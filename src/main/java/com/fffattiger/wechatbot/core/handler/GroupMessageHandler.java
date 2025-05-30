@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import com.fffattiger.wechatbot.config.ChatBotProperties;
 import com.fffattiger.wechatbot.core.WxChat;
 import com.fffattiger.wechatbot.wxauto.MessageHandler;
 import com.fffattiger.wechatbot.wxauto.MessageHandlerChain;
@@ -16,12 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class GroupMessageHandler implements MessageHandler {
-
-    private final ChatBotProperties chatBotProperties;
-
-    GroupMessageHandler(ChatBotProperties chatBotProperties) {
-        this.chatBotProperties = chatBotProperties;
-    }
 
     @Override
     public boolean handle(MessageHandlerContext context, MessageHandlerChain chain) {
