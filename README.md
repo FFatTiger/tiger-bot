@@ -92,3 +92,5 @@ https://github.com/cluic/wxauto
 https://github.com/spring-projects/spring-ai
 
 https://github.com/iwyxdxl/WeChatBot_WXAUTO_SE
+
+https://github.com/sjzar/chatlog
