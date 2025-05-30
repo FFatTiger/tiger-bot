@@ -1,0 +1,44 @@
+server:
+  port: 8080 
+#logging:
+#  level:
+#    '[com.fffattiger.wechatbot]': DEBUG
+        
+spring:
+  ai:
+    deepseek:
+      chat:
+        api-key: sk-3237d5d4bbf8471a89ae771c70ca0a20
+chatbot:
+  # 聊天记录API地址
+  chatLogApiUrl: http://127.0.0.1:5030
+  # 微信网关基础URL
+  baseUrl: http://127.0.0.1:8000
+  # 监听的微信窗口对象
+  listeners:
+    - wxInfo:
+        # 微信窗口名称
+        chatName: 测试一号
+        # 是否是群聊
+        groupFlg: true
+      # 是否开启@回复
+      at-reply-enable: true
+      # 允许的命令
+      command-info:
+        # 允许的命令通配符
+        allow-command-parttens:
+        - '/*'
+        # 允许的命令用户
+        command-allow-user:
+          '[/*]':
+            - 'fffattiger'
+    - wxInfo:
+        chatName: 测试二号
+        groupFlg: true
+      at-reply-enable: true
+      command-info:
+        allow-command-parttens:
+        - '/*'
+        command-allow-user:
+          '[/*]':
+            - 'fffattiger'
