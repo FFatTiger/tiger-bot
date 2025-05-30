@@ -29,7 +29,7 @@ spring:
   ai:
     deepseek:
       chat:
-        api-key: sk-3237d5d4bbf8471a89ae771c70ca0a20
+        api-key: sk-xxxxxxx
 chatbot:
   # 聊天记录API地址
   chatLogApiUrl: http://127.0.0.1:5030
