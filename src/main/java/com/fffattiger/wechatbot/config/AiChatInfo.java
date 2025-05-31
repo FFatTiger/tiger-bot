@@ -17,12 +17,17 @@ public class AiChatInfo {
 
 
     /**
-     * 模拟打字速度
+     * 模拟的单个打字速度区间
      */
-    private double typeSpeed;
+    private double typeOneWordSpeedMin;
+    
+    /**
+     * 模拟的单个打字速度区间
+     */
+    private double typeOneWordSpeedMax;
 
     /**
-     * 模拟打字平均速度
+     * 模拟的打字平均速度
      * @return
      */
     private double typeAvgSpeed;
