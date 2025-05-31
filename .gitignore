@@ -4,3 +4,4 @@ target/
 collector/
 chatMemory/
 .DS_Store
+*.iml

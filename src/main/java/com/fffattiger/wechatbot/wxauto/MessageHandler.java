@@ -14,7 +14,7 @@ public interface MessageHandler extends Ordered {
 
     /**
      * 处理微信消息
-     * 
+     *
      * @param context 上下文
      * @param chain   责任链传递
      * @return 处理结果
@@ -22,7 +22,7 @@ public interface MessageHandler extends Ordered {
     boolean handle(MessageHandlerContext context, MessageHandlerChain chain);
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record BatchedSanitizedWechatMessages(
+    record BatchedSanitizedWechatMessages(
             @JsonProperty("event_type") String eventType,
             @JsonProperty("message") String message,
             @JsonProperty("timestamp") Long timestamp,
@@ -40,56 +40,67 @@ public interface MessageHandler extends Ordered {
                     @JsonProperty("id") String id,
                     @JsonProperty("time") String time,
                     @JsonProperty("sender_remark") String senderRemark) {
-            };
-        };
-    };
+            }
+        }
+    }
 
-    public record ApiResponse<T>(
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record Result<T>(
             boolean success,
             String message,
             String requestId,
             T data) {
-    };
-
-    public record SseEvent(
-            @JsonProperty("event_type") String eventType,
-            Object data,
-            Long timestamp) {
-    };
+    }
 
 
-    public record SendTextRequest(
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record SendTextRequest(
             @JsonProperty("to_who") String toWho,
             @JsonProperty("text_content") String textContent) {
-    };
+    }
 
-    public record SendFileByPathRequest(
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record SendFileByPathRequest(
             @JsonProperty("to_who") String toWho,
             @JsonProperty("filepath") String filepath) {
-    };
+    }
 
-    public record SendFileByUrlRequest(
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record SendFileByUrlRequest(
             @JsonProperty("to_who") String toWho,
             @JsonProperty("file_url") String fileUrl,
             @JsonProperty("filename") String filename) {
-    };
+    }
 
-    public record AddListenChatRequest(
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record AddListenChatRequest(
             String who,
-            boolean savepic,
-            boolean savevoice,
-            boolean parseLinks) {
-    };
+            @JsonProperty("savepic") boolean savePic,
+            @JsonProperty("savevoice") boolean saveVoice,
+            @JsonProperty("parseLinks") boolean parseLinks) {
+    }
 
-    public record ChatWithRequest(
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record ChatWithRequest(
             String who) {
-    };
+    }
 
-    public record VoiceCallRequest(
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record VoiceCallRequest(
             @JsonProperty("user_id") String userId) {
-    };
+    }
 
-    public record RobotNameResponse(
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record RobotNameResponse(
             @JsonProperty("robot_name") String robotName) {
-    };
+    }
+
+
 }

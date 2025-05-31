@@ -42,14 +42,21 @@ public class ChatBotProperties {
     /**
      * 聊天记录API地址
      */
-    private String chatLogApiUrl = "http://127.0.0.1:5030";
+    private String chatLogApiUrl;
 
 
-      /**
+    /**
      * 微信网关基础URL
      */
-    private String baseUrl = "http://127.0.0.1:8000";
-    
+    private String wxAutoGatewayHttpUrl;
+
+
+    /**
+     * 微信网关基础URL
+     */
+    private String wxAutoGatewayWsUrl;
+
+
     /**
      * SSE连接超时时间
      */

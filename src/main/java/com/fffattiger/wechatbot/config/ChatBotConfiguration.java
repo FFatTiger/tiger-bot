@@ -44,7 +44,7 @@ public class ChatBotConfiguration {
             wxAuto.addListenChat(listener.getWxInfo().getChatName(), true, true, true);
         }
 
-        com.fffattiger.wechatbot.wxauto.MessageHandler.ApiResponse<RobotNameResponse> robotName = wxAuto.getRobotName();
+        MessageHandler.Result<RobotNameResponse> robotName = wxAuto.getRobotName();
         if (robotName.success()) {
             chatBotProperties.setRobotName(robotName.data().robotName());
         } else {

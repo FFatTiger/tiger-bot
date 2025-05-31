@@ -13,7 +13,8 @@ chatbot:
   # 聊天记录API地址
   chatLogApiUrl: http://127.0.0.1:5030
   # 微信网关基础URL
-  baseUrl: http://127.0.0.1:8000
+  wx-auto-gateway-http-url: http://127.0.0.1:8000
+  wx-auto-gateway-ws-url: http://127.0.0.1:8765
   # 监听的微信窗口对象
   listeners:
     - wxInfo:
@@ -26,8 +27,8 @@ chatbot:
       # 允许的命令
       command-info:
         # 允许的命令通配符
-        allow-command-parttens:
-        - '/*'
+        allow-command-patterns:
+          - - '/*'
         # 允许的命令用户
         command-allow-user:
           '[/*]':
@@ -37,7 +38,7 @@ chatbot:
         groupFlg: true
       at-reply-enable: true
       command-info:
-        allow-command-parttens:
+        allow-command-patterns:
         - '/*'
         command-allow-user:
           '[/*]':
