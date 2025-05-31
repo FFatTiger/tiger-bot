@@ -136,6 +136,7 @@ public class WxAutoWebSocketHttpClient implements WxAuto{
                             context.setWxAuto(WxAutoWebSocketHttpClient.this);
                             context.setCurrentChat(wxChat);
                             context.setChatBotProperties(chatBotProperties);
+                            context.setMessageTimestamp(batchedMessages.timestamp());
                             new DefaultMessageHandlerChain(messageHandlers).handle(context);
                         });
                     }

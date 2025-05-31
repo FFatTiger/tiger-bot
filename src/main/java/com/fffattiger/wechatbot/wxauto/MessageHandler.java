@@ -25,6 +25,7 @@ public interface MessageHandler extends Ordered {
     public record BatchedSanitizedWechatMessages(
             @JsonProperty("event_type") String eventType,
             @JsonProperty("message") String message,
+            @JsonProperty("timestamp") Long timestamp,
             @JsonProperty("data") List<Chat> data) {
         @JsonIgnoreProperties(ignoreUnknown = true)
         public record Chat(

@@ -37,6 +37,6 @@ public class StatusCommandMessageHandler extends AbstractCommandMessageHandler {
 
     @Override
     public String description() {
-        return "/status /s 查看状态";
+        return "/status 查看状态";
     }
 }

@@ -30,7 +30,7 @@ public abstract class AbstractCommandMessageHandler implements MessageHandler {
         String sender = message.sender();
         String cleanContent = context.cleanContent();
         String commandPrefix = context.chatBotProperties().getCommandPrefix();
-        if (message == null || message.type() == null || !message.type().equals(MessageType.FRIEND) || !StringUtils.hasLength(cleanContent) || !cleanContent.startsWith(commandPrefix)) {
+        if (message.type() == null || !message.type().equals(MessageType.FRIEND) || !StringUtils.hasLength(cleanContent) || !cleanContent.startsWith(commandPrefix)) {
             return chain.handle(context);
         }
         
@@ -67,7 +67,7 @@ public abstract class AbstractCommandMessageHandler implements MessageHandler {
             log.info("命令未开启, command: {}", cleanContent);
             return false;
         }
-        for (String pattern : commandInfo.getAllowCommandParttens()) {
+        for (String pattern : commandInfo.getAllowCommandPatterns()) {
             if (!antPathMatcher.match(pattern, cleanContent)) {
                 log.info("该命令未启用, command: {}, pattern: {}", cleanContent, pattern);
                 return false;

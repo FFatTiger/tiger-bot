@@ -32,6 +32,18 @@ public interface MessageHandlerContext {
      */
     void setMessage(Message message);
 
+    /** 
+     * 获取微信消息时间戳
+     * @return 微信消息时间戳
+     */
+    Long messageTimestamp();
+
+    /**
+     * 设置微信消息时间戳
+     * @param messageTimestamp 微信消息时间戳
+     */
+    void setMessageTimestamp(Long messageTimestamp);
+
     /**
      * 经过处理的微信消息，不含@robotName
      * @return 经过处理的微信消息

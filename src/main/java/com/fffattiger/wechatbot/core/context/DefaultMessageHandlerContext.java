@@ -29,7 +29,7 @@ public class DefaultMessageHandlerContext implements MessageHandlerContext {
 
     @Override
     public Message message() {
-        return (Message) get("message");
+        return get("message");
     }
 
     @Override
@@ -44,7 +44,7 @@ public class DefaultMessageHandlerContext implements MessageHandlerContext {
 
     @Override
     public WxAuto wx() {
-        return (WxAuto) get("wxAuto");
+        return get("wxAuto");
     }
 
     @Override
@@ -54,7 +54,7 @@ public class DefaultMessageHandlerContext implements MessageHandlerContext {
 
     @Override
     public WxChat currentChat() {
-        return (WxChat) get("currentChat");
+        return get("currentChat");
     }
 
     
@@ -64,7 +64,7 @@ public class DefaultMessageHandlerContext implements MessageHandlerContext {
 
     @Override
     public ChatBotProperties chatBotProperties() {
-        return (ChatBotProperties) get("chatBotProperties");
+        return get("chatBotProperties");
     }
 
     @Override
@@ -74,12 +74,22 @@ public class DefaultMessageHandlerContext implements MessageHandlerContext {
 
     @Override
     public String cleanContent() {
-        return (String) get("cleanContent");
+        return get("cleanContent");
     }
 
     @Override
     public void setCleanContent(String cleanContent) {
         set("cleanContent", cleanContent);
+    }
+
+    @Override
+    public Long messageTimestamp() {
+        return get("messageTimestamp");
+    }
+
+    @Override
+    public void setMessageTimestamp(Long messageTimestamp) {
+        set("messageTimestamp", messageTimestamp);
     }
 
 

@@ -34,6 +34,6 @@ public class HelpCommandMessageHandler extends AbstractCommandMessageHandler {
 
     @Override
     public String description() {
-        return "/help /h /? /帮助 查看帮助";
+        return "/help 查看帮助";
     }
 }

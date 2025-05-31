@@ -41,7 +41,7 @@ public class AddListenerCommandMessageHandler extends AbstractCommandMessageHand
 
     @Override
     public String description() {
-        return "/增加监听 /addlistener chatName [savePic] [saveVoice] [parseLinks] 增加监听";
+        return "/增加监听 chatName 增加监听";
     }
     
 }

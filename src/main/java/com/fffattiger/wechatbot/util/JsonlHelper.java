@@ -65,6 +65,9 @@ public class JsonlHelper {
      * @throws IOException
      */
     public static void overwriteJsonLines(File file, List<?> objs) throws IOException {
+        if (!file.getParentFile().exists()) {
+            file.getParentFile().mkdirs();
+        }
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, false))) {
             for (Object obj : objs) {
                 String json = OBJECT_MAPPER.writeValueAsString(obj);

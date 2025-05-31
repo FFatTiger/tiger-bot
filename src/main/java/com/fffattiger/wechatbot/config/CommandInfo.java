@@ -17,7 +17,7 @@ public class CommandInfo {
     /**
      * 允许的命令
      */
-    private List<String> allowCommandParttens;
+    private List<String> allowCommandPatterns;
 
 
     /**

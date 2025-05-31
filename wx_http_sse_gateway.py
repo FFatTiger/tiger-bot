@@ -76,7 +76,7 @@ async def register_websocket_client(websocket):
     await websocket.send(json.dumps({
         "event_type": "connected",
         "message": "WebSocket connection established",
-        "timestamp": time.time()
+        "timestamp": int(time.time() * 1000)
     }))
 
 async def unregister_websocket_client(websocket):
@@ -140,7 +140,7 @@ async def download_file_from_url(url: str, filename: Optional[str] = None) -> st
                     ext = '.mp3'
                 else:
                     ext = '.bin'  # 默认二进制文件
-                filename = f"downloaded_{int(time.time())}{ext}"
+                filename = f"downloaded_{int(int(time.time() * 1000))}{ext}"
         
         # 检查文件大小
         content_length = response.headers.get('content-length')
@@ -148,7 +148,7 @@ async def download_file_from_url(url: str, filename: Optional[str] = None) -> st
             raise ValueError(f"File too large: {content_length} bytes (max: {MAX_FILE_SIZE} bytes)")
         
         # 保存到临时文件
-        temp_filepath = os.path.join(TEMP_DIR, f"wx_download_{int(time.time())}_{filename}")
+        temp_filepath = os.path.join(TEMP_DIR, f"wx_download_{int(int(time.time() * 1000))}_{filename}")
         
         with open(temp_filepath, 'wb') as f:
             downloaded_size = 0
@@ -182,10 +182,10 @@ async def save_uploaded_file(file: UploadFile) -> str:
             raise ValueError(f"File too large: {len(content)} bytes (max: {MAX_FILE_SIZE} bytes)")
         
         # 保存到临时文件
-        safe_filename = file.filename or f"upload_{int(time.time())}.bin"
+        safe_filename = file.filename or f"upload_{int(int(time.time() * 1000))}.bin"
         # 移除文件名中的危险字符
         safe_filename = "".join(c for c in safe_filename if c.isalnum() or c in '._-')
-        temp_filepath = os.path.join(TEMP_DIR, f"wx_upload_{int(time.time())}_{safe_filename}")
+        temp_filepath = os.path.join(TEMP_DIR, f"wx_upload_{int(int(time.time() * 1000))}_{safe_filename}")
         
         with open(temp_filepath, 'wb') as f:
             f.write(content)
@@ -296,7 +296,7 @@ async def wechat_listener_loop():
                     await broadcast_to_websocket_clients({
                         "event_type": "wechat_messages",
                         "data": sanitized_dict_to_send,
-                        "timestamp": time.time()
+                        "timestamp": int(time.time() * 1000)
                     })
             
             await asyncio.sleep(WECHAT_POLL_INTERVAL)
@@ -320,7 +320,7 @@ async def websocket_handler(websocket, path = None):
                     await asyncio.sleep(30)  # 每30秒发送心跳
                     await websocket.send(json.dumps({
                         "event_type": "heartbeat",
-                        "timestamp": time.time()
+                        "timestamp": int(time.time() * 1000)
                     }))
                 except websockets.exceptions.ConnectionClosed:
                     break
@@ -337,7 +337,7 @@ async def websocket_handler(websocket, path = None):
                 if data.get("event_type") == "pong":
                     logger.debug("Received pong from client")
                 elif data.get("event_type") == "ping":
-                    await websocket.send(json.dumps({"event_type": "pong", "timestamp": time.time()}))
+                    await websocket.send(json.dumps({"event_type": "pong", "timestamp": int(time.time() * 1000)}))
                 else:
                     logger.info(f"Received message from WebSocket client: {data}")
             except json.JSONDecodeError:
