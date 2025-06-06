@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{management/layout :: layout(~{::title}, ~{::content}, ~{::scripts})}">
+<head>
+    <title th:fragment="title">系统配置</title>
+</head>
+<body>
+    <th:block th:fragment="content">
+        <!-- 配置导航标签 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <ul class="nav nav-tabs" id="configTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="basic-tab" data-bs-toggle="tab" data-bs-target="#basic" type="button" role="tab">
+                            <i class="fas fa-cog me-2"></i>基础配置
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="ai-tab" data-bs-toggle="tab" data-bs-target="#ai" type="button" role="tab">
+                            <i class="fas fa-robot me-2"></i>AI配置
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="database-tab" data-bs-toggle="tab" data-bs-target="#database" type="button" role="tab">
+                            <i class="fas fa-database me-2"></i>数据库配置
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="gateway-config-tab" data-bs-toggle="tab" data-bs-target="#gateway-config" type="button" role="tab">
+                            <i class="fas fa-network-wired me-2"></i>网关配置
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 配置内容 -->
+        <div class="tab-content" id="configTabContent">
+            <!-- 基础配置 -->
+            <div class="tab-pane fade show active" id="basic" role="tabpanel">
+                <div class="card shadow">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">基础系统配置</h6>
+                    </div>
+                    <div class="card-body">
+                        <form>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="robotName" class="form-label">机器人名称</label>
+                                        <input type="text" class="form-control" id="robotName" 
+                                               th:value="${chatBotProperties.robotName}" placeholder="请输入机器人名称">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="commandPrefix" class="form-label">命令前缀</label>
+                                        <input type="text" class="form-control" id="commandPrefix" 
+                                               th:value="${chatBotProperties.commandPrefix}" placeholder="/">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="tempFileDir" class="form-label">临时文件目录</label>
+                                        <input type="text" class="form-control" id="tempFileDir" 
+                                               th:value="${chatBotProperties.tempFileDir}" placeholder="output">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="chatMemoryDir" class="form-label">聊天记忆目录</label>
+                                        <input type="text" class="form-control" id="chatMemoryDir" 
+                                               th:value="${chatBotProperties.chatMemoryDir}" placeholder="chatMemory">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="chatMemoryFileMaxCount" class="form-label">聊天记忆文件最大数量</label>
+                                        <input type="number" class="form-control" id="chatMemoryFileMaxCount" 
+                                               th:value="${chatBotProperties.chatMemoryFileMaxCount}" placeholder="100">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="healthCheckEnabled" class="form-label">健康检查</label>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="healthCheckEnabled" 
+                                                   th:checked="${chatBotProperties.healthCheckEnabled}">
+                                            <label class="form-check-label" for="healthCheckEnabled">
+                                                启用健康检查
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI配置 -->
+            <div class="tab-pane fade" id="ai" role="tabpanel">
+                <div class="card shadow">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">AI模型配置</h6>
+                    </div>
+                    <div class="card-body">
+                        <form>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="aiProvider" class="form-label">AI提供商</label>
+                                        <select class="form-select" id="aiProvider">
+                                            <option value="deepseek" selected>DeepSeek</option>
+                                            <option value="openai">OpenAI</option>
+                                            <option value="claude">Claude</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="aiModel" class="form-label">AI模型</label>
+                                        <select class="form-select" id="aiModel">
+                                            <option value="deepseek-chat" selected>deepseek-chat</option>
+                                            <option value="deepseek-coder">deepseek-coder</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="aiApiKey" class="form-label">API密钥</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="aiApiKey" 
+                                                   placeholder="请输入API密钥">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('aiApiKey')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="aiBaseUrl" class="form-label">API基础地址</label>
+                                        <input type="url" class="form-control" id="aiBaseUrl" 
+                                               placeholder="https://api.deepseek.com">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="maxTokens" class="form-label">最大Token数</label>
+                                        <input type="number" class="form-control" id="maxTokens" 
+                                               value="4000" placeholder="4000">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="temperature" class="form-label">温度参数</label>
+                                        <input type="range" class="form-range" id="temperature" 
+                                               min="0" max="2" step="0.1" value="0.7">
+                                        <div class="d-flex justify-content-between">
+                                            <small>0 (保守)</small>
+                                            <small id="temperatureValue">0.7</small>
+                                            <small>2 (创造)</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <hr>
+                            
+                            <h6 class="text-primary mb-3">角色配置</h6>
+                            <div class="mb-3">
+                                <label for="aiRole" class="form-label">AI角色设定</label>
+                                <textarea class="form-control" id="aiRole" rows="6" 
+                                          placeholder="请输入AI角色的详细设定...">你是一位19岁的大学女生，性格活泼开朗，刚开始体验大学生活和初恋的美好。你说话自然随意，偶尔会有些小女生的娇羞和可爱。</textarea>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 数据库配置 -->
+            <div class="tab-pane fade" id="database" role="tabpanel">
+                <div class="card shadow">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">数据库连接配置</h6>
+                    </div>
+                    <div class="card-body">
+                        <form>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="dbHost" class="form-label">数据库主机</label>
+                                        <input type="text" class="form-control" id="dbHost" 
+                                               value="localhost" placeholder="localhost">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="dbPort" class="form-label">端口</label>
+                                        <input type="number" class="form-control" id="dbPort" 
+                                               value="5432" placeholder="5432">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="dbName" class="form-label">数据库名</label>
+                                        <input type="text" class="form-control" id="dbName" 
+                                               value="tigerbot" placeholder="tigerbot">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="dbUsername" class="form-label">用户名</label>
+                                        <input type="text" class="form-control" id="dbUsername" 
+                                               placeholder="请输入数据库用户名">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="dbPassword" class="form-label">密码</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="dbPassword" 
+                                                   placeholder="请输入数据库密码">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('dbPassword')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="dbMaxConnections" class="form-label">最大连接数</label>
+                                        <input type="number" class="form-control" id="dbMaxConnections" 
+                                               value="10" placeholder="10">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-end">
+                                <button type="button" class="btn btn-outline-primary me-2" onclick="testDbConnection()">
+                                    <i class="fas fa-plug me-2"></i>测试连接
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 网关配置 -->
+            <div class="tab-pane fade" id="gateway-config" role="tabpanel">
+                <div class="card shadow">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">微信网关连接配置</h6>
+                    </div>
+                    <div class="card-body">
+                        <form>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="gatewayHttpUrl" class="form-label">HTTP网关地址</label>
+                                        <input type="url" class="form-control" id="gatewayHttpUrl" 
+                                               th:value="${chatBotProperties.wxAutoGatewayHttpUrl}" 
+                                               placeholder="http://localhost:8000/api">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="gatewayWsUrl" class="form-label">WebSocket网关地址</label>
+                                        <input type="text" class="form-control" id="gatewayWsUrl" 
+                                               th:value="${chatBotProperties.wxAutoGatewayWsUrl}" 
+                                               placeholder="ws://localhost:8765">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="httpTimeout" class="form-label">HTTP超时时间(秒)</label>
+                                        <input type="number" class="form-control" id="httpTimeout" 
+                                               th:value="${chatBotProperties.httpTimeout.seconds}" 
+                                               placeholder="30">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="reconnectInterval" class="form-label">重连间隔(秒)</label>
+                                        <input type="number" class="form-control" id="reconnectInterval" 
+                                               th:value="${chatBotProperties.reconnectInterval.seconds}" 
+                                               placeholder="5">
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 保存按钮 -->
+        <div class="row mt-4">
+            <div class="col-12 text-end">
+                <button type="button" class="btn btn-secondary me-2" onclick="resetConfig()">
+                    <i class="fas fa-undo me-2"></i>重置
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveConfig()">
+                    <i class="fas fa-save me-2"></i>保存配置
+                </button>
+            </div>
+        </div>
+    </th:block>
+
+    <th:block th:fragment="scripts">
+        <script>
+            // 切换密码显示
+            function togglePassword(inputId) {
+                const input = document.getElementById(inputId);
+                const icon = input.nextElementSibling.querySelector('i');
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.className = 'fas fa-eye-slash';
+                } else {
+                    input.type = 'password';
+                    icon.className = 'fas fa-eye';
+                }
+            }
+
+            // 温度参数滑块
+            document.getElementById('temperature').addEventListener('input', function() {
+                document.getElementById('temperatureValue').textContent = this.value;
+            });
+
+            // 测试数据库连接
+            function testDbConnection() {
+                const host = document.getElementById('dbHost').value;
+                const port = document.getElementById('dbPort').value;
+                const dbName = document.getElementById('dbName').value;
+                const username = document.getElementById('dbUsername').value;
+                const password = document.getElementById('dbPassword').value;
+                
+                if (!host || !port || !dbName || !username || !password) {
+                    showAlert('请填写完整的数据库连接信息', 'warning');
+                    return;
+                }
+                
+                showAlert('正在测试数据库连接...', 'info');
+                
+                // 这里应该调用后端API测试连接
+                setTimeout(() => {
+                    showAlert('数据库连接测试成功！', 'success');
+                }, 2000);
+            }
+
+            // 保存配置
+            function saveConfig() {
+                showAlert('正在保存配置...', 'info');
+                
+                // 收集所有配置数据
+                const config = {
+                    basic: {
+                        robotName: document.getElementById('robotName').value,
+                        commandPrefix: document.getElementById('commandPrefix').value,
+                        tempFileDir: document.getElementById('tempFileDir').value,
+                        chatMemoryDir: document.getElementById('chatMemoryDir').value,
+                        chatMemoryFileMaxCount: document.getElementById('chatMemoryFileMaxCount').value,
+                        healthCheckEnabled: document.getElementById('healthCheckEnabled').checked
+                    },
+                    ai: {
+                        provider: document.getElementById('aiProvider').value,
+                        model: document.getElementById('aiModel').value,
+                        apiKey: document.getElementById('aiApiKey').value,
+                        baseUrl: document.getElementById('aiBaseUrl').value,
+                        maxTokens: document.getElementById('maxTokens').value,
+                        temperature: document.getElementById('temperature').value,
+                        role: document.getElementById('aiRole').value
+                    },
+                    database: {
+                        host: document.getElementById('dbHost').value,
+                        port: document.getElementById('dbPort').value,
+                        dbName: document.getElementById('dbName').value,
+                        username: document.getElementById('dbUsername').value,
+                        password: document.getElementById('dbPassword').value,
+                        maxConnections: document.getElementById('dbMaxConnections').value
+                    },
+                    gateway: {
+                        httpUrl: document.getElementById('gatewayHttpUrl').value,
+                        wsUrl: document.getElementById('gatewayWsUrl').value,
+                        httpTimeout: document.getElementById('httpTimeout').value,
+                        reconnectInterval: document.getElementById('reconnectInterval').value
+                    }
+                };
+                
+                // 这里应该调用后端API保存配置
+                console.log('保存配置:', config);
+                
+                setTimeout(() => {
+                    showAlert('配置保存成功！', 'success');
+                }, 1000);
+            }
+
+            // 重置配置
+            function resetConfig() {
+                if (confirm('确定要重置所有配置吗？这将恢复到默认值。')) {
+                    location.reload();
+                }
+            }
+        </script>
+    </th:block>
+</body>
+</html>

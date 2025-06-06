@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{management/layout :: layout('监听配置', ~{::content}, ~{::scripts})}">
+
+<th:block th:fragment="content">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-ear-listen me-2"></i>监听对象配置
+                    </h5>
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createListenerModal">
+                        <i class="fas fa-plus me-1"></i>添加监听
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>聊天对象</th>
+                                    <th>类型</th>
+                                    <th>@回复</th>
+                                    <th>关键词回复</th>
+                                    <th>保存图片</th>
+                                    <th>保存语音</th>
+                                    <th>解析链接</th>
+                                    <th>关键词</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="listener : ${listeners}">
+                                    <td th:text="${listener.listener().id()}">1</td>
+                                    <td th:text="${listener.chat().name()}">测试群</td>
+                                    <td>
+                                        <span th:if="${listener.chat().groupFlag()}" class="badge bg-info">群聊</span>
+                                        <span th:unless="${listener.chat().groupFlag()}" class="badge bg-success">私聊</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${listener.listener().atReplyEnable()}" class="text-success">
+                                            <i class="fas fa-check"></i>
+                                        </span>
+                                        <span th:unless="${listener.listener().atReplyEnable()}" class="text-muted">
+                                            <i class="fas fa-times"></i>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${listener.listener().keywordReplyEnable()}" class="text-success">
+                                            <i class="fas fa-check"></i>
+                                        </span>
+                                        <span th:unless="${listener.listener().keywordReplyEnable()}" class="text-muted">
+                                            <i class="fas fa-times"></i>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${listener.listener().savePic()}" class="text-success">
+                                            <i class="fas fa-check"></i>
+                                        </span>
+                                        <span th:unless="${listener.listener().savePic()}" class="text-muted">
+                                            <i class="fas fa-times"></i>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${listener.listener().saveVoice()}" class="text-success">
+                                            <i class="fas fa-check"></i>
+                                        </span>
+                                        <span th:unless="${listener.listener().saveVoice()}" class="text-muted">
+                                            <i class="fas fa-times"></i>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${listener.listener().parseLinks()}" class="text-success">
+                                            <i class="fas fa-check"></i>
+                                        </span>
+                                        <span th:unless="${listener.listener().parseLinks()}" class="text-muted">
+                                            <i class="fas fa-times"></i>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small th:text="${#strings.listJoin(listener.listener().keywordReply(), ', ')}" class="text-muted">关键词1, 关键词2</small>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary me-1" 
+                                                th:onclick="'editListener(' + ${listener.listener().id()} + ')'">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                th:onclick="'deleteListener(' + ${listener.listener().id()} + ')'">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 创建监听器模态框 -->
+    <div class="modal fade" id="createListenerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">添加监听对象</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="createListenerForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="chatId" class="form-label">选择聊天对象</label>
+                            <select class="form-select" id="chatId" name="chatId" required>
+                                <option value="">请选择...</option>
+                                <option th:each="chat : ${allChats}" th:value="${chat.id()}" th:text="${chat.name() + (chat.groupFlag() ? ' (群聊)' : ' (私聊)')}">聊天对象</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="atReplyEnable" name="atReplyEnable" checked>
+                                    <label class="form-check-label" for="atReplyEnable">启用@回复</label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="keywordReplyEnable" name="keywordReplyEnable">
+                                    <label class="form-check-label" for="keywordReplyEnable">启用关键词回复</label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="savePic" name="savePic" checked>
+                                    <label class="form-check-label" for="savePic">保存图片</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="saveVoice" name="saveVoice" checked>
+                                    <label class="form-check-label" for="saveVoice">保存语音</label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="parseLinks" name="parseLinks" checked>
+                                    <label class="form-check-label" for="parseLinks">解析链接</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="keywordReply" class="form-label">关键词 (逗号分隔)</label>
+                            <input type="text" class="form-control" id="keywordReply" name="keywordReply" placeholder="例如: 你好,帮助,查询">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">创建</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑监听器模态框 -->
+    <div class="modal fade" id="editListenerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">编辑监听配置</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editListenerForm">
+                    <input type="hidden" id="editListenerId" name="id">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">聊天对象</label>
+                            <input type="text" class="form-control" id="editChatName" readonly>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="editAtReplyEnable" name="atReplyEnable">
+                                    <label class="form-check-label" for="editAtReplyEnable">启用@回复</label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="editKeywordReplyEnable" name="keywordReplyEnable">
+                                    <label class="form-check-label" for="editKeywordReplyEnable">启用关键词回复</label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="editSavePic" name="savePic">
+                                    <label class="form-check-label" for="editSavePic">保存图片</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="editSaveVoice" name="saveVoice">
+                                    <label class="form-check-label" for="editSaveVoice">保存语音</label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="editParseLinks" name="parseLinks">
+                                    <label class="form-check-label" for="editParseLinks">解析链接</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editKeywordReply" class="form-label">关键词 (逗号分隔)</label>
+                            <input type="text" class="form-control" id="editKeywordReply" name="keywordReply">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<th:block th:fragment="scripts">
+    <script th:inline="javascript">
+        // 监听器数据
+        const listeners = /*[[${listeners}]]*/ [];
+
+        // 创建监听器
+        $('#createListenerForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = $(this).serialize();
+            
+            makeRequest('/management/bot-config/listeners/create', 'POST', formData)
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('监听器创建成功！', 'success');
+                        $('#createListenerModal').modal('hide');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('创建失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        });
+        
+        // 编辑监听器
+        function editListener(id) {
+            const listener = listeners.find(l => l.listener.id === id);
+            if (!listener) return;
+            
+            $('#editListenerId').val(listener.listener.id);
+            $('#editChatName').val(listener.chat.name + (listener.chat.groupFlag ? ' (群聊)' : ' (私聊)'));
+            $('#editAtReplyEnable').prop('checked', listener.listener.atReplyEnable);
+            $('#editKeywordReplyEnable').prop('checked', listener.listener.keywordReplyEnable);
+            $('#editSavePic').prop('checked', listener.listener.savePic);
+            $('#editSaveVoice').prop('checked', listener.listener.saveVoice);
+            $('#editParseLinks').prop('checked', listener.listener.parseLinks);
+            $('#editKeywordReply').val(listener.listener.keywordReply.join(', '));
+            
+            $('#editListenerModal').modal('show');
+        }
+        
+        // 保存编辑
+        $('#editListenerForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const id = $('#editListenerId').val();
+            const formData = $(this).serialize();
+            
+            makeRequest(`/management/bot-config/listeners/${id}/update`, 'POST', formData)
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('监听器更新成功！', 'success');
+                        $('#editListenerModal').modal('hide');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('更新失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        });
+        
+        // 删除监听器
+        function deleteListener(id) {
+            if (!confirm('确定要删除这个监听器吗？')) return;
+            
+            makeRequest(`/management/bot-config/listeners/${id}/delete`, 'POST')
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('监听器删除成功！', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('删除失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        }
+    </script>
+</th:block>
+
+</html>

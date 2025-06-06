@@ -1,0 +1,40 @@
+server:
+  port: 8080 
+logging:
+  level:
+    '[com.fffattiger.wechatbot]': DEBUG
+spring:
+  ai:
+    model:
+      audio:
+        speech: NONE
+        transcription: NONE
+      embedding: NONE
+      image: NONE
+      moderation: NONE
+      chat: NONE
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: always
+      client:
+        enabled: false
+  datasource:
+    url: jdbc:postgresql://192.168.31.66:5437/postgres
+    username: admin
+    password: 123
+    driver-class-name: org.postgresql.Driver
+  sql:
+    init:
+      mode: always
+      platform: postgresql
+      schema-locations: classpath:scripts/schema-postgresql.sql
+      data-locations: classpath:scripts/data.sql
+
+chatbot:
+  # 聊天记录API地址
+  chatLogApiUrl: http://192.168.31.77:5030
+  # 微信网关基础URL
+  wx-auto-gateway-http-url: http://192.168.31.77:8000
+  wx-auto-gateway-ws-url: ws://192.168.31.77:8765

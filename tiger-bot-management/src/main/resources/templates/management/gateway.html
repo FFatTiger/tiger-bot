@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{management/layout :: layout(~{::title}, ~{::content}, ~{::scripts})}">
+<head>
+    <title th:fragment="title">网关控制</title>
+</head>
+<body>
+    <th:block th:fragment="content">
+        <!-- 网关状态卡片 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <i class="fas fa-network-wired me-2"></i>Python微信网关控制
+                        </h6>
+                        <div>
+                            <span class="badge status-badge me-2" 
+                                  th:classappend="${gatewayStatus == '运行中' ? 'bg-success' : (gatewayStatus == '连接中' ? 'bg-warning' : 'bg-danger')}"
+                                  th:text="${gatewayStatus}" id="gatewayStatusBadge">
+                                运行中
+                            </span>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="refreshStatus()">
+                                <i class="fas fa-sync-alt"></i> 刷新状态
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h5>网关信息</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-borderless">
+                                        <tbody>
+                                            <tr>
+                                                <td><strong>脚本路径:</strong></td>
+                                                <td th:text="${pythonScriptPath}">wx_http_sse_gateway.py</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>HTTP端口:</strong></td>
+                                                <td>8000</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>WebSocket端口:</strong></td>
+                                                <td>8765</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>当前状态:</strong></td>
+                                                <td>
+                                                    <span id="gatewayStatusText" th:text="${gatewayStatus}">运行中</span>
+                                                    <i class="fas fa-circle ms-2" 
+                                                       th:classappend="${gatewayStatus == '运行中' ? 'text-success' : (gatewayStatus == '连接中' ? 'text-warning' : 'text-danger')}"
+                                                       id="gatewayStatusIcon"></i>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <h5>控制操作</h5>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-success" onclick="startGateway()" id="startBtn">
+                                        <i class="fas fa-play me-2"></i>启动网关
+                                    </button>
+                                    <button class="btn btn-danger" onclick="stopGateway()" id="stopBtn">
+                                        <i class="fas fa-stop me-2"></i>停止网关
+                                    </button>
+                                    <button class="btn btn-warning" onclick="restartGateway()" id="restartBtn">
+                                        <i class="fas fa-redo me-2"></i>重启网关
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 网关配置 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <i class="fas fa-cogs me-2"></i>网关配置
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <form>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="httpHost" class="form-label">HTTP监听地址</label>
+                                        <input type="text" class="form-control" id="httpHost" value="0.0.0.0" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="httpPort" class="form-label">HTTP端口</label>
+                                        <input type="number" class="form-control" id="httpPort" value="8000" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="wsHost" class="form-label">WebSocket监听地址</label>
+                                        <input type="text" class="form-control" id="wsHost" value="0.0.0.0" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="wsPort" class="form-label">WebSocket端口</label>
+                                        <input type="number" class="form-control" id="wsPort" value="8765" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="pollInterval" class="form-label">消息轮询间隔(秒)</label>
+                                        <input type="number" class="form-control" id="pollInterval" value="1" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="logLevel" class="form-label">日志级别</label>
+                                        <select class="form-select" id="logLevel" disabled>
+                                            <option value="DEBUG">DEBUG</option>
+                                            <option value="INFO" selected>INFO</option>
+                                            <option value="WARNING">WARNING</option>
+                                            <option value="ERROR">ERROR</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <button type="button" class="btn btn-secondary me-2" disabled>
+                                    <i class="fas fa-edit me-2"></i>编辑配置
+                                </button>
+                                <button type="button" class="btn btn-primary" disabled>
+                                    <i class="fas fa-save me-2"></i>保存配置
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 网关日志 -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <i class="fas fa-file-alt me-2"></i>网关运行日志
+                        </h6>
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary me-2" onclick="clearLog()">
+                                <i class="fas fa-trash me-1"></i>清空日志
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="refreshLog()">
+                                <i class="fas fa-sync-alt me-1"></i>刷新日志
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="bg-dark text-light p-3 rounded" style="height: 300px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 0.9rem;" id="logContainer">
+                            <div id="logContent">
+                                [2024-01-20 14:30:25] INFO - Starting WeChat WebSocket/HTTP Gateway<br>
+                                [2024-01-20 14:30:26] INFO - WebSocket server starting on ws://0.0.0.0:8765<br>
+                                [2024-01-20 14:30:26] INFO - HTTP server starting on http://0.0.0.0:8000<br>
+                                [2024-01-20 14:30:27] INFO - WeChat instance initialized successfully<br>
+                                [2024-01-20 14:30:28] INFO - Starting WeChat message listener loop...<br>
+                                [2024-01-20 14:30:30] INFO - WebSocket连接已建立<br>
+                                [2024-01-20 14:30:35] DEBUG - Received heartbeat from client<br>
+                                <span class="text-success">[2024-01-20 14:30:40] INFO - Gateway is running normally</span><br>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <th:block th:fragment="scripts">
+        <script>
+            // 网关控制函数
+            function startGateway() {
+                updateButtonStates(true);
+                showAlert('正在启动网关...', 'info');
+                
+                makeRequest('/management/gateway/start', 'POST')
+                    .done(function(response) {
+                        if (response === 'success') {
+                            showAlert('网关启动成功！', 'success');
+                            updateGatewayStatus('运行中');
+                            addLogEntry('INFO', '网关启动成功');
+                        } else {
+                            showAlert('网关启动失败: ' + response, 'danger');
+                            addLogEntry('ERROR', '网关启动失败: ' + response);
+                        }
+                    })
+                    .fail(function() {
+                        showAlert('启动请求失败，请检查网络连接', 'danger');
+                        addLogEntry('ERROR', '启动请求失败');
+                    })
+                    .always(function() {
+                        updateButtonStates(false);
+                    });
+            }
+
+            function stopGateway() {
+                updateButtonStates(true);
+                showAlert('正在停止网关...', 'info');
+                
+                makeRequest('/management/gateway/stop', 'POST')
+                    .done(function(response) {
+                        if (response === 'success') {
+                            showAlert('网关停止成功！', 'success');
+                            updateGatewayStatus('已停止');
+                            addLogEntry('INFO', '网关停止成功');
+                        } else {
+                            showAlert('网关停止失败: ' + response, 'danger');
+                            addLogEntry('ERROR', '网关停止失败: ' + response);
+                        }
+                    })
+                    .fail(function() {
+                        showAlert('停止请求失败，请检查网络连接', 'danger');
+                        addLogEntry('ERROR', '停止请求失败');
+                    })
+                    .always(function() {
+                        updateButtonStates(false);
+                    });
+            }
+
+            function restartGateway() {
+                updateButtonStates(true);
+                showAlert('正在重启网关，请稍候...', 'info');
+                
+                makeRequest('/management/gateway/restart', 'POST')
+                    .done(function(response) {
+                        if (response === 'success') {
+                            showAlert('网关重启成功！', 'success');
+                            updateGatewayStatus('运行中');
+                            addLogEntry('INFO', '网关重启成功');
+                        } else {
+                            showAlert('网关重启失败: ' + response, 'danger');
+                            addLogEntry('ERROR', '网关重启失败: ' + response);
+                        }
+                    })
+                    .fail(function() {
+                        showAlert('重启请求失败，请检查网络连接', 'danger');
+                        addLogEntry('ERROR', '重启请求失败');
+                    })
+                    .always(function() {
+                        updateButtonStates(false);
+                    });
+            }
+
+            function refreshStatus() {
+                makeRequest('/management/gateway/status')
+                    .done(function(status) {
+                        updateGatewayStatus(status);
+                        showAlert('状态已刷新', 'info');
+                    })
+                    .fail(function() {
+                        showAlert('获取状态失败', 'danger');
+                    });
+            }
+
+            function updateGatewayStatus(status) {
+                $('#gatewayStatusText').text(status);
+                $('#gatewayStatusBadge').text(status);
+                
+                // 更新样式
+                const badge = $('#gatewayStatusBadge');
+                const icon = $('#gatewayStatusIcon');
+                
+                badge.removeClass('bg-success bg-warning bg-danger');
+                icon.removeClass('text-success text-warning text-danger');
+                
+                if (status === '运行中') {
+                    badge.addClass('bg-success');
+                    icon.addClass('text-success');
+                } else if (status === '连接中') {
+                    badge.addClass('bg-warning');
+                    icon.addClass('text-warning');
+                } else {
+                    badge.addClass('bg-danger');
+                    icon.addClass('text-danger');
+                }
+            }
+
+            function updateButtonStates(disabled) {
+                $('#startBtn, #stopBtn, #restartBtn').prop('disabled', disabled);
+            }
+
+            function addLogEntry(level, message) {
+                const now = new Date();
+                const timestamp = now.toISOString().slice(0, 19).replace('T', ' ');
+                const logEntry = `[${timestamp}] ${level} - ${message}<br>`;
+                
+                $('#logContent').append(logEntry);
+                
+                // 滚动到底部
+                const container = $('#logContainer')[0];
+                container.scrollTop = container.scrollHeight;
+            }
+
+            function clearLog() {
+                $('#logContent').empty();
+                showAlert('日志已清空', 'info');
+            }
+
+            function refreshLog() {
+                // 这里可以实现从后端获取最新日志的逻辑
+                addLogEntry('INFO', '日志已刷新');
+                showAlert('日志已刷新', 'info');
+            }
+
+            // 页面加载完成后定期刷新状态
+            $(document).ready(function() {
+                setInterval(function() {
+                    refreshStatus();
+                }, 30000); // 每30秒刷新一次
+            });
+        </script>
+    </th:block>
+</body>
+</html>

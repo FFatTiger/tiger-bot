@@ -1,0 +1,1 @@
+[{time}] [{chatType}消息-来自{chatType}'{chatName}'-发送者昵称:{sender}]:{content}

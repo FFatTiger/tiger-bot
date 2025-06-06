@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{management/layout :: layout('用户管理', ~{::content}, ~{::scripts})}">
+
+<th:block th:fragment="content">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i>用户管理
+                    </h5>
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createUserModal">
+                        <i class="fas fa-plus me-1"></i>添加用户
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>用户名</th>
+                                    <th>备注</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="user : ${users}">
+                                    <td th:text="${user.id()}">1</td>
+                                    <td th:text="${user.username()}">用户名</td>
+                                    <td th:text="${user.remark() ?: '无'}">备注</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary me-1" 
+                                                th:onclick="'editUser(' + ${user.id()} + ')'">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                th:onclick="'deleteUser(' + ${user.id()} + ')'">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 创建用户模态框 -->
+    <div class="modal fade" id="createUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">添加用户</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="createUserForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">用户名</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="remark" class="form-label">备注</label>
+                            <input type="text" class="form-control" id="remark" name="remark">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">创建</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑用户模态框 -->
+    <div class="modal fade" id="editUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">编辑用户</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editUserForm">
+                    <input type="hidden" id="editUserId" name="id">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="editUsername" class="form-label">用户名</label>
+                            <input type="text" class="form-control" id="editUsername" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editRemark" class="form-label">备注</label>
+                            <input type="text" class="form-control" id="editRemark" name="remark">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<th:block th:fragment="scripts">
+    <script th:inline="javascript">
+        // 用户数据
+        const users = /*[[${users}]]*/ [];
+        
+        // 创建用户
+        $('#createUserForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = $(this).serialize();
+            
+            makeRequest('/management/bot-config/users/create', 'POST', formData)
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('用户创建成功！', 'success');
+                        $('#createUserModal').modal('hide');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('创建失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        });
+        
+        // 编辑用户
+        function editUser(id) {
+            const user = users.find(u => u.id === id);
+            if (!user) return;
+            
+            $('#editUserId').val(user.id);
+            $('#editUsername').val(user.username);
+            $('#editRemark').val(user.remark || '');
+            
+            $('#editUserModal').modal('show');
+        }
+        
+        // 保存编辑
+        $('#editUserForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const id = $('#editUserId').val();
+            const formData = $(this).serialize();
+            
+            makeRequest(`/management/bot-config/users/${id}/update`, 'POST', formData)
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('用户更新成功！', 'success');
+                        $('#editUserModal').modal('hide');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('更新失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        });
+        
+        // 删除用户
+        function deleteUser(id) {
+            if (!confirm('确定要删除这个用户吗？')) return;
+            
+            makeRequest(`/management/bot-config/users/${id}/delete`, 'POST')
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('用户删除成功！', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('删除失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        }
+    </script>
+</th:block>
+
+</html>

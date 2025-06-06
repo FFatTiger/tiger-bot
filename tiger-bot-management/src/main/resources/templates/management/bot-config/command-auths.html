@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{management/layout :: layout('权限配置', ~{::content}, ~{::scripts})}">
+
+<th:block th:fragment="content">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-shield me-2"></i>命令权限配置
+                    </h5>
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createAuthModal">
+                        <i class="fas fa-plus me-1"></i>添加权限
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>聊天对象</th>
+                                    <th>命令</th>
+                                    <th>用户</th>
+                                    <th>权限范围</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="auth : ${commandAuths}">
+                                    <td th:text="${auth.id()}">1</td>
+                                    <td>
+                                        <span th:each="chat : ${allChats}" th:if="${chat.id() == auth.chatId()}" 
+                                              th:text="${chat.name()}" class="badge bg-info">聊天对象</span>
+                                    </td>
+                                    <td>
+                                        <span th:each="command : ${allCommands}" th:if="${command.id() == auth.commandId()}" 
+                                              th:text="${command.pattern()}" class="badge bg-secondary">命令</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${auth.userId() != null}">
+                                            <span th:each="user : ${allUsers}" th:if="${user.id() == auth.userId()}" 
+                                                  th:text="${user.username()}" class="badge bg-success">用户</span>
+                                        </span>
+                                        <span th:if="${auth.userId() == null}" class="text-muted">所有用户</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${auth.userId() != null}" class="badge bg-warning">特定用户</span>
+                                        <span th:if="${auth.userId() == null}" class="badge bg-primary">全局权限</span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary me-1" 
+                                                th:onclick="'editAuth(' + ${auth.id()} + ')'">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                th:onclick="'deleteAuth(' + ${auth.id()} + ')'">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 创建权限模态框 -->
+    <div class="modal fade" id="createAuthModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">添加命令权限</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="createAuthForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="chatId" class="form-label">选择聊天对象</label>
+                            <select class="form-select" id="chatId" name="chatId" required>
+                                <option value="">请选择...</option>
+                                <option th:each="chat : ${allChats}" th:value="${chat.id()}" 
+                                        th:text="${chat.name() + (chat.groupFlag() ? ' (群聊)' : ' (私聊)')}">聊天对象</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="commandId" class="form-label">选择命令</label>
+                            <select class="form-select" id="commandId" name="commandId" required>
+                                <option value="">请选择...</option>
+                                <option th:each="command : ${allCommands}" th:value="${command.id()}" 
+                                        th:text="${command.pattern() + ' - ' + command.description()}">命令</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="userId" class="form-label">选择用户 (可选)</label>
+                            <select class="form-select" id="userId" name="userId">
+                                <option value="">所有用户 (全局权限)</option>
+                                <option th:each="user : ${allUsers}" th:value="${user.id()}" 
+                                        th:text="${user.username() + (user.remark() != null ? ' (' + user.remark() + ')' : '')}">用户</option>
+                            </select>
+                            <div class="form-text">如果不选择用户，则该命令对所有用户开放</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">创建</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑权限模态框 -->
+    <div class="modal fade" id="editAuthModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">编辑命令权限</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editAuthForm">
+                    <input type="hidden" id="editAuthId" name="id">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="editChatId" class="form-label">选择聊天对象</label>
+                            <select class="form-select" id="editChatId" name="chatId" required>
+                                <option value="">请选择...</option>
+                                <option th:each="chat : ${allChats}" th:value="${chat.id()}" 
+                                        th:text="${chat.name() + (chat.groupFlag() ? ' (群聊)' : ' (私聊)')}">聊天对象</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editCommandId" class="form-label">选择命令</label>
+                            <select class="form-select" id="editCommandId" name="commandId" required>
+                                <option value="">请选择...</option>
+                                <option th:each="command : ${allCommands}" th:value="${command.id()}" 
+                                        th:text="${command.pattern() + ' - ' + command.description()}">命令</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editUserId" class="form-label">选择用户 (可选)</label>
+                            <select class="form-select" id="editUserId" name="userId">
+                                <option value="">所有用户 (全局权限)</option>
+                                <option th:each="user : ${allUsers}" th:value="${user.id()}" 
+                                        th:text="${user.username() + (user.remark() != null ? ' (' + user.remark() + ')' : '')}">用户</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<th:block th:fragment="scripts">
+    <script th:inline="javascript">
+        // 权限数据
+        const commandAuths = /*[[${commandAuths}]]*/ [];
+        const allChats = /*[[${allChats}]]*/ [];
+        const allCommands = /*[[${allCommands}]]*/ [];
+        const allUsers = /*[[${allUsers}]]*/ [];
+        
+        // 创建权限
+        $('#createAuthForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = $(this).serialize();
+            
+            makeRequest('/management/bot-config/command-auths/create', 'POST', formData)
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('权限创建成功！', 'success');
+                        $('#createAuthModal').modal('hide');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('创建失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        });
+        
+        // 编辑权限
+        function editAuth(id) {
+            const auth = commandAuths.find(a => a.id === id);
+            if (!auth) return;
+            
+            $('#editAuthId').val(auth.id);
+            $('#editChatId').val(auth.chatId);
+            $('#editCommandId').val(auth.commandId);
+            $('#editUserId').val(auth.userId || '');
+            
+            $('#editAuthModal').modal('show');
+        }
+        
+        // 保存编辑
+        $('#editAuthForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const id = $('#editAuthId').val();
+            const formData = $(this).serialize();
+            
+            makeRequest(`/management/bot-config/command-auths/${id}/update`, 'POST', formData)
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('权限更新成功！', 'success');
+                        $('#editAuthModal').modal('hide');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('更新失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        });
+        
+        // 删除权限
+        function deleteAuth(id) {
+            if (!confirm('确定要删除这个权限配置吗？')) return;
+            
+            makeRequest(`/management/bot-config/command-auths/${id}/delete`, 'POST')
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('权限删除成功！', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('删除失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        }
+    </script>
+</th:block>
+
+</html>

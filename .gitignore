@@ -1,0 +1,12 @@
+target/
+.idea/
+.vscode/
+.cursor/
+collector/
+chatMemory/
+.DS_Store
+*.iml
+test/
+
+# 本地敏感配置文件
+tiger-bot-core/src/main/resources/scripts/data.sql

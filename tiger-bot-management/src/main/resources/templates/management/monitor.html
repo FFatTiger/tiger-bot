@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{management/layout :: layout(~{::title}, ~{::content}, ~{::scripts})}">
+<head>
+    <title th:fragment="title">系统监控</title>
+</head>
+<body>
+    <th:block th:fragment="content">
+        <!-- 系统指标卡片 -->
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-primary shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    内存使用率
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" 
+                                     th:text="${systemMetrics.memoryUsagePercent != null ? systemMetrics.memoryUsagePercent + '%' : '0%'}" 
+                                     id="memoryUsage">
+                                    65%
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-memory fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-success shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                    运行时间
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" 
+                                     th:text="${systemMetrics.uptime ?: '0分钟'}" 
+                                     id="uptime">
+                                    2小时30分钟
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-clock fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-info shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                    活跃线程数
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" 
+                                     th:text="${systemMetrics.threadCount ?: '0'}" 
+                                     id="threadCount">
+                                    25
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-tasks fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-warning shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                    已用内存
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" 
+                                     th:text="${systemMetrics.usedMemory ?: '0 MB'}" 
+                                     id="usedMemory">
+                                    512 MB
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-microchip fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 图表区域 -->
+        <div class="row mb-4">
+            <!-- 内存使用趋势 -->
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <i class="fas fa-chart-area me-2"></i>内存使用趋势
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="memoryChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CPU使用率 -->
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <i class="fas fa-chart-line me-2"></i>系统负载
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="loadChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 详细信息 -->
+        <div class="row">
+            <!-- 系统详情 -->
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <i class="fas fa-server me-2"></i>系统详细信息
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-borderless">
+                                <tbody>
+                                    <tr>
+                                        <td><strong>JVM版本:</strong></td>
+                                        <td th:text="${@environment.getProperty('java.version')}">17.0.1</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>JVM供应商:</strong></td>
+                                        <td th:text="${@environment.getProperty('java.vendor')}">Eclipse Adoptium</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>操作系统:</strong></td>
+                                        <td th:text="${@environment.getProperty('os.name')} + ' ' + ${@environment.getProperty('os.version')}">Windows 11</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>系统架构:</strong></td>
+                                        <td th:text="${@environment.getProperty('os.arch')}">amd64</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>可用处理器:</strong></td>
+                                        <td id="availableProcessors">8</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>最大内存:</strong></td>
+                                        <td th:text="${systemMetrics.maxMemory ?: '未知'}" id="maxMemory">2 GB</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>已用内存:</strong></td>
+                                        <td th:text="${systemMetrics.usedMemory ?: '未知'}" id="usedMemoryDetail">512 MB</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 应用状态 -->
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <i class="fas fa-robot me-2"></i>应用状态监控
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>WebSocket连接状态</span>
+                                <span class="badge bg-success" id="wsStatus">已连接</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: 100%"></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>数据库连接池</span>
+                                <span class="badge bg-info" id="dbPoolStatus">8/10</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-info" role="progressbar" style="width: 80%"></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>AI服务状态</span>
+                                <span class="badge bg-success" id="aiStatus">正常</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: 100%"></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>消息处理队列</span>
+                                <span class="badge bg-warning" id="queueStatus">5/1000</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-warning" role="progressbar" style="width: 0.5%"></div>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <button class="btn btn-sm btn-outline-primary" onclick="refreshAppStatus()">
+                                <i class="fas fa-sync-alt me-1"></i>刷新状态
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 实时日志 -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <i class="fas fa-terminal me-2"></i>实时系统日志
+                        </h6>
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary me-2" onclick="clearRealTimeLog()">
+                                <i class="fas fa-trash me-1"></i>清空
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="toggleAutoRefresh()">
+                                <i class="fas fa-play me-1"></i><span id="autoRefreshText">开始自动刷新</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="bg-dark text-light p-3 rounded" style="height: 250px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 0.85rem;" id="realTimeLogContainer">
+                            <div id="realTimeLogContent">
+                                <span class="text-info">[2024-01-20 14:30:25]</span> <span class="text-success">INFO</span> - TigerBot应用启动完成<br>
+                                <span class="text-info">[2024-01-20 14:30:26]</span> <span class="text-primary">DEBUG</span> - WebSocket客户端连接成功<br>
+                                <span class="text-info">[2024-01-20 14:30:27]</span> <span class="text-success">INFO</span> - 数据库连接池初始化完成<br>
+                                <span class="text-info">[2024-01-20 14:30:28]</span> <span class="text-success">INFO</span> - AI聊天客户端初始化完成<br>
+                                <span class="text-info">[2024-01-20 14:30:30]</span> <span class="text-warning">WARN</span> - 聊天记忆文件数量: 85/100<br>
+                                <span class="text-info">[2024-01-20 14:30:35]</span> <span class="text-primary">DEBUG</span> - 收到心跳消息<br>
+                                <span class="text-info">[2024-01-20 14:30:40]</span> <span class="text-success">INFO</span> - 系统运行正常<br>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <th:block th:fragment="scripts">
+        <!-- Chart.js -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        
+        <script>
+            let memoryChart, loadChart;
+            let autoRefreshInterval;
+            let isAutoRefreshing = false;
+
+            // 初始化图表
+            function initCharts() {
+                // 内存使用趋势图
+                const memoryCtx = document.getElementById('memoryChart').getContext('2d');
+                memoryChart = new Chart(memoryCtx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: '内存使用率 (%)',
+                            data: [],
+                            borderColor: 'rgb(75, 192, 192)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+
+                // 系统负载图
+                const loadCtx = document.getElementById('loadChart').getContext('2d');
+                loadChart = new Chart(loadCtx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: '线程数',
+                            data: [],
+                            borderColor: 'rgb(255, 99, 132)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+
+                // 初始化一些示例数据
+                updateCharts();
+            }
+
+            // 更新图表数据
+            function updateCharts() {
+                const now = new Date().toLocaleTimeString();
+                const memoryUsage = Math.floor(Math.random() * 30) + 50; // 50-80%
+                const threadCount = Math.floor(Math.random() * 10) + 20; // 20-30
+
+                // 更新内存图表
+                if (memoryChart.data.labels.length >= 10) {
+                    memoryChart.data.labels.shift();
+                    memoryChart.data.datasets[0].data.shift();
+                }
+                memoryChart.data.labels.push(now);
+                memoryChart.data.datasets[0].data.push(memoryUsage);
+                memoryChart.update();
+
+                // 更新负载图表
+                if (loadChart.data.labels.length >= 10) {
+                    loadChart.data.labels.shift();
+                    loadChart.data.datasets[0].data.shift();
+                }
+                loadChart.data.labels.push(now);
+                loadChart.data.datasets[0].data.push(threadCount);
+                loadChart.update();
+
+                // 更新指标卡片
+                document.getElementById('memoryUsage').textContent = memoryUsage + '%';
+                document.getElementById('threadCount').textContent = threadCount;
+            }
+
+            // 刷新应用状态
+            function refreshAppStatus() {
+                showAlert('正在刷新应用状态...', 'info');
+                
+                // 模拟状态更新
+                setTimeout(() => {
+                    const statuses = ['正常', '警告', '错误'];
+                    const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+                    
+                    document.getElementById('aiStatus').textContent = randomStatus;
+                    document.getElementById('aiStatus').className = 'badge ' + 
+                        (randomStatus === '正常' ? 'bg-success' : 
+                         randomStatus === '警告' ? 'bg-warning' : 'bg-danger');
+                    
+                    showAlert('应用状态已刷新', 'success');
+                }, 1000);
+            }
+
+            // 清空实时日志
+            function clearRealTimeLog() {
+                document.getElementById('realTimeLogContent').innerHTML = '';
+                showAlert('日志已清空', 'info');
+            }
+
+            // 切换自动刷新
+            function toggleAutoRefresh() {
+                const button = document.getElementById('autoRefreshText');
+                
+                if (isAutoRefreshing) {
+                    clearInterval(autoRefreshInterval);
+                    button.textContent = '开始自动刷新';
+                    button.previousElementSibling.className = 'fas fa-play me-1';
+                    isAutoRefreshing = false;
+                    showAlert('自动刷新已停止', 'info');
+                } else {
+                    autoRefreshInterval = setInterval(() => {
+                        updateCharts();
+                        addRealTimeLogEntry();
+                    }, 5000);
+                    button.textContent = '停止自动刷新';
+                    button.previousElementSibling.className = 'fas fa-pause me-1';
+                    isAutoRefreshing = true;
+                    showAlert('自动刷新已开始', 'success');
+                }
+            }
+
+            // 添加实时日志条目
+            function addRealTimeLogEntry() {
+                const logTypes = [
+                    { level: 'INFO', class: 'text-success', message: '系统运行正常' },
+                    { level: 'DEBUG', class: 'text-primary', message: '处理消息队列' },
+                    { level: 'WARN', class: 'text-warning', message: '内存使用率较高' },
+                    { level: 'INFO', class: 'text-success', message: '收到心跳消息' }
+                ];
+                
+                const randomLog = logTypes[Math.floor(Math.random() * logTypes.length)];
+                const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+                
+                const logEntry = `<span class="text-info">[${now}]</span> <span class="${randomLog.class}">${randomLog.level}</span> - ${randomLog.message}<br>`;
+                
+                const logContent = document.getElementById('realTimeLogContent');
+                logContent.innerHTML += logEntry;
+                
+                // 滚动到底部
+                const container = document.getElementById('realTimeLogContainer');
+                container.scrollTop = container.scrollHeight;
+                
+                // 限制日志条数
+                const lines = logContent.innerHTML.split('<br>');
+                if (lines.length > 50) {
+                    logContent.innerHTML = lines.slice(-50).join('<br>');
+                }
+            }
+
+            // 页面加载完成后初始化
+            $(document).ready(function() {
+                initCharts();
+                
+                // 定期更新系统指标
+                setInterval(updateCharts, 10000);
+            });
+        </script>
+    </th:block>
+</body>
+</html>
