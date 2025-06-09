@@ -1,12 +1,11 @@
 package com.fffattiger.wechatbot.interfaces.event.handlers;
 
-import java.util.List;
-
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.fffattiger.wechatbot.application.dto.ListenerAggregate;
+import com.fffattiger.wechatbot.application.dto.MessageProcessingData;
 import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler;
+
 import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandlerChain;
 import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandlerContext;
 import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageType;
@@ -19,10 +18,12 @@ public class GroupMessageHandler implements MessageHandler {
 
     @Override
     public boolean handle(MessageHandlerContext context, MessageHandlerChain chain) {
-        ListenerAggregate chat = context.currentChat();
+        MessageProcessingData listenerData = context.currentChat();
         BatchedSanitizedWechatMessages.Chat.Message message = context.message();
         String content = message.content();
-        if (!chat.chat().groupFlag()) { 
+        String botName = context.chatBotProperties().getRobotName();
+
+        if (!listenerData.chat().isGroupChat()) {
             context.setCleanContent(content);
             return chain.handle(context);
         }
@@ -32,44 +33,18 @@ public class GroupMessageHandler implements MessageHandler {
             return chain.handle(context);
         }
 
-        if (chat.listener().atReplyEnable() && !content.startsWith("@" + context.chatBotProperties().getRobotName())) {
-            log.info("已开启@回复，未匹配到@回复，跳过");
+        if (!listenerData.listener().shouldProcessMessage(content, botName, listenerData.chat().isGroupChat())) {
+            log.info("监听器判断不应处理此消息，跳过");
             return false;
         }
-        
-        if (chat.listener().atReplyEnable()) {
-            content = extractNoneAtContent(context, content);
-        }
 
-        context.setCleanContent(content);
-        if (chat.listener().keywordReplyEnable()) {
-            List<String> keywordReply = chat.listener().keywordReply();
-            for (String keyword : keywordReply) {
-                if (content.contains(keyword)) {
-                    return chain.handle(context);
-                }
-            }
-        } else {
-            return chain.handle(context);
-        }
-        return false;
+        String cleanContent = listenerData.listener().extractCleanContent(content, botName);
+        context.setCleanContent(cleanContent);
+
+        return chain.handle(context);
     }
 
-    private String extractNoneAtContent(MessageHandlerContext context, String content) {
-        String robotName = context.chatBotProperties().getRobotName();
-        String realContent = content;
-        String atRobot = "@" + robotName;
-        int startIndex = content.indexOf(atRobot) + atRobot.length();
-        while (startIndex < content.length() && Character.isWhitespace(content.charAt(startIndex))) {
-            startIndex++;
-        }
-        if (startIndex < content.length()) {
-            realContent = content.substring(startIndex);
-        }
 
-        content = realContent;
-        return content;
-    }
 
     @Override
     public int getOrder() {

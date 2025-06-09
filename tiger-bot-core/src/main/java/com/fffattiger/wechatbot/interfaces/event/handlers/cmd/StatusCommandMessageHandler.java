@@ -18,7 +18,7 @@ public class StatusCommandMessageHandler extends AbstractCommandMessageHandler {
     public void doHandle(String command, String[] args, MessageHandlerContext context) {
         // 监听对象
         String listeners = context.wx().getListeners().stream().collect(Collectors.joining(", "));
-        context.wx().sendText(context.currentChat().chat().name(), "监听对象: " + listeners);
+        context.wx().sendText(context.currentChat().chat().getName(), "监听对象: " + listeners);
         
         // TODO 机器人是否开启
 

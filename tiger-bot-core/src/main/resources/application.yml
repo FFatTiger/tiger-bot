@@ -25,12 +25,12 @@ spring:
     username: admin
     password: 123
     driver-class-name: org.postgresql.Driver
-  sql:
-    init:
-      mode: always
-      platform: postgresql
-      schema-locations: classpath:scripts/schema-postgresql.sql
-      data-locations: classpath:scripts/data.sql
+  # sql:
+  #   init:
+  #     mode: never
+  #     platform: postgresql
+  #     schema-locations: classpath:scripts/schema-postgresql.sql
+  #     data-locations: classpath:scripts/data.sql
 
 chatbot:
   # 聊天记录API地址

@@ -8,14 +8,19 @@ import com.fffattiger.wechatbot.domain.listener.ChatCommandAuth;
 import com.fffattiger.wechatbot.domain.listener.Listener;
 import com.fffattiger.wechatbot.domain.user.User;
 
-public record ListenerAggregate(
+/**
+ * 消息处理器专用数据聚合
+ * 移除重复的业务方法，让接口层直接使用领域对象的业务方法
+ */
+public record MessageProcessingData(
     Listener listener,
     Chat chat,
     List<ChatCommandAuthWithCommandAndUser> commandAuths
 ) {
+
     public record ChatCommandAuthWithCommandAndUser(
         ChatCommandAuth auth,
         Command command,
-        User user
+        User user  // 可能为null，表示全局权限
     ) {}
 }

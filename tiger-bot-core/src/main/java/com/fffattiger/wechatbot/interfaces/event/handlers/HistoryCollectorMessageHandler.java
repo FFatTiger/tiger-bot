@@ -19,10 +19,10 @@ public class HistoryCollectorMessageHandler implements MessageHandler {
     @Override
     public boolean handle(MessageHandlerContext context, MessageHandlerChain chain) {
         Message message = context.message();
-        String chatName = context.currentChat().chat().name();
-        
+        String chatName = context.currentChat().chat().getName();
+
         chatHistoryCollector.collect(chatName, message, context.messageTimestamp());
-        
+
         return chain.handle(context);
     }
 

@@ -1,6 +1,6 @@
 package com.fffattiger.wechatbot.infrastructure.external.wchat;
 
-import com.fffattiger.wechatbot.application.dto.ListenerAggregate;
+import com.fffattiger.wechatbot.application.dto.MessageProcessingData;
 import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler.BatchedSanitizedWechatMessages.Chat.Message;
 import com.fffattiger.wechatbot.shared.properties.ChatBotProperties;
 
@@ -72,13 +72,13 @@ public interface MessageHandlerContext {
      * 设置当前聊天对象
      * @param currentChat 当前聊天对象
      */
-    void setCurrentChat(ListenerAggregate currentChat);
+    void setCurrentChat(MessageProcessingData currentChat);
 
     /**
      * 获取当前聊天对象
      * @return 当前聊天对象
      */
-    ListenerAggregate currentChat();
+    MessageProcessingData currentChat();
 
     /**
      * 全局配置

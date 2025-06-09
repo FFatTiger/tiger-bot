@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS ai_providers (
     id BIGSERIAL PRIMARY KEY,
     provider_type VARCHAR(128) NOT NULL,
     provider_name VARCHAR(128) NOT NULL,
-    api_key VARCHAR(128) NOT NULL,
+    api_key TEXT NOT NULL,
     base_url VARCHAR(128) NOT NULL
 );
 

@@ -29,7 +29,7 @@ public class HelpCommandMessageHandler extends AbstractCommandMessageHandler {
     @Override
     public void doHandle(String command, String[] args, MessageHandlerContext context) {
         String help = messageHandlers.stream().map(AbstractCommandMessageHandler::description).collect(Collectors.joining("\n"));
-        context.wx().sendText(context.currentChat().chat().name(), help);
+        context.wx().sendText(context.currentChat().chat().getName(), help);
     }
 
     @Override

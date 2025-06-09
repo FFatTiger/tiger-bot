@@ -3,7 +3,7 @@ package com.fffattiger.wechatbot.interfaces.context;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.fffattiger.wechatbot.application.dto.ListenerAggregate;
+import com.fffattiger.wechatbot.application.dto.MessageProcessingData;
 import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandlerContext;
 import com.fffattiger.wechatbot.infrastructure.external.wchat.WxAuto;
 import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler.BatchedSanitizedWechatMessages.Chat.Message;
@@ -48,12 +48,12 @@ public class DefaultMessageHandlerContext implements MessageHandlerContext {
     }
 
     @Override
-    public void setCurrentChat(ListenerAggregate currentChat) {
+    public void setCurrentChat(MessageProcessingData currentChat) {
         set("currentChat", currentChat);
     }
 
     @Override
-    public ListenerAggregate currentChat() {
+    public MessageProcessingData currentChat() {
         return get("currentChat");
     }
 

@@ -5,11 +5,9 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.fffattiger.wechatbot.domain.chat.repository.ChatRepository;
-import com.fffattiger.wechatbot.domain.command.repository.CommandRepository;
 import com.fffattiger.wechatbot.domain.listener.ChatCommandAuth;
 import com.fffattiger.wechatbot.domain.listener.repository.ChatCommandAuthRepository;
-import com.fffattiger.wechatbot.domain.user.repository.UserRepository;
+import com.fffattiger.wechatbot.domain.listener.service.ListenerDomainService;
 
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -25,13 +23,16 @@ public class CommandAuthApplicationService {
     private ChatCommandAuthRepository chatCommandAuthRepository;
 
     @Resource
-    private ChatRepository chatRepository;
+    private ChatApplicationService chatApplicationService;
 
     @Resource
-    private CommandRepository commandRepository;
+    private CommandApplicationService commandApplicationService;
 
     @Resource
-    private UserRepository userRepository;
+    private UserApplicationService userApplicationService;
+
+    @Resource
+    private ListenerDomainService listenerDomainService;
 
     /**
      * 获取指定聊天的所有命令权限
@@ -53,21 +54,22 @@ public class CommandAuthApplicationService {
      * 创建命令权限
      */
     public void createCommandAuth(Long chatId, Long commandId, Long userId) {
-        // 验证聊天对象存在
-        chatRepository.findById(chatId)
-                .orElseThrow(() -> new RuntimeException("Chat not found: " + chatId));
-        
-        // 验证命令存在
-        commandRepository.findById(commandId)
-                .orElseThrow(() -> new RuntimeException("Command not found: " + commandId));
-        
+        // 使用应用服务验证相关实体存在
+        chatApplicationService.getChatById(chatId);
+        commandApplicationService.getCommandById(commandId);
+
         // 验证用户存在（如果指定了用户）
         if (userId != null) {
-            userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+            userApplicationService.getUserById(userId);
         }
 
         ChatCommandAuth newAuth = new ChatCommandAuth(null, chatId, commandId, userId);
+
+        // 使用领域对象验证
+        if (!newAuth.isValidAuth()) {
+            throw new RuntimeException("Invalid command auth data");
+        }
+
         chatCommandAuthRepository.save(newAuth);
         log.info("创建命令权限: {}", newAuth);
     }
@@ -88,14 +90,11 @@ public class CommandAuthApplicationService {
         chatCommandAuthRepository.findById(authId)
                 .orElseThrow(() -> new RuntimeException("CommandAuth not found: " + authId));
 
-        // 验证相关实体存在
-        chatRepository.findById(chatId)
-                .orElseThrow(() -> new RuntimeException("Chat not found: " + chatId));
-        commandRepository.findById(commandId)
-                .orElseThrow(() -> new RuntimeException("Command not found: " + commandId));
+        // 使用应用服务验证相关实体存在
+        chatApplicationService.getChatById(chatId);
+        commandApplicationService.getCommandById(commandId);
         if (userId != null) {
-            userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+            userApplicationService.getUserById(userId);
         }
 
         ChatCommandAuth updatedAuth = new ChatCommandAuth(authId, chatId, commandId, userId);
@@ -105,26 +104,13 @@ public class CommandAuthApplicationService {
 
     /**
      * 检查用户是否有权限执行命令
+     * 委托给领域服务处理，避免重复逻辑
      */
     public boolean hasPermission(Long chatId, Long commandId, Long userId) {
         List<ChatCommandAuth> auths = chatCommandAuthRepository.findByChatIdAndCommandId(chatId, commandId);
-        
-        // 如果没有任何权限配置，默认拒绝
-        if (auths.isEmpty()) {
-            return false;
-        }
-        
-        // 检查是否有全局权限（userId为null）
-        boolean hasGlobalPermission = auths.stream()
-                .anyMatch(auth -> auth.userId() == null);
-        
-        if (hasGlobalPermission) {
-            return true;
-        }
-        
-        // 检查是否有特定用户权限
-        return auths.stream()
-                .anyMatch(auth -> userId.equals(auth.userId()));
+
+        // 使用领域服务的权限检查逻辑
+        return listenerDomainService.hasCommandPermission(auths, userId);
     }
 
     /**

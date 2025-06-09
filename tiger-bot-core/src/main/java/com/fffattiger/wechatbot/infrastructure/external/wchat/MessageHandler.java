@@ -14,6 +14,25 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public interface MessageHandler extends Ordered {
 
     /**
+     * 获取处理条件谓词（新的谓词模式，可选实现）
+     * @return 消息谓词，默认返回null表示不使用谓词模式
+     */
+    default MessagePredicate getPredicate() {
+        return null;
+    }
+
+    /**
+     * 处理消息（不再需要条件判断，新的谓词模式，可选实现）
+     * @param context 上下文
+     * @param chain 责任链传递
+     * @return 处理结果
+     */
+    default boolean doHandle(MessageHandlerContext context, MessageHandlerChain chain) {
+        // 默认实现，子类可以重写
+        return chain.handle(context);
+    }
+
+    /**
      * 处理微信消息
      *
      * @param context 上下文

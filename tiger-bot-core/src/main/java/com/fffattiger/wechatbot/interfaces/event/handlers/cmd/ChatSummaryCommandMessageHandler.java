@@ -44,12 +44,12 @@ public class ChatSummaryCommandMessageHandler extends AbstractCommandMessageHand
     @Override
     public void doHandle(String command, String[] args, MessageHandlerContext context) {
         if (args.length > 2) {
-            context.wx().sendText(context.currentChat().chat().name(), "命令格式错误，请参考帮助");
+            context.wx().sendText(context.currentChat().chat().getName(), "命令格式错误，请参考帮助");
             return;
         }
 
         String dateStr = args[0];
-        String chatName = context.currentChat().chat().name();
+        String chatName = context.currentChat().chat().getName();
         String summaryTargetChatName = chatName;
         if (args.length > 1) {
             summaryTargetChatName = args[1];
@@ -69,14 +69,13 @@ public class ChatSummaryCommandMessageHandler extends AbstractCommandMessageHand
         }
 
         context.wx().sendText(chatName, "总结中");
-        AiSpecification aiSpecification = commandRepository.findByPattern("/总结").aiSpecification();
+        AiSpecification aiSpecification = commandRepository.findByPattern("/总结").getAiSpecification();
         String aiSummary = chat(chatLog, aiSpecification);
         if (!StringUtils.hasLength(aiSummary)) {
             context.wx().sendText(chatName, "服务繁忙，稍后再试");
             return;
         }
-
-        // TODO 异常处理
+        
         File outputFile = renderImageFile(context, aiSummary, summaryTargetChatName);
 
         context.wx().sendFileByUpload(chatName, outputFile);

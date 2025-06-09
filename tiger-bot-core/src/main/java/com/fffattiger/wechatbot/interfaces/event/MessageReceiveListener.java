@@ -7,7 +7,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
-import com.fffattiger.wechatbot.application.dto.ListenerAggregate;
+import com.fffattiger.wechatbot.application.dto.MessageProcessingData;
 import com.fffattiger.wechatbot.application.service.ListenerApplicationService;
 import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler;
 import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler.BatchedSanitizedWechatMessages;
@@ -58,8 +58,8 @@ public class MessageReceiveListener implements ApplicationListener<MessageReceiv
     public void onApplicationEvent(@NonNull MessageReceiveEvent event) {
         // 处理微信消息
         for (BatchedSanitizedWechatMessages.Chat chat : event.getMessage().data()) {
-            ListenerAggregate listenerAggregate = listenerApplicationService.getListenerAggregate(chat.chatName());
-            if (listenerAggregate == null) {
+            MessageProcessingData messageProcessingData = listenerApplicationService.getMessageProcessingData(chat.chatName());
+            if (messageProcessingData == null) {
                 log.warn("未监听该对象: {}", chat.chatName());
                 continue;
             }
@@ -69,7 +69,7 @@ public class MessageReceiveListener implements ApplicationListener<MessageReceiv
                     DefaultMessageHandlerContext context = new DefaultMessageHandlerContext();
                     context.setMessage(msg);
                     context.setWxAuto(event.getWxAuto());
-                    context.setCurrentChat(listenerAggregate);
+                    context.setCurrentChat(messageProcessingData);
                     context.setChatBotProperties(chatBotProperties);
                     context.setMessageTimestamp(event.getMessage().timestamp());
                     new DefaultMessageHandlerChain(messageHandlers).handle(context);

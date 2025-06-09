@@ -2,11 +2,11 @@ package com.fffattiger.wechatbot.interfaces.event.handlers.cmd;
 
 import java.util.List;
 
-import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StringUtils;
 
-import com.fffattiger.wechatbot.application.dto.ListenerAggregate;
+import com.fffattiger.wechatbot.application.dto.MessageProcessingData;
 import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler;
+
 import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandlerChain;
 import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandlerContext;
 import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageType;
@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class AbstractCommandMessageHandler implements MessageHandler {
 
-    private final AntPathMatcher antPathMatcher = new AntPathMatcher();
+
 
     @Override
     public boolean handle(MessageHandlerContext context, MessageHandlerChain chain) {
@@ -47,7 +47,7 @@ public abstract class AbstractCommandMessageHandler implements MessageHandler {
                 isCommand = true;
             } catch (Exception e) {
                 log.error("命令处理失败, content: {}", cleanContent, e);
-                context.wx().sendText(context.currentChat().chat().name(), "命令格式错误，请参考帮助");
+                context.wx().sendText(context.currentChat().chat().getName(), "命令格式错误，请参考帮助");
             }
         }
 
@@ -60,39 +60,44 @@ public abstract class AbstractCommandMessageHandler implements MessageHandler {
     }
 
     private boolean hasPermission(String cleanContent, String sender, MessageHandlerContext context) {
-        List<ListenerAggregate.ChatCommandAuthWithCommandAndUser> commandAuthList = context.currentChat().commandAuths();
+        List<MessageProcessingData.ChatCommandAuthWithCommandAndUser> commandAuthList = context.currentChat().commandAuths();
         if (commandAuthList.isEmpty()) {
             log.info("命令未开启, command: {}", cleanContent);
             return false;
         }
-        boolean commandEnable = false;
-        for (ListenerAggregate.ChatCommandAuthWithCommandAndUser commandAuth : commandAuthList) {
-            String pattern = commandAuth.command().pattern();
-            if (antPathMatcher.match(pattern, cleanContent)) {
-                commandEnable = true;
-                break;
+
+        // 使用富领域模型的业务方法检查命令匹配和权限
+        boolean hasPermission = false;
+        for (MessageProcessingData.ChatCommandAuthWithCommandAndUser commandAuth : commandAuthList) {
+            // 使用富领域模型的业务方法检查命令匹配
+            if (commandAuth.command().matches(cleanContent)) {
+                // 使用富领域模型验证命令有效性
+                if (!commandAuth.command().isValidCommand()) {
+                    log.warn("命令无效: {}", commandAuth.command().getPattern());
+                    continue;
+                }
+
+                // 检查权限
+                if (commandAuth.auth().isGlobalPermission()) {
+                    hasPermission = true;
+                    break;
+                } else if (commandAuth.user() != null && commandAuth.user().isValidUser()) {
+                    if (commandAuth.user().getUsername().equals(sender)) {
+                        hasPermission = true;
+                        break;
+                    }
+                }
             }
         }
-        if (!commandEnable) {
-            log.info("命令未开启, command: {}", cleanContent);
+
+        if (!hasPermission) {
+            log.info("命令权限不足, command: {}, sender: {}", cleanContent, sender);
+            context.wx().sendText(context.currentChat().chat().getName(), "您无权限调用此命令");
             return false;
         }
 
-        for (ListenerAggregate.ChatCommandAuthWithCommandAndUser commandAuth : commandAuthList) {
-            boolean hasPermission = false;
-            if (antPathMatcher.match(commandAuth.command().pattern(), cleanContent)) {
-                hasPermission = commandAuth.user().username().equals(sender);
-            }
-            if (hasPermission) {
-                log.info("命令满足权限, command: {}, sender: {}", cleanContent, sender);
-                return true;
-            } else {
-                log.info("命令不满足权限, command: {}, sender: {}", cleanContent, sender);
-                context.wx().sendText(context.currentChat().chat().name(), "您无权限调用");
-            }
-        }
-
-        return false;
+        log.info("命令权限验证通过, command: {}, sender: {}", cleanContent, sender);
+        return true;
     }
 
     @Override

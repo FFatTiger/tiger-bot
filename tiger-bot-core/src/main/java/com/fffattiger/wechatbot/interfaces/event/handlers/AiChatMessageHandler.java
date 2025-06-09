@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.fffattiger.wechatbot.application.dto.ListenerAggregate;
+import com.fffattiger.wechatbot.application.dto.MessageProcessingData;
 import com.fffattiger.wechatbot.application.service.AiChatApplicationService;
 import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler;
 import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandlerChain;
@@ -41,48 +41,47 @@ public class AiChatMessageHandler implements MessageHandler {
 	public boolean handle(MessageHandlerContext context, MessageHandlerChain chain) {
 		String cleanContent = context.cleanContent();
 		BatchedSanitizedWechatMessages.Chat.Message message = context.message();
-		ListenerAggregate chat = context.currentChat();
+		MessageProcessingData chat = context.currentChat();
 		if (message == null || message.type() == null || !message.type().equals(MessageType.FRIEND)
 				|| !StringUtils.hasLength(cleanContent)) {
 			return chain.handle(context);
 		}
 		Map<String, Object> params = new HashMap<>();
-		params.put("chatType", chat.chat().groupFlag() ? "群聊" : "私聊");
+		params.put("chatType", chat.chat().isGroupFlag() ? "群聊" : "私聊");
 
 		String content = chat(context, cleanContent, message, chat, params);
-		
+
 		if (!StringUtils.hasLength(content)) {
-			context.wx().sendText(chat.chat().name(), "繁忙， 请稍后再试");
+			context.wx().sendText(chat.chat().getName(), "繁忙， 请稍后再试");
 			return false;
 		}
 		String[] contents = content.split("\\\\");
 		for (String finalContent : contents) {
-			context.wx().sendText(chat.chat().name(), finalContent);
+			context.wx().sendText(chat.chat().getName(), finalContent);
 		}
 
 		return true;
 	}
 
 	private String chat(MessageHandlerContext context, String cleanContent,
-			BatchedSanitizedWechatMessages.Chat.Message message, ListenerAggregate chat, Map<String, Object> params) {
+			BatchedSanitizedWechatMessages.Chat.Message message, MessageProcessingData chat, Map<String, Object> params) {
 		ChatMemory chatMemory = MessageWindowChatMemory.builder()
 				.chatMemoryRepository(chatMemoryRepository)
 				.maxMessages(10)
 				.build();
-		String content = aiChatApplicationService.builder(chat.chat().aiSpecification(), params)
+		return aiChatApplicationService.builder(chat.chat().getAiSpecification(), params)
 				.defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
 				.build()
 				.prompt()
 				.user(t -> t.text(USER_PROMPT_RESOURCE)
 						.param("time", DateUtil.date(context.messageTimestamp()).toString("yyyy-MM-dd HH:mm:ss EEEE"))
-						.param("chatType", chat.chat().groupFlag() ? "群聊" : "私聊")
-						.param("chatName", chat.chat().name())
+						.param("chatType", chat.chat().isGroupFlag() ? "群聊" : "私聊")
+						.param("chatName", chat.chat().getName())
 						.param("sender", message.sender())
 						.param("content", cleanContent))
-				.advisors(a -> a.param(ChatMemory.CONVERSATION_ID, chat.chat().name()))
+				.advisors(a -> a.param(ChatMemory.CONVERSATION_ID, chat.chat().getName()))
 				.call()
 				.content();
-		return content;
 	}
 
 	@Override

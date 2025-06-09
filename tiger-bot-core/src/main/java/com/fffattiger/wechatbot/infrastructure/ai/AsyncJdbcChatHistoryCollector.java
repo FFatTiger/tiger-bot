@@ -5,7 +5,7 @@ import java.util.concurrent.ExecutorService;
 import org.springframework.stereotype.Component;
 
 import com.fffattiger.wechatbot.application.assembler.MessageAssembler;
-import com.fffattiger.wechatbot.application.dto.ListenerAggregate;
+import com.fffattiger.wechatbot.application.dto.MessageProcessingData;
 import com.fffattiger.wechatbot.application.service.ListenerApplicationService;
 import com.fffattiger.wechatbot.application.service.MessageApplicationService;
 import com.fffattiger.wechatbot.domain.ai.service.ChatHistoryCollector;
@@ -35,7 +35,7 @@ public class AsyncJdbcChatHistoryCollector implements ChatHistoryCollector {
     public void collect(String chatName, Message message, Long timestamp) {
         executorService.execute(() -> {
             try {
-                ListenerAggregate listenerAggregate = listenerApplicationService.getListenerAggregate(chatName);
+                MessageProcessingData listenerAggregate = listenerApplicationService.getMessageProcessingData(chatName);
                 messageApplicationService.save(messageAssembler.toMessage(message, listenerAggregate.chat(), timestamp));
             } catch (Exception e) {
                 log.error("collect chat history error", e);

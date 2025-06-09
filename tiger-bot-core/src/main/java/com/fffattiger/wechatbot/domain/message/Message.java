@@ -9,43 +9,149 @@ import org.springframework.data.relational.core.mapping.Table;
 import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageType;
 
 @Table("messages")
-public record Message(
+public class Message {
     @Id
-    Long id,
+    private Long id;
 
     /**
      * 聊天的id
      */
-    Long chatId,
+    private Long chatId;
+
     /**
      * 消息类型
      */
-    MessageType type,
+    private MessageType type;
 
     /**
      * 消息内容
      */
-    String content,
+    private String content;
 
     /**
      * 发送者
      */
-    String sender,
+    private String sender;
 
     /**
      * 消息信息
      */
-    List<String> info,
+    private List<String> info;
 
     /**
      * 消息时间
      */
-    LocalDateTime time,
+    private LocalDateTime time;
 
     /**
      * 发送者备注
      */
-    String senderRemark
-) {
-    
+    private String senderRemark;
+
+    // 构造函数
+    public Message() {}
+
+    public Message(Long id, Long chatId, MessageType type, String content, String sender,
+                  List<String> info, LocalDateTime time, String senderRemark) {
+        this.id = id;
+        this.chatId = chatId;
+        this.type = type;
+        this.content = content;
+        this.sender = sender;
+        this.info = info;
+        this.time = time;
+        this.senderRemark = senderRemark;
+    }
+
+    // 业务方法
+    public boolean isValidMessage() {
+        return content != null && !content.trim().isEmpty() &&
+               sender != null && !sender.trim().isEmpty() &&
+               chatId != null && type != null;
+    }
+
+    public boolean isFromUser(String username) {
+        return sender != null && sender.equals(username);
+    }
+
+    public boolean containsKeyword(String keyword) {
+        return content != null && content.contains(keyword);
+    }
+
+    public boolean isTextMessage() {
+        return type == MessageType.FRIEND && content != null;
+    }
+
+    public String getDisplaySender() {
+        if (senderRemark != null && !senderRemark.trim().isEmpty()) {
+            return senderRemark;
+        }
+        return sender;
+    }
+
+    // Getters
+    public Long getId() {
+        return id;
+    }
+
+    public Long getChatId() {
+        return chatId;
+    }
+
+    public MessageType getType() {
+        return type;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public String getSender() {
+        return sender;
+    }
+
+    public List<String> getInfo() {
+        return info;
+    }
+
+    public LocalDateTime getTime() {
+        return time;
+    }
+
+    public String getSenderRemark() {
+        return senderRemark;
+    }
+
+    // Setters (仅用于框架)
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setChatId(Long chatId) {
+        this.chatId = chatId;
+    }
+
+    public void setType(MessageType type) {
+        this.type = type;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public void setSender(String sender) {
+        this.sender = sender;
+    }
+
+    public void setInfo(List<String> info) {
+        this.info = info;
+    }
+
+    public void setTime(LocalDateTime time) {
+        this.time = time;
+    }
+
+    public void setSenderRemark(String senderRemark) {
+        this.senderRemark = senderRemark;
+    }
 }

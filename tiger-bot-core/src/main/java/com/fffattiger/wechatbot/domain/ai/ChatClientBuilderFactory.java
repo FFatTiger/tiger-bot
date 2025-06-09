@@ -36,7 +36,7 @@ public class ChatClientBuilderFactory {
                     .build();
         } else if (aiProvider.providerType()
                 .equals(org.springframework.ai.observation.conventions.AiProvider.OPENAI.value())) {
-            OpenAiApi openAiApi = OpenAiApi.builder().apiKey(aiProvider.apiKey()).build();
+            OpenAiApi openAiApi = OpenAiApi.builder().restClientBuilder(restClientBuilderProvider.getIfAvailable(RestClient::builder)).baseUrl(aiProvider.baseUrl()).apiKey(aiProvider.apiKey()).build();
             chatModel = OpenAiChatModel.builder().openAiApi(openAiApi)
                     .defaultOptions(OpenAiChatOptions.builder()
                             .model(aiModel.modelName())
