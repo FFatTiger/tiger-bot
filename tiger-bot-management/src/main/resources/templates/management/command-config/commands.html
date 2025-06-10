@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{management/layout :: layout('命令配置', ~{::content}, ~{::scripts})}">
+
+<th:block th:fragment="content">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-terminal me-2"></i>命令配置管理
+                    </h5>
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createCommandModal">
+                        <i class="fas fa-plus me-1"></i>添加命令
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>命令模式</th>
+                                    <th>描述</th>
+                                    <th>AI配置</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="command : ${commands}">
+                                    <td th:text="${command.id()}">1</td>
+                                    <td>
+                                        <code th:text="${command.pattern()}" class="text-primary">命令模式</code>
+                                    </td>
+                                    <td th:text="${command.description()}">命令描述</td>
+                                    <td>
+                                        <span th:if="${command.hasAiConfiguration()}">
+                                            <div class="d-flex flex-column">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-cloud me-1"></i>
+                                                    <span th:text="${command.aiProviderName() ?: '未知提供商'}">提供商</span>
+                                                </small>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-brain me-1"></i>
+                                                    <span th:text="${command.aiModelName() ?: '未知模型'}">模型</span>
+                                                </small>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-user-tie me-1"></i>
+                                                    <span th:text="${command.aiRoleName() ?: '未知角色'}">角色</span>
+                                                </small>
+                                            </div>
+                                        </span>
+                                        <span th:if="${!command.hasAiConfiguration()}" class="text-muted">
+                                            <i class="fas fa-times-circle me-1"></i>未配置
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${command.hasAiConfiguration()}" class="badge bg-success">
+                                            <i class="fas fa-check me-1"></i>已配置
+                                        </span>
+                                        <span th:if="${!command.hasAiConfiguration()}" class="badge bg-warning">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>需配置
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary me-1"
+                                                th:onclick="'editCommand(' + ${command.id()} + ')'">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                th:onclick="'deleteCommand(' + ${command.id()} + ')'">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 创建命令模态框 -->
+    <div class="modal fade" id="createCommandModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">添加命令</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="createCommandForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="pattern" class="form-label">命令模式 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="pattern" name="pattern" required
+                                           placeholder="例如: /help 或 help*">
+                                    <div class="form-text">支持通配符，如 * 和 ?</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">命令描述 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="description" name="description" required
+                                           placeholder="命令的功能描述">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        <h6 class="mb-3">
+                            <i class="fas fa-robot me-2"></i>AI配置 (可选)
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="aiProviderId" class="form-label">AI提供商</label>
+                                    <select class="form-select" id="aiProviderId" name="aiProviderId">
+                                        <option value="">请选择...</option>
+                                        <option th:each="provider : ${allProviders}" th:value="${provider.id}"
+                                                th:text="${provider.providerName}">提供商</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="aiModelId" class="form-label">AI模型</label>
+                                    <select class="form-select" id="aiModelId" name="aiModelId">
+                                        <option value="">请选择...</option>
+                                        <option th:each="model : ${allModels}" th:value="${model.id}"
+                                                th:text="${model.modelName}">模型</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="aiRoleId" class="form-label">AI角色</label>
+                                    <select class="form-select" id="aiRoleId" name="aiRoleId">
+                                        <option value="">请选择...</option>
+                                        <option th:each="role : ${allRoles}" th:value="${role.id}"
+                                                th:text="${role.name}">角色</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            如果不配置AI设置，命令将使用默认的AI配置。如果要配置专用AI，请选择完整的提供商、模型和角色。
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">创建</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑命令模态框 -->
+    <div class="modal fade" id="editCommandModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">编辑命令</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editCommandForm">
+                    <input type="hidden" id="editCommandId" name="id">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editPattern" class="form-label">命令模式 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="editPattern" name="pattern" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editDescription" class="form-label">命令描述 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="editDescription" name="description" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        <h6 class="mb-3">
+                            <i class="fas fa-robot me-2"></i>AI配置 (可选)
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="editAiProviderId" class="form-label">AI提供商</label>
+                                    <select class="form-select" id="editAiProviderId" name="aiProviderId">
+                                        <option value="">请选择...</option>
+                                        <option th:each="provider : ${allProviders}" th:value="${provider.id}"
+                                                th:text="${provider.providerName}">提供商</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="editAiModelId" class="form-label">AI模型</label>
+                                    <select class="form-select" id="editAiModelId" name="aiModelId">
+                                        <option value="">请选择...</option>
+                                        <option th:each="model : ${allModels}" th:value="${model.id}"
+                                                th:text="${model.modelName}">模型</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="editAiRoleId" class="form-label">AI角色</label>
+                                    <select class="form-select" id="editAiRoleId" name="aiRoleId">
+                                        <option value="">请选择...</option>
+                                        <option th:each="role : ${allRoles}" th:value="${role.id}"
+                                                th:text="${role.name}">角色</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<th:block th:fragment="scripts">
+    <script th:inline="javascript">
+        // 命令数据
+        const commands = /*[[${commands}]]*/ [];
+        const allProviders = /*[[${allProviders}]]*/ [];
+        const allModels = /*[[${allModels}]]*/ [];
+        const allRoles = /*[[${allRoles}]]*/ [];
+        
+        // 创建命令
+        $('#createCommandForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = $(this).serialize();
+            
+            makeRequest('/management/command-config/commands/create', 'POST', formData)
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('命令创建成功！', 'success');
+                        $('#createCommandModal').modal('hide');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('创建失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        });
+        
+        // 编辑命令
+        function editCommand(id) {
+            // 通过AJAX获取命令详情
+            makeRequest(`/management/command-config/commands/${id}`, 'GET')
+                .done(function(command) {
+                    if (command) {
+                        $('#editCommandId').val(command.id);
+                        $('#editPattern').val(command.pattern);
+                        $('#editDescription').val(command.description);
+                        $('#editAiProviderId').val(command.aiProviderId || '');
+                        $('#editAiModelId').val(command.aiModelId || '');
+                        $('#editAiRoleId').val(command.aiRoleId || '');
+                        
+                        $('#editCommandModal').modal('show');
+                    } else {
+                        showAlert('获取命令详情失败', 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        }
+        
+        // 保存编辑
+        $('#editCommandForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const id = $('#editCommandId').val();
+            const formData = $(this).serialize();
+            
+            makeRequest(`/management/command-config/commands/${id}/update`, 'POST', formData)
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('命令更新成功！', 'success');
+                        $('#editCommandModal').modal('hide');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('更新失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        });
+        
+        // 删除命令
+        function deleteCommand(id) {
+            if (!confirm('确定要删除这个命令吗？删除后相关的权限配置也会失效。')) return;
+            
+            makeRequest(`/management/command-config/commands/${id}/delete`, 'POST')
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('命令删除成功！', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('删除失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        }
+        
+        // 重置表单
+        $('#createCommandModal').on('hidden.bs.modal', function() {
+            $('#createCommandForm')[0].reset();
+        });
+        
+        $('#editCommandModal').on('hidden.bs.modal', function() {
+            $('#editCommandForm')[0].reset();
+        });
+    </script>
+</th:block>
+
+</html>

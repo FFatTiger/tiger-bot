@@ -116,6 +116,18 @@
                     </ul>
 
                     <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-white-50">
+                        <span>命令管理</span>
+                    </h6>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/management/command-config/commands">
+                                <i class="fas fa-terminal me-2"></i>
+                                命令配置
+                            </a>
+                        </li>
+                    </ul>
+
+                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-white-50">
                         <span>聊天管理</span>
                     </h6>
                     <ul class="nav flex-column">
@@ -218,6 +230,8 @@
                 $('a[href="/management/ai-config/models"]').addClass('active');
             } else if (currentPath.includes('/ai-config/roles')) {
                 $('a[href="/management/ai-config/roles"]').addClass('active');
+            } else if (currentPath.includes('/command-config/commands')) {
+                $('a[href="/management/command-config/commands"]').addClass('active');
             } else if (currentPath.includes('/chat-config/chats')) {
                 $('a[href="/management/chat-config/chats"]').addClass('active');
             } else if (currentPath.includes('/chat-config/messages')) {
