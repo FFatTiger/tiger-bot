@@ -33,62 +33,61 @@
                             </thead>
                             <tbody>
                                 <tr th:each="listener : ${listeners}">
-                                    <td th:text="${listener.listener().id()}">1</td>
-                                    <td th:text="${listener.chat().name()}">测试群</td>
+                                    <td th:text="${listener.id()}">1</td>
+                                    <td th:text="${listener.chatName()}">测试群</td>
                                     <td>
-                                        <span th:if="${listener.chat().groupFlag()}" class="badge bg-info">群聊</span>
-                                        <span th:unless="${listener.chat().groupFlag()}" class="badge bg-success">私聊</span>
+                                        <span class="badge bg-info">聊天</span>
                                     </td>
                                     <td>
-                                        <span th:if="${listener.listener().atReplyEnable()}" class="text-success">
+                                        <span th:if="${listener.atReplyEnable()}" class="text-success">
                                             <i class="fas fa-check"></i>
                                         </span>
-                                        <span th:unless="${listener.listener().atReplyEnable()}" class="text-muted">
+                                        <span th:unless="${listener.atReplyEnable()}" class="text-muted">
                                             <i class="fas fa-times"></i>
                                         </span>
                                     </td>
                                     <td>
-                                        <span th:if="${listener.listener().keywordReplyEnable()}" class="text-success">
+                                        <span th:if="${listener.keywordReplyEnable()}" class="text-success">
                                             <i class="fas fa-check"></i>
                                         </span>
-                                        <span th:unless="${listener.listener().keywordReplyEnable()}" class="text-muted">
+                                        <span th:unless="${listener.keywordReplyEnable()}" class="text-muted">
                                             <i class="fas fa-times"></i>
                                         </span>
                                     </td>
                                     <td>
-                                        <span th:if="${listener.listener().savePic()}" class="text-success">
+                                        <span th:if="${listener.savePic()}" class="text-success">
                                             <i class="fas fa-check"></i>
                                         </span>
-                                        <span th:unless="${listener.listener().savePic()}" class="text-muted">
+                                        <span th:unless="${listener.savePic()}" class="text-muted">
                                             <i class="fas fa-times"></i>
                                         </span>
                                     </td>
                                     <td>
-                                        <span th:if="${listener.listener().saveVoice()}" class="text-success">
+                                        <span th:if="${listener.saveVoice()}" class="text-success">
                                             <i class="fas fa-check"></i>
                                         </span>
-                                        <span th:unless="${listener.listener().saveVoice()}" class="text-muted">
+                                        <span th:unless="${listener.saveVoice()}" class="text-muted">
                                             <i class="fas fa-times"></i>
                                         </span>
                                     </td>
                                     <td>
-                                        <span th:if="${listener.listener().parseLinks()}" class="text-success">
+                                        <span th:if="${listener.parseLinks()}" class="text-success">
                                             <i class="fas fa-check"></i>
                                         </span>
-                                        <span th:unless="${listener.listener().parseLinks()}" class="text-muted">
+                                        <span th:unless="${listener.parseLinks()}" class="text-muted">
                                             <i class="fas fa-times"></i>
                                         </span>
                                     </td>
                                     <td>
-                                        <small th:text="${#strings.listJoin(listener.listener().keywordReply(), ', ')}" class="text-muted">关键词1, 关键词2</small>
+                                        <small th:text="${#strings.listJoin(listener.keywordReply(), ', ')}" class="text-muted">关键词1, 关键词2</small>
                                     </td>
                                     <td>
-                                        <button type="button" class="btn btn-sm btn-outline-primary me-1" 
-                                                th:onclick="'editListener(' + ${listener.listener().id()} + ')'">
+                                        <button type="button" class="btn btn-sm btn-outline-primary me-1"
+                                                th:onclick="'editListener(' + ${listener.id()} + ')'">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                th:onclick="'deleteListener(' + ${listener.listener().id()} + ')'">
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                th:onclick="'deleteListener(' + ${listener.id()} + ')'">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </td>
@@ -115,7 +114,7 @@
                             <label for="chatId" class="form-label">选择聊天对象</label>
                             <select class="form-select" id="chatId" name="chatId" required>
                                 <option value="">请选择...</option>
-                                <option th:each="chat : ${allChats}" th:value="${chat.id()}" th:text="${chat.name() + (chat.groupFlag() ? ' (群聊)' : ' (私聊)')}">聊天对象</option>
+                                <option th:each="chat : ${allChats}" th:value="${chat.id}" th:text="${chat.name + (chat.groupFlag ? ' (群聊)' : ' (私聊)')}">聊天对象</option>
                             </select>
                         </div>
                         <div class="row">
@@ -242,18 +241,18 @@
         
         // 编辑监听器
         function editListener(id) {
-            const listener = listeners.find(l => l.listener.id === id);
+            const listener = listeners.find(l => l.id === id);
             if (!listener) return;
-            
-            $('#editListenerId').val(listener.listener.id);
-            $('#editChatName').val(listener.chat.name + (listener.chat.groupFlag ? ' (群聊)' : ' (私聊)'));
-            $('#editAtReplyEnable').prop('checked', listener.listener.atReplyEnable);
-            $('#editKeywordReplyEnable').prop('checked', listener.listener.keywordReplyEnable);
-            $('#editSavePic').prop('checked', listener.listener.savePic);
-            $('#editSaveVoice').prop('checked', listener.listener.saveVoice);
-            $('#editParseLinks').prop('checked', listener.listener.parseLinks);
-            $('#editKeywordReply').val(listener.listener.keywordReply.join(', '));
-            
+
+            $('#editListenerId').val(listener.id);
+            $('#editChatName').val(listener.chatName);
+            $('#editAtReplyEnable').prop('checked', listener.atReplyEnable);
+            $('#editKeywordReplyEnable').prop('checked', listener.keywordReplyEnable);
+            $('#editSavePic').prop('checked', listener.savePic);
+            $('#editSaveVoice').prop('checked', listener.saveVoice);
+            $('#editParseLinks').prop('checked', listener.parseLinks);
+            $('#editKeywordReply').val(listener.keywordReply.join(', '));
+
             $('#editListenerModal').modal('show');
         }
         

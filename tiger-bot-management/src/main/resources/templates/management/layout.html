@@ -66,21 +66,9 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/management/config">
-                                <i class="fas fa-cog me-2"></i>
-                                系统配置
-                            </a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link" href="/management/gateway">
                                 <i class="fas fa-network-wired me-2"></i>
                                 网关控制
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/management/monitor">
-                                <i class="fas fa-chart-line me-2"></i>
-                                系统监控
                             </a>
                         </li>
                         <li class="nav-item">
@@ -174,12 +162,8 @@
 
             if (currentPath === '/management/' || currentPath === '/management/index') {
                 $('a[href="/management/"]').addClass('active');
-            } else if (currentPath.endsWith('/config')) {
-                $('a[href="/management/config"]').addClass('active');
             } else if (currentPath.endsWith('/gateway')) {
                 $('a[href="/management/gateway"]').addClass('active');
-            } else if (currentPath.endsWith('/monitor')) {
-                $('a[href="/management/monitor"]').addClass('active');
             } else if (currentPath.includes('/bot-config/listeners')) {
                 $('a[href="/management/bot-config/listeners"]').addClass('active');
             } else if (currentPath.includes('/bot-config/command-auths')) {

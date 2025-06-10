@@ -1,4 +1,4 @@
-package com.fffattiger.wechatbot.management.service;
+package com.fffattiger.wechatbot.management.infrastructure.gateway;
 
 import java.io.File;
 import java.lang.management.ManagementFactory;
@@ -6,24 +6,22 @@ import java.lang.management.MemoryMXBean;
 import java.lang.management.RuntimeMXBean;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import com.fffattiger.wechatbot.infrastructure.external.wchat.WxAuto;
-import com.fffattiger.wechatbot.shared.properties.ChatBotProperties;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 管理服务
+ * Python网关管理器
+ * 负责Python网关进程的启停控制
  */
-@Service
+@Component
 @Slf4j
-public class ManagementService {
-
-    @Autowired
-    private ChatBotProperties chatBotProperties;
+public class PythonGatewayManager {
     
     @Autowired(required = false)
     private WxAuto wxAuto;
@@ -31,28 +29,9 @@ public class ManagementService {
     private Process pythonProcess;
 
     /**
-     * 获取系统状态
-     */
-    public String getSystemStatus() {
-        try {
-            RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
-            long uptime = runtimeBean.getUptime();
-            
-            if (uptime > 0) {
-                return "运行中 (运行时间: " + formatUptime(uptime) + ")";
-            } else {
-                return "未知";
-            }
-        } catch (Exception e) {
-            log.error("获取系统状态失败", e);
-            return "获取失败";
-        }
-    }
-
-    /**
      * 获取网关状态
      */
-    public String getGatewayStatus() {
+    public String getStatus() {
         try {
             // 检查Python进程是否存在
             if (pythonProcess != null && pythonProcess.isAlive()) {
@@ -106,7 +85,7 @@ public class ManagementService {
     /**
      * 启动Python网关
      */
-    public boolean startPythonGateway() {
+    public boolean start() {
         try {
             if (pythonProcess != null && pythonProcess.isAlive()) {
                 log.warn("Python网关已在运行中");
@@ -140,13 +119,13 @@ public class ManagementService {
     /**
      * 停止Python网关
      */
-    public boolean stopPythonGateway() {
+    public boolean stop() {
         try {
             if (pythonProcess != null && pythonProcess.isAlive()) {
                 pythonProcess.destroy();
                 
                 // 等待进程结束
-                boolean terminated = pythonProcess.waitFor(5, java.util.concurrent.TimeUnit.SECONDS);
+                boolean terminated = pythonProcess.waitFor(5, TimeUnit.SECONDS);
                 
                 if (!terminated) {
                     // 强制终止
@@ -169,10 +148,10 @@ public class ManagementService {
     /**
      * 重启Python网关
      */
-    public boolean restartPythonGateway() {
+    public boolean restart() {
         log.info("重启Python网关");
         
-        boolean stopped = stopPythonGateway();
+        boolean stopped = stop();
         if (!stopped) {
             return false;
         }
@@ -184,14 +163,24 @@ public class ManagementService {
             Thread.currentThread().interrupt();
         }
         
-        return startPythonGateway();
+        return start();
+    }
+
+    /**
+     * 格式化字节数
+     */
+    private String formatBytes(long bytes) {
+        if (bytes < 1024) return bytes + " B";
+        int exp = (int) (Math.log(bytes) / Math.log(1024));
+        String pre = "KMGTPE".charAt(exp - 1) + "";
+        return String.format("%.1f %sB", bytes / Math.pow(1024, exp), pre);
     }
 
     /**
      * 格式化运行时间
      */
-    private String formatUptime(long uptimeMs) {
-        long seconds = uptimeMs / 1000;
+    private String formatUptime(long uptime) {
+        long seconds = uptime / 1000;
         long minutes = seconds / 60;
         long hours = minutes / 60;
         long days = hours / 24;
@@ -200,18 +189,10 @@ public class ManagementService {
             return String.format("%d天%d小时%d分钟", days, hours % 24, minutes % 60);
         } else if (hours > 0) {
             return String.format("%d小时%d分钟", hours, minutes % 60);
-        } else {
+        } else if (minutes > 0) {
             return String.format("%d分钟", minutes);
+        } else {
+            return String.format("%d秒", seconds);
         }
-    }
-
-    /**
-     * 格式化字节数
-     */
-    private String formatBytes(long bytes) {
-        if (bytes < 1024) return bytes + " B";
-        if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
-        if (bytes < 1024 * 1024 * 1024) return String.format("%.1f MB", bytes / (1024.0 * 1024));
-        return String.format("%.1f GB", bytes / (1024.0 * 1024 * 1024));
     }
 }

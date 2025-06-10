@@ -31,17 +31,14 @@
                                 <tr th:each="auth : ${commandAuths}">
                                     <td th:text="${auth.id()}">1</td>
                                     <td>
-                                        <span th:each="chat : ${allChats}" th:if="${chat.id() == auth.chatId()}" 
-                                              th:text="${chat.name()}" class="badge bg-info">聊天对象</span>
+                                        <span th:text="${auth.chatName()}" class="badge bg-info">聊天对象</span>
                                     </td>
                                     <td>
-                                        <span th:each="command : ${allCommands}" th:if="${command.id() == auth.commandId()}" 
-                                              th:text="${command.pattern()}" class="badge bg-secondary">命令</span>
+                                        <span th:text="${auth.commandName()}" class="badge bg-secondary">命令</span>
                                     </td>
                                     <td>
                                         <span th:if="${auth.userId() != null}">
-                                            <span th:each="user : ${allUsers}" th:if="${user.id() == auth.userId()}" 
-                                                  th:text="${user.username()}" class="badge bg-success">用户</span>
+                                            <span th:text="${auth.username()}" class="badge bg-success">用户</span>
                                         </span>
                                         <span th:if="${auth.userId() == null}" class="text-muted">所有用户</span>
                                     </td>
@@ -50,11 +47,11 @@
                                         <span th:if="${auth.userId() == null}" class="badge bg-primary">全局权限</span>
                                     </td>
                                     <td>
-                                        <button type="button" class="btn btn-sm btn-outline-primary me-1" 
+                                        <button type="button" class="btn btn-sm btn-outline-primary me-1"
                                                 th:onclick="'editAuth(' + ${auth.id()} + ')'">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
                                                 th:onclick="'deleteAuth(' + ${auth.id()} + ')'">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -82,24 +79,24 @@
                             <label for="chatId" class="form-label">选择聊天对象</label>
                             <select class="form-select" id="chatId" name="chatId" required>
                                 <option value="">请选择...</option>
-                                <option th:each="chat : ${allChats}" th:value="${chat.id()}" 
-                                        th:text="${chat.name() + (chat.groupFlag() ? ' (群聊)' : ' (私聊)')}">聊天对象</option>
+                                <option th:each="chat : ${allChats}" th:value="${chat.id}"
+                                        th:text="${chat.name + (chat.groupFlag ? ' (群聊)' : ' (私聊)')}">聊天对象</option>
                             </select>
                         </div>
                         <div class="mb-3">
                             <label for="commandId" class="form-label">选择命令</label>
                             <select class="form-select" id="commandId" name="commandId" required>
                                 <option value="">请选择...</option>
-                                <option th:each="command : ${allCommands}" th:value="${command.id()}" 
-                                        th:text="${command.pattern() + ' - ' + command.description()}">命令</option>
+                                <option th:each="command : ${allCommands}" th:value="${command.id}"
+                                        th:text="${command.pattern + ' - ' + command.description}">命令</option>
                             </select>
                         </div>
                         <div class="mb-3">
                             <label for="userId" class="form-label">选择用户 (可选)</label>
                             <select class="form-select" id="userId" name="userId">
                                 <option value="">所有用户 (全局权限)</option>
-                                <option th:each="user : ${allUsers}" th:value="${user.id()}" 
-                                        th:text="${user.username() + (user.remark() != null ? ' (' + user.remark() + ')' : '')}">用户</option>
+                                <option th:each="user : ${allUsers}" th:value="${user.id}"
+                                        th:text="${user.username + (user.remark != null ? ' (' + user.remark + ')' : '')}">用户</option>
                             </select>
                             <div class="form-text">如果不选择用户，则该命令对所有用户开放</div>
                         </div>
@@ -128,24 +125,24 @@
                             <label for="editChatId" class="form-label">选择聊天对象</label>
                             <select class="form-select" id="editChatId" name="chatId" required>
                                 <option value="">请选择...</option>
-                                <option th:each="chat : ${allChats}" th:value="${chat.id()}" 
-                                        th:text="${chat.name() + (chat.groupFlag() ? ' (群聊)' : ' (私聊)')}">聊天对象</option>
+                                <option th:each="chat : ${allChats}" th:value="${chat.id}"
+                                        th:text="${chat.name + (chat.groupFlag ? ' (群聊)' : ' (私聊)')}">聊天对象</option>
                             </select>
                         </div>
                         <div class="mb-3">
                             <label for="editCommandId" class="form-label">选择命令</label>
                             <select class="form-select" id="editCommandId" name="commandId" required>
                                 <option value="">请选择...</option>
-                                <option th:each="command : ${allCommands}" th:value="${command.id()}" 
-                                        th:text="${command.pattern() + ' - ' + command.description()}">命令</option>
+                                <option th:each="command : ${allCommands}" th:value="${command.id}"
+                                        th:text="${command.pattern + ' - ' + command.description}">命令</option>
                             </select>
                         </div>
                         <div class="mb-3">
                             <label for="editUserId" class="form-label">选择用户 (可选)</label>
                             <select class="form-select" id="editUserId" name="userId">
                                 <option value="">所有用户 (全局权限)</option>
-                                <option th:each="user : ${allUsers}" th:value="${user.id()}" 
-                                        th:text="${user.username() + (user.remark() != null ? ' (' + user.remark() + ')' : '')}">用户</option>
+                                <option th:each="user : ${allUsers}" th:value="${user.id}"
+                                        th:text="${user.username + (user.remark != null ? ' (' + user.remark + ')' : '')}">用户</option>
                             </select>
                         </div>
                     </div>

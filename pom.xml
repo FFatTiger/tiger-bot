@@ -32,7 +32,7 @@
         <flying-saucer.version>9.1.22</flying-saucer.version>
         <nekohtml.version>1.9.22</nekohtml.version>
         <hutool.version>5.8.38</hutool.version>
-        <lombok.version>1.18.24</lombok.version>
+        <lombok.version>1.18.34</lombok.version>
         <mapstruct.version>1.6.3</mapstruct.version>
     </properties>
 

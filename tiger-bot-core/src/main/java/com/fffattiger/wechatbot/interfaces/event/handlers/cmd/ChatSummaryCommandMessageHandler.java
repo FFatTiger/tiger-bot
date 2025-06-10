@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.fffattiger.wechatbot.application.service.AiChatApplicationService;
-import com.fffattiger.wechatbot.domain.command.Command;
 import com.fffattiger.wechatbot.domain.command.repository.CommandRepository;
 import com.fffattiger.wechatbot.domain.shared.valueobject.AiSpecification;
 import com.fffattiger.wechatbot.infrastructure.external.chatlog.ChatLogClient;

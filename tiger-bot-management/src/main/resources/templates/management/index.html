@@ -154,20 +154,25 @@
                     </div>
                     <div class="card-body">
                         <div class="list-group list-group-flush">
-                            <a href="/management/config" class="list-group-item list-group-item-action">
-                                <i class="fas fa-cog me-2 text-primary"></i>
-                                系统配置管理
-                                <small class="text-muted d-block">配置AI模型、数据库连接等</small>
-                            </a>
                             <a href="/management/gateway" class="list-group-item list-group-item-action">
                                 <i class="fas fa-network-wired me-2 text-success"></i>
                                 Python网关控制
                                 <small class="text-muted d-block">启停微信网关服务</small>
                             </a>
-                            <a href="/management/monitor" class="list-group-item list-group-item-action">
-                                <i class="fas fa-chart-line me-2 text-info"></i>
-                                系统监控
-                                <small class="text-muted d-block">查看系统运行状态和性能指标</small>
+                            <a href="/management/bot-config/listeners" class="list-group-item list-group-item-action">
+                                <i class="fas fa-ear-listen me-2 text-primary"></i>
+                                监听配置管理
+                                <small class="text-muted d-block">配置机器人监听规则</small>
+                            </a>
+                            <a href="/management/bot-config/command-auths" class="list-group-item list-group-item-action">
+                                <i class="fas fa-user-shield me-2 text-warning"></i>
+                                权限配置管理
+                                <small class="text-muted d-block">管理命令使用权限</small>
+                            </a>
+                            <a href="/management/bot-config/users" class="list-group-item list-group-item-action">
+                                <i class="fas fa-users me-2 text-info"></i>
+                                用户管理
+                                <small class="text-muted d-block">管理系统用户信息</small>
                             </a>
                         </div>
                     </div>
