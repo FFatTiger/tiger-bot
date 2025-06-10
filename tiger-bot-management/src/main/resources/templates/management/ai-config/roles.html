@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{management/layout :: layout('AI角色管理', ~{::content}, ~{::scripts})}">
+
+<th:block th:fragment="content">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-tie me-2"></i>AI角色配置
+                    </h5>
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createRoleModal">
+                        <i class="fas fa-plus me-1"></i>添加角色
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>角色名称</th>
+                                    <th>角色描述</th>
+                                    <th>提示词类型</th>
+                                    <th>复杂度</th>
+                                    <th>额外记忆</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="role : ${roles}">
+                                    <td th:text="${role.id()}">1</td>
+                                    <td>
+                                        <strong th:text="${role.name()}">智能助手</strong>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted" th:text="${role.getRoleDescription()}">一个友善的AI助手</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge" th:classappend="${role.getPromptTypeBadgeClass()}" 
+                                              th:text="${role.getPromptTypeDisplayName()}">系统</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" th:classappend="${role.getComplexityBadgeClass()}" 
+                                              th:text="${role.getComplexityBadge()}">简单</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${role.hasExtraMemory()}" class="text-success">
+                                            <i class="fas fa-check"></i>
+                                        </span>
+                                        <span th:unless="${role.hasExtraMemory()}" class="text-muted">
+                                            <i class="fas fa-times"></i>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-info me-1"
+                                                th:onclick="'previewRole(' + ${role.id()} + ')'">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary me-1"
+                                                th:onclick="'editRole(' + ${role.id()} + ')'">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                th:onclick="'deleteRole(' + ${role.id()} + ')'">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 创建角色模态框 -->
+    <div class="modal fade" id="createRoleModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">添加AI角色</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="createRoleForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">角色名称</label>
+                                    <input type="text" class="form-control" id="name" name="name" required>
+                                    <div class="form-text">角色的唯一标识名称</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="promptType" class="form-label">提示词类型</label>
+                                    <select class="form-select" id="promptType" name="promptType" required>
+                                        <option value="">请选择...</option>
+                                        <option th:each="type : ${supportedPromptTypes}" th:value="${type}" th:text="${type}">system</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="extraMemory" class="form-label">额外记忆 (可选)</label>
+                                    <textarea class="form-control" id="extraMemory" name="extraMemory" rows="4" 
+                                              placeholder="角色的额外记忆信息..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="promptContent" class="form-label">提示词内容</label>
+                            <textarea class="form-control" id="promptContent" name="promptContent" rows="10" required 
+                                      placeholder="请输入角色的提示词内容..."></textarea>
+                            <div class="form-text">
+                                <span id="promptContentLength">0</span> 字符
+                                <span id="promptValidationMessage" class="text-muted ms-2"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-info me-auto" onclick="loadDefaultRoleConfig()">
+                            <i class="fas fa-magic me-1"></i>加载模板
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">创建</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑角色模态框 -->
+    <div class="modal fade" id="editRoleModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">编辑AI角色</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editRoleForm">
+                    <input type="hidden" id="editRoleId" name="id">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editName" class="form-label">角色名称</label>
+                                    <input type="text" class="form-control" id="editName" name="name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editPromptType" class="form-label">提示词类型</label>
+                                    <select class="form-select" id="editPromptType" name="promptType" required>
+                                        <option th:each="type : ${supportedPromptTypes}" th:value="${type}" th:text="${type}">system</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editExtraMemory" class="form-label">额外记忆 (可选)</label>
+                                    <textarea class="form-control" id="editExtraMemory" name="extraMemory" rows="4"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="editPromptContent" class="form-label">提示词内容</label>
+                            <textarea class="form-control" id="editPromptContent" name="promptContent" rows="10" required></textarea>
+                            <div class="form-text">
+                                <span id="editPromptContentLength">0</span> 字符
+                                <span id="editPromptValidationMessage" class="text-muted ms-2"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 角色预览模态框 -->
+    <div class="modal fade" id="previewRoleModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">角色效果预览</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="previewContent">
+                        <!-- 预览内容将在这里显示 -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<th:block th:fragment="scripts">
+    <script th:inline="javascript">
+        // 角色数据
+        const roles = /*[[${roles}]]*/ [];
+        const supportedPromptTypes = /*[[${supportedPromptTypes}]]*/ [];
+
+        // 提示词内容变化时的验证
+        $('#promptContent').on('input', function() {
+            validatePromptContent($(this).val(), '#promptContentLength', '#promptValidationMessage');
+        });
+
+        $('#editPromptContent').on('input', function() {
+            validatePromptContent($(this).val(), '#editPromptContentLength', '#editPromptValidationMessage');
+        });
+
+        // 角色名称变化时检查重复
+        $('#name').on('blur', function() {
+            checkRoleName($(this).val());
+        });
+
+        $('#editName').on('blur', function() {
+            const excludeId = $('#editRoleId').val();
+            checkRoleName($(this).val(), excludeId);
+        });
+
+        // 验证提示词内容
+        function validatePromptContent(content, lengthSelector, messageSelector) {
+            $(lengthSelector).text(content.length);
+            
+            if (content.length === 0) {
+                $(messageSelector).text('').removeClass('text-success text-warning text-danger');
+                return;
+            }
+            
+            makeRequest('/management/ai-config/roles/validate-prompt', 'POST', 'promptContent=' + encodeURIComponent(content))
+                .done(function(response) {
+                    if (response === 'valid') {
+                        $(messageSelector).text('✓ 提示词格式正确').removeClass('text-warning text-danger').addClass('text-success');
+                    } else {
+                        $(messageSelector).text('⚠ ' + response).removeClass('text-success text-danger').addClass('text-warning');
+                    }
+                })
+                .fail(function() {
+                    $(messageSelector).text('验证失败').removeClass('text-success text-warning').addClass('text-danger');
+                });
+        }
+
+        // 检查角色名称
+        function checkRoleName(name, excludeId) {
+            if (!name || name.trim() === '') return;
+            
+            let url = '/management/ai-config/roles/check-name?name=' + encodeURIComponent(name);
+            if (excludeId) {
+                url += '&excludeId=' + excludeId;
+            }
+            
+            makeRequest(url, 'GET')
+                .done(function(response) {
+                    const inputField = excludeId ? '#editName' : '#name';
+                    if (response === 'exists') {
+                        $(inputField).addClass('is-invalid');
+                        $(inputField).next('.invalid-feedback').remove();
+                        $(inputField).after('<div class="invalid-feedback">角色名称已存在</div>');
+                    } else {
+                        $(inputField).removeClass('is-invalid');
+                        $(inputField).next('.invalid-feedback').remove();
+                    }
+                })
+                .fail(function() {
+                    console.warn('无法检查角色名称');
+                });
+        }
+
+        // 加载默认角色配置
+        function loadDefaultRoleConfig() {
+            makeRequest('/management/ai-config/roles/default-config', 'GET')
+                .done(function(config) {
+                    $('#promptContent').val(config.promptContent);
+                    $('#promptType').val(config.promptType);
+                    $('#extraMemory').val(config.extraMemory);
+                    validatePromptContent(config.promptContent, '#promptContentLength', '#promptValidationMessage');
+                })
+                .fail(function() {
+                    showAlert('无法加载默认配置', 'warning');
+                });
+        }
+
+        // 创建角色
+        $('#createRoleForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = $(this).serialize();
+            
+            makeRequest('/management/ai-config/roles/create', 'POST', formData)
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('AI角色创建成功！', 'success');
+                        $('#createRoleModal').modal('hide');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('创建失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        });
+        
+        // 编辑角色
+        function editRole(id) {
+            const role = roles.find(r => r.id === id);
+            if (!role) return;
+
+            $('#editRoleId').val(role.id);
+            $('#editName').val(role.name);
+            $('#editPromptContent').val(role.promptContent);
+            $('#editExtraMemory').val(role.extraMemory);
+            $('#editPromptType').val(role.promptType);
+            
+            validatePromptContent(role.promptContent, '#editPromptContentLength', '#editPromptValidationMessage');
+
+            $('#editRoleModal').modal('show');
+        }
+        
+        // 保存编辑
+        $('#editRoleForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const id = $('#editRoleId').val();
+            const formData = $(this).serialize();
+            
+            makeRequest(`/management/ai-config/roles/${id}/update`, 'POST', formData)
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('AI角色更新成功！', 'success');
+                        $('#editRoleModal').modal('hide');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('更新失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        });
+        
+        // 删除角色
+        function deleteRole(id) {
+            if (!confirm('确定要删除这个AI角色吗？删除后相关的聊天配置将失效。')) return;
+            
+            makeRequest(`/management/ai-config/roles/${id}/delete`, 'POST')
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('AI角色删除成功！', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('删除失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        }
+
+        // 预览角色
+        function previewRole(id) {
+            const role = roles.find(r => r.id === id);
+            if (!role) return;
+
+            $('#previewContent').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> 正在生成预览...</div>');
+            $('#previewRoleModal').modal('show');
+            
+            const formData = `name=${encodeURIComponent(role.name)}&promptContent=${encodeURIComponent(role.promptContent)}&extraMemory=${encodeURIComponent(role.extraMemory || '')}&promptType=${encodeURIComponent(role.promptType)}`;
+            
+            makeRequest('/management/ai-config/roles/preview', 'POST', formData)
+                .done(function(response) {
+                    $('#previewContent').html('<pre class="bg-light p-3 rounded">' + response + '</pre>');
+                })
+                .fail(function() {
+                    $('#previewContent').html('<div class="alert alert-danger"><i class="fas fa-times-circle me-2"></i>预览生成失败</div>');
+                });
+        }
+    </script>
+</th:block>
+
+</html>

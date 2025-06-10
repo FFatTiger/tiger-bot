@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{management/layout :: layout('AI模型管理', ~{::content}, ~{::scripts})}">
+
+<th:block th:fragment="content">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-brain me-2"></i>AI模型配置
+                    </h5>
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createModelModal">
+                        <i class="fas fa-plus me-1"></i>添加模型
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>提供商</th>
+                                    <th>模型名称</th>
+                                    <th>描述</th>
+                                    <th>令牌限制</th>
+                                    <th>参数</th>
+                                    <th>功能</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="model : ${models}">
+                                    <td th:text="${model.id()}">1</td>
+                                    <td>
+                                        <small class="text-muted" th:text="${model.providerName()}">OpenAI</small>
+                                    </td>
+                                    <td>
+                                        <strong th:text="${model.modelName()}">gpt-4</strong>
+                                    </td>
+                                    <td>
+                                        <small th:text="${model.getShortDescription()}">GPT-4模型</small>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted" th:text="${model.getTokenSummary()}">输入: 128,000 / 输出: 4,096</small>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted" th:text="${model.getParameterSummary()}">温度: 0.7</small>
+                                    </td>
+                                    <td>
+                                        <span th:utext="${model.getFeatureBadges()}">
+                                            <span class="badge bg-info me-1">推理</span>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" th:classappend="${model.getStatusBadgeClass()}" 
+                                              th:text="${model.getStatusBadge()}">启用</span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-success me-1"
+                                                th:onclick="'testModel(' + ${model.id()} + ')'">
+                                            <i class="fas fa-play"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm me-1"
+                                                th:classappend="${model.enabled() ? 'btn-outline-warning' : 'btn-outline-success'}"
+                                                th:onclick="'toggleModel(' + ${model.id()} + ')'">
+                                            <i th:class="${model.enabled() ? 'fas fa-pause' : 'fas fa-play'}"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary me-1"
+                                                th:onclick="'editModel(' + ${model.id()} + ')'">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                th:onclick="'deleteModel(' + ${model.id()} + ')'">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 创建模型模态框 -->
+    <div class="modal fade" id="createModelModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">添加AI模型</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="createModelForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="aiProviderId" class="form-label">AI提供商</label>
+                                    <select class="form-select" id="aiProviderId" name="aiProviderId" required>
+                                        <option value="">请选择...</option>
+                                        <option th:each="provider : ${allProviders}" th:value="${provider.id}" 
+                                                th:text="${provider.providerName}" th:data-type="${provider.providerType}">OpenAI</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="modelName" class="form-label">模型名称</label>
+                                    <input type="text" class="form-control" id="modelName" name="modelName" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">模型描述</label>
+                                    <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="maxTokens" class="form-label">最大输入令牌数</label>
+                                    <input type="number" class="form-control" id="maxTokens" name="maxTokens" min="1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="maxOutputTokens" class="form-label">最大输出令牌数</label>
+                                    <input type="number" class="form-control" id="maxOutputTokens" name="maxOutputTokens" min="1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="temperature" class="form-label">温度 (0.0-2.0)</label>
+                                    <input type="number" class="form-control" id="temperature" name="temperature" 
+                                           min="0" max="2" step="0.1" value="0.7">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="frequencyPenalty" class="form-label">频率惩罚 (-2.0-2.0)</label>
+                                    <input type="number" class="form-control" id="frequencyPenalty" name="frequencyPenalty" 
+                                           min="-2" max="2" step="0.1" value="0">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="presencePenalty" class="form-label">存在惩罚 (-2.0-2.0)</label>
+                                    <input type="number" class="form-control" id="presencePenalty" name="presencePenalty" 
+                                           min="-2" max="2" step="0.1" value="0">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="topK" class="form-label">Top-K</label>
+                                    <input type="number" class="form-control" id="topK" name="topK" 
+                                           min="0" step="0.1" value="0">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="topP" class="form-label">Top-P (0.0-1.0)</label>
+                                    <input type="number" class="form-control" id="topP" name="topP" 
+                                           min="0" max="1" step="0.1" value="0">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="reasoningFlg" name="reasoningFlg">
+                                    <label class="form-check-label" for="reasoningFlg">推理功能</label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="streamFlg" name="streamFlg" checked>
+                                    <label class="form-check-label" for="streamFlg">流式输出</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="enabled" name="enabled" checked>
+                                    <label class="form-check-label" for="enabled">启用模型</label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="toolCallFlg" name="toolCallFlg">
+                                    <label class="form-check-label" for="toolCallFlg">工具调用</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">创建</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑模型模态框 -->
+    <div class="modal fade" id="editModelModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">编辑AI模型</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editModelForm">
+                    <input type="hidden" id="editModelId" name="id">
+                    <div class="modal-body">
+                        <!-- 编辑表单内容与创建表单类似，但字段ID前缀为edit -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editAiProviderId" class="form-label">AI提供商</label>
+                                    <select class="form-select" id="editAiProviderId" name="aiProviderId" required>
+                                        <option th:each="provider : ${allProviders}" th:value="${provider.id}" 
+                                                th:text="${provider.providerName}">OpenAI</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editModelName" class="form-label">模型名称</label>
+                                    <input type="text" class="form-control" id="editModelName" name="modelName" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editDescription" class="form-label">模型描述</label>
+                                    <textarea class="form-control" id="editDescription" name="description" rows="3" required></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editMaxTokens" class="form-label">最大输入令牌数</label>
+                                    <input type="number" class="form-control" id="editMaxTokens" name="maxTokens" min="1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editMaxOutputTokens" class="form-label">最大输出令牌数</label>
+                                    <input type="number" class="form-control" id="editMaxOutputTokens" name="maxOutputTokens" min="1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editTemperature" class="form-label">温度 (0.0-2.0)</label>
+                                    <input type="number" class="form-control" id="editTemperature" name="temperature" 
+                                           min="0" max="2" step="0.1">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editFrequencyPenalty" class="form-label">频率惩罚 (-2.0-2.0)</label>
+                                    <input type="number" class="form-control" id="editFrequencyPenalty" name="frequencyPenalty" 
+                                           min="-2" max="2" step="0.1">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editPresencePenalty" class="form-label">存在惩罚 (-2.0-2.0)</label>
+                                    <input type="number" class="form-control" id="editPresencePenalty" name="presencePenalty" 
+                                           min="-2" max="2" step="0.1">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editTopK" class="form-label">Top-K</label>
+                                    <input type="number" class="form-control" id="editTopK" name="topK" 
+                                           min="0" step="0.1">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editTopP" class="form-label">Top-P (0.0-1.0)</label>
+                                    <input type="number" class="form-control" id="editTopP" name="topP" 
+                                           min="0" max="1" step="0.1">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="editReasoningFlg" name="reasoningFlg">
+                                    <label class="form-check-label" for="editReasoningFlg">推理功能</label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="editStreamFlg" name="streamFlg">
+                                    <label class="form-check-label" for="editStreamFlg">流式输出</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="editEnabled" name="enabled">
+                                    <label class="form-check-label" for="editEnabled">启用模型</label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="editToolCallFlg" name="toolCallFlg">
+                                    <label class="form-check-label" for="editToolCallFlg">工具调用</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 测试结果模态框 -->
+    <div class="modal fade" id="testResultModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">模型测试结果</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="testResultContent">
+                        <!-- 测试结果将在这里显示 -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<th:block th:fragment="scripts">
+    <script th:inline="javascript">
+        // 模型数据
+        const models = /*[[${models}]]*/ [];
+        const allProviders = /*[[${allProviders}]]*/ [];
+
+        // 提供商变化时加载默认配置
+        $('#aiProviderId').on('change', function() {
+            const selectedProviderId = $(this).val();
+            const selectedProvider = allProviders.find(p => p.id == selectedProviderId);
+            if (selectedProvider) {
+                loadDefaultModelConfig(selectedProviderId, selectedProvider.providerType);
+            }
+        });
+
+        // 加载默认模型配置
+        function loadDefaultModelConfig(providerId, providerType) {
+            makeRequest(`/management/ai-config/models/default-config?providerId=${providerId}&providerType=${providerType}`, 'GET')
+                .done(function(config) {
+                    $('#maxTokens').val(config.maxTokens);
+                    $('#maxOutputTokens').val(config.maxOutputTokens);
+                    $('#temperature').val(config.temperature);
+                })
+                .fail(function() {
+                    console.warn('无法加载默认配置');
+                });
+        }
+
+        // 创建模型
+        $('#createModelForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = $(this).serialize();
+            
+            makeRequest('/management/ai-config/models/create', 'POST', formData)
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('AI模型创建成功！', 'success');
+                        $('#createModelModal').modal('hide');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('创建失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        });
+        
+        // 编辑模型
+        function editModel(id) {
+            const model = models.find(m => m.id === id);
+            if (!model) return;
+
+            $('#editModelId').val(model.id);
+            $('#editAiProviderId').val(model.aiProviderId);
+            $('#editModelName').val(model.modelName);
+            $('#editDescription').val(model.description);
+            $('#editMaxTokens').val(model.maxTokens);
+            $('#editMaxOutputTokens').val(model.maxOutputTokens);
+            $('#editTemperature').val(model.temperature);
+            $('#editFrequencyPenalty').val(model.frequencyPenalty);
+            $('#editPresencePenalty').val(model.presencePenalty);
+            $('#editTopK').val(model.topK);
+            $('#editTopP').val(model.topP);
+            $('#editReasoningFlg').prop('checked', model.reasoningFlg);
+            $('#editStreamFlg').prop('checked', model.streamFlg);
+            $('#editEnabled').prop('checked', model.enabled);
+            $('#editToolCallFlg').prop('checked', model.toolCallFlg);
+
+            $('#editModelModal').modal('show');
+        }
+        
+        // 保存编辑
+        $('#editModelForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const id = $('#editModelId').val();
+            const formData = $(this).serialize();
+            
+            makeRequest(`/management/ai-config/models/${id}/update`, 'POST', formData)
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('AI模型更新成功！', 'success');
+                        $('#editModelModal').modal('hide');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('更新失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        });
+        
+        // 删除模型
+        function deleteModel(id) {
+            if (!confirm('确定要删除这个AI模型吗？删除后相关的聊天配置将失效。')) return;
+            
+            makeRequest(`/management/ai-config/models/${id}/delete`, 'POST')
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('AI模型删除成功！', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('删除失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        }
+
+        // 切换模型状态
+        function toggleModel(id) {
+            makeRequest(`/management/ai-config/models/${id}/toggle`, 'POST')
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('模型状态切换成功！', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('状态切换失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        }
+
+        // 测试模型
+        function testModel(id) {
+            const model = models.find(m => m.id === id);
+            if (!model) return;
+
+            $('#testResultContent').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> 正在测试模型...</div>');
+            $('#testResultModal').modal('show');
+            
+            makeRequest(`/management/ai-config/models/${id}/test`, 'POST')
+                .done(function(response) {
+                    let resultHtml = '';
+                    if (response === 'success') {
+                        resultHtml = '<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>模型测试成功！</div>';
+                    } else if (response === 'failed') {
+                        resultHtml = '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>模型测试失败，请检查配置。</div>';
+                    } else {
+                        resultHtml = '<div class="alert alert-danger"><i class="fas fa-times-circle me-2"></i>测试出错: ' + response + '</div>';
+                    }
+                    $('#testResultContent').html(resultHtml);
+                })
+                .fail(function() {
+                    $('#testResultContent').html('<div class="alert alert-danger"><i class="fas fa-times-circle me-2"></i>请求失败，请检查网络连接</div>');
+                });
+        }
+    </script>
+</th:block>
+
+</html>

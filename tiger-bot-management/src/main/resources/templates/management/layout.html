@@ -90,7 +90,49 @@
                             </a>
                         </li>
                     </ul>
-                    
+
+                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-white-50">
+                        <span>AI配置管理</span>
+                    </h6>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/management/ai-config/providers">
+                                <i class="fas fa-cloud me-2"></i>
+                                AI提供商
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/management/ai-config/models">
+                                <i class="fas fa-brain me-2"></i>
+                                AI模型
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/management/ai-config/roles">
+                                <i class="fas fa-user-tie me-2"></i>
+                                AI角色
+                            </a>
+                        </li>
+                    </ul>
+
+                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-white-50">
+                        <span>聊天管理</span>
+                    </h6>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/management/chat-config/chats">
+                                <i class="fas fa-comments me-2"></i>
+                                聊天对象
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/management/chat-config/messages">
+                                <i class="fas fa-envelope me-2"></i>
+                                消息记录
+                            </a>
+                        </li>
+                    </ul>
+
                     <hr class="text-white-50">
                     
                     <div class="text-center">
@@ -170,6 +212,16 @@
                 $('a[href="/management/bot-config/command-auths"]').addClass('active');
             } else if (currentPath.includes('/bot-config/users')) {
                 $('a[href="/management/bot-config/users"]').addClass('active');
+            } else if (currentPath.includes('/ai-config/providers')) {
+                $('a[href="/management/ai-config/providers"]').addClass('active');
+            } else if (currentPath.includes('/ai-config/models')) {
+                $('a[href="/management/ai-config/models"]').addClass('active');
+            } else if (currentPath.includes('/ai-config/roles')) {
+                $('a[href="/management/ai-config/roles"]').addClass('active');
+            } else if (currentPath.includes('/chat-config/chats')) {
+                $('a[href="/management/chat-config/chats"]').addClass('active');
+            } else if (currentPath.includes('/chat-config/messages')) {
+                $('a[href="/management/chat-config/messages"]').addClass('active');
             }
         });
     </script>

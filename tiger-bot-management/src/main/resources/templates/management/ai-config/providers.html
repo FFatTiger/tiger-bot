@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{management/layout :: layout('AI提供商管理', ~{::content}, ~{::scripts})}">
+
+<th:block th:fragment="content">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cloud me-2"></i>AI提供商配置
+                    </h5>
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createProviderModal">
+                        <i class="fas fa-plus me-1"></i>添加提供商
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>提供商类型</th>
+                                    <th>提供商名称</th>
+                                    <th>API密钥</th>
+                                    <th>基础URL</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="provider : ${providers}">
+                                    <td th:text="${provider.id()}">1</td>
+                                    <td>
+                                        <span class="badge bg-info" th:text="${provider.getProviderTypeDisplayName()}">OpenAI</span>
+                                    </td>
+                                    <td th:text="${provider.providerName()}">OpenAI</td>
+                                    <td>
+                                        <code class="text-muted" th:text="${provider.getMaskedApiKey()}">sk-****</code>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted" th:text="${provider.baseUrl()}">https://api.openai.com/v1</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge" th:classappend="${provider.isLocalProvider() ? 'bg-warning' : 'bg-success'}" 
+                                              th:text="${provider.getStatusBadge()}">云端</span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-success me-1"
+                                                th:onclick="'testProvider(' + ${provider.id()} + ')'">
+                                            <i class="fas fa-plug"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary me-1"
+                                                th:onclick="'editProvider(' + ${provider.id()} + ')'">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                th:onclick="'deleteProvider(' + ${provider.id()} + ')'">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 创建提供商模态框 -->
+    <div class="modal fade" id="createProviderModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">添加AI提供商</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="createProviderForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="providerType" class="form-label">提供商类型</label>
+                            <select class="form-select" id="providerType" name="providerType" required>
+                                <option value="">请选择...</option>
+                                <option th:each="type : ${supportedTypes}" th:value="${type}" th:text="${type}">openai</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="providerName" class="form-label">提供商名称</label>
+                            <input type="text" class="form-control" id="providerName" name="providerName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="apiKey" class="form-label">API密钥</label>
+                            <input type="password" class="form-control" id="apiKey" name="apiKey" required>
+                            <div class="form-text">API密钥将被安全存储</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="baseUrl" class="form-label">基础URL</label>
+                            <input type="url" class="form-control" id="baseUrl" name="baseUrl" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">创建</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑提供商模态框 -->
+    <div class="modal fade" id="editProviderModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">编辑AI提供商</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editProviderForm">
+                    <input type="hidden" id="editProviderId" name="id">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="editProviderType" class="form-label">提供商类型</label>
+                            <select class="form-select" id="editProviderType" name="providerType" required>
+                                <option th:each="type : ${supportedTypes}" th:value="${type}" th:text="${type}">openai</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editProviderName" class="form-label">提供商名称</label>
+                            <input type="text" class="form-control" id="editProviderName" name="providerName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editApiKey" class="form-label">API密钥</label>
+                            <input type="password" class="form-control" id="editApiKey" name="apiKey" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editBaseUrl" class="form-label">基础URL</label>
+                            <input type="url" class="form-control" id="editBaseUrl" name="baseUrl" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 测试结果模态框 -->
+    <div class="modal fade" id="testResultModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">连接测试结果</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="testResultContent">
+                        <!-- 测试结果将在这里显示 -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<th:block th:fragment="scripts">
+    <script th:inline="javascript">
+        // 提供商数据
+        const providers = /*[[${providers}]]*/ [];
+        const supportedTypes = /*[[${supportedTypes}]]*/ [];
+
+        // 提供商类型变化时自动填充默认配置
+        $('#providerType').on('change', function() {
+            const selectedType = $(this).val();
+            if (selectedType) {
+                loadDefaultConfig(selectedType);
+            }
+        });
+
+        // 加载默认配置
+        function loadDefaultConfig(providerType) {
+            makeRequest('/management/ai-config/providers/default-config?providerType=' + providerType, 'GET')
+                .done(function(config) {
+                    $('#providerName').val(config.providerName);
+                    $('#baseUrl').val(config.baseUrl);
+                })
+                .fail(function() {
+                    console.warn('无法加载默认配置');
+                });
+        }
+
+        // 创建提供商
+        $('#createProviderForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = $(this).serialize();
+            
+            makeRequest('/management/ai-config/providers/create', 'POST', formData)
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('AI提供商创建成功！', 'success');
+                        $('#createProviderModal').modal('hide');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('创建失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        });
+        
+        // 编辑提供商
+        function editProvider(id) {
+            const provider = providers.find(p => p.id === id);
+            if (!provider) return;
+
+            $('#editProviderId').val(provider.id);
+            $('#editProviderType').val(provider.providerType);
+            $('#editProviderName').val(provider.providerName);
+            $('#editApiKey').val(provider.apiKey);
+            $('#editBaseUrl').val(provider.baseUrl);
+
+            $('#editProviderModal').modal('show');
+        }
+        
+        // 保存编辑
+        $('#editProviderForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const id = $('#editProviderId').val();
+            const formData = $(this).serialize();
+            
+            makeRequest(`/management/ai-config/providers/${id}/update`, 'POST', formData)
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('AI提供商更新成功！', 'success');
+                        $('#editProviderModal').modal('hide');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('更新失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        });
+        
+        // 删除提供商
+        function deleteProvider(id) {
+            if (!confirm('确定要删除这个AI提供商吗？删除后相关的模型配置也将失效。')) return;
+            
+            makeRequest(`/management/ai-config/providers/${id}/delete`, 'POST')
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('AI提供商删除成功！', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('删除失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        }
+
+        // 测试提供商连接
+        function testProvider(id) {
+            const provider = providers.find(p => p.id === id);
+            if (!provider) return;
+
+            $('#testResultContent').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> 正在测试连接...</div>');
+            $('#testResultModal').modal('show');
+            
+            makeRequest(`/management/ai-config/providers/${id}/test`, 'POST')
+                .done(function(response) {
+                    let resultHtml = '';
+                    if (response === 'success') {
+                        resultHtml = '<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>连接测试成功！</div>';
+                    } else if (response === 'failed') {
+                        resultHtml = '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>连接测试失败，请检查配置。</div>';
+                    } else {
+                        resultHtml = '<div class="alert alert-danger"><i class="fas fa-times-circle me-2"></i>测试出错: ' + response + '</div>';
+                    }
+                    $('#testResultContent').html(resultHtml);
+                })
+                .fail(function() {
+                    $('#testResultContent').html('<div class="alert alert-danger"><i class="fas fa-times-circle me-2"></i>请求失败，请检查网络连接</div>');
+                });
+        }
+    </script>
+</th:block>
+
+</html>

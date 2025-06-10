@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{management/layout :: layout('消息记录管理', ~{::content}, ~{::scripts})}">
+
+<th:block th:fragment="content">
+    <!-- 搜索筛选区域 -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-search me-2"></i>搜索筛选
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" action="/management/chat-config/messages">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label for="chatId" class="form-label">聊天对象</label>
+                                <select class="form-select" id="chatId" name="chatId">
+                                    <option value="">全部聊天</option>
+                                    <option th:each="chat : ${allChats}" 
+                                            th:value="${chat.id}" 
+                                            th:text="${chat.name + (chat.groupFlag ? ' (群聊)' : ' (私聊)')}"
+                                            th:selected="${chat.id == currentChatId}">聊天对象</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="keyword" class="form-label">关键词</label>
+                                <input type="text" class="form-control" id="keyword" name="keyword" 
+                                       th:value="${currentKeyword}" placeholder="搜索消息内容或发送者">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="startTime" class="form-label">开始时间</label>
+                                <input type="datetime-local" class="form-control" id="startTime" name="startTime" 
+                                       th:value="${currentStartTime}">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="endTime" class="form-label">结束时间</label>
+                                <input type="datetime-local" class="form-control" id="endTime" name="endTime" 
+                                       th:value="${currentEndTime}">
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="fas fa-search me-1"></i>搜索
+                                </button>
+                                <a href="/management/chat-config/messages" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-1"></i>清空
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 消息列表 -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-envelope me-2"></i>消息记录
+                        <span class="badge bg-secondary ms-2" th:text="${messages.totalElements}">0</span>
+                    </h5>
+                    <div>
+                        <button type="button" class="btn btn-warning btn-sm me-2" data-bs-toggle="modal" data-bs-target="#cleanupModal">
+                            <i class="fas fa-broom me-1"></i>清理消息
+                        </button>
+                        <button type="button" class="btn btn-success btn-sm" onclick="exportMessages()">
+                            <i class="fas fa-download me-1"></i>导出记录
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>时间</th>
+                                    <th>聊天对象</th>
+                                    <th>发送者</th>
+                                    <th>类型</th>
+                                    <th>内容</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="message : ${messages.content}">
+                                    <td>
+                                        <small th:text="${message.getFormattedTimeString()}">2024-01-01 12:00:00</small>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-comments text-muted me-1"></i>
+                                            <small th:text="${message.chatName()}">聊天名称</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small th:text="${message.getDisplaySenderName()}">发送者</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info" th:text="${message.getMessageTypeDisplay()}">文本</span>
+                                    </td>
+                                    <td>
+                                        <div class="message-content" th:title="${message.content()}">
+                                            <span th:text="${message.getTruncatedContent(50)}">消息内容...</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-info me-1"
+                                                th:onclick="'viewMessage(' + ${message.id()} + ')'">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                th:onclick="'deleteMessage(' + ${message.id()} + ')'">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 分页 -->
+                    <nav th:if="${messages.totalPages > 1}">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item" th:classappend="${messages.first} ? 'disabled'">
+                                <a class="page-link" th:href="@{/management/chat-config/messages(page=${messages.number - 1}, size=${messages.size}, chatId=${currentChatId}, keyword=${currentKeyword}, startTime=${currentStartTime}, endTime=${currentEndTime})}">上一页</a>
+                            </li>
+                            
+                            <li class="page-item" th:each="pageNum : ${#numbers.sequence(0, messages.totalPages - 1)}"
+                                th:classappend="${pageNum == messages.number} ? 'active'">
+                                <a class="page-link" th:href="@{/management/chat-config/messages(page=${pageNum}, size=${messages.size}, chatId=${currentChatId}, keyword=${currentKeyword}, startTime=${currentStartTime}, endTime=${currentEndTime})}"
+                                   th:text="${pageNum + 1}">1</a>
+                            </li>
+                            
+                            <li class="page-item" th:classappend="${messages.last} ? 'disabled'">
+                                <a class="page-link" th:href="@{/management/chat-config/messages(page=${messages.number + 1}, size=${messages.size}, chatId=${currentChatId}, keyword=${currentKeyword}, startTime=${currentStartTime}, endTime=${currentEndTime})}">下一页</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 消息详情模态框 -->
+    <div class="modal fade" id="messageDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">消息详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>时间:</strong> <span id="detailTime"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>聊天对象:</strong> <span id="detailChat"></span>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-6">
+                            <strong>发送者:</strong> <span id="detailSender"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>类型:</strong> <span id="detailType"></span>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <strong>内容:</strong>
+                        <div class="border rounded p-3 mt-2" id="detailContent" style="max-height: 300px; overflow-y: auto;"></div>
+                    </div>
+                    <div class="mt-3" id="detailInfoSection" style="display: none;">
+                        <strong>附加信息:</strong>
+                        <div class="border rounded p-3 mt-2" id="detailInfo"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 清理消息模态框 -->
+    <div class="modal fade" id="cleanupModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">清理消息记录</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>警告:</strong> 清理操作不可恢复，请谨慎操作！
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">清理方式</label>
+                        <div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="cleanupType" id="cleanupByChat" value="chat">
+                                <label class="form-check-label" for="cleanupByChat">
+                                    清理指定聊天的所有消息
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="cleanupType" id="cleanupByTime" value="time">
+                                <label class="form-check-label" for="cleanupByTime">
+                                    清理指定时间之前的消息
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3" id="cleanupChatSection" style="display: none;">
+                        <label for="cleanupChatId" class="form-label">选择聊天对象</label>
+                        <select class="form-select" id="cleanupChatId">
+                            <option value="">请选择...</option>
+                            <option th:each="chat : ${allChats}"
+                                    th:value="${chat.id}"
+                                    th:text="${chat.name + (chat.groupFlag ? ' (群聊)' : ' (私聊)')}">聊天对象</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="cleanupTimeSection" style="display: none;">
+                        <label for="cleanupBeforeTime" class="form-label">清理此时间之前的消息</label>
+                        <input type="datetime-local" class="form-control" id="cleanupBeforeTime">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" onclick="performCleanup()">确认清理</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 清理消息模态框 -->
+    <div class="modal fade" id="cleanupModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">清理消息记录</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>警告:</strong> 清理操作不可恢复，请谨慎操作！
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">清理方式</label>
+                        <div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="cleanupType" id="cleanupByChat" value="chat">
+                                <label class="form-check-label" for="cleanupByChat">
+                                    清理指定聊天的所有消息
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="cleanupType" id="cleanupByTime" value="time">
+                                <label class="form-check-label" for="cleanupByTime">
+                                    清理指定时间之前的消息
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3" id="cleanupChatSection" style="display: none;">
+                        <label for="cleanupChatId" class="form-label">选择聊天对象</label>
+                        <select class="form-select" id="cleanupChatId">
+                            <option value="">请选择...</option>
+                            <option th:each="chat : ${allChats}"
+                                    th:value="${chat.id}"
+                                    th:text="${chat.name + (chat.groupFlag ? ' (群聊)' : ' (私聊)')}">聊天对象</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="cleanupTimeSection" style="display: none;">
+                        <label for="cleanupBeforeTime" class="form-label">清理此时间之前的消息</label>
+                        <input type="datetime-local" class="form-control" id="cleanupBeforeTime">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" onclick="performCleanup()">确认清理</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<th:block th:fragment="scripts">
+    <script th:inline="javascript">
+        // 消息数据
+        const messages = /*[[${messages.content}]]*/ [];
+
+        // 查看消息详情
+        function viewMessage(id) {
+            const message = messages.find(m => m.id === id);
+            if (!message) return;
+
+            $('#detailTime').text(message.formattedTime || '');
+            $('#detailChat').text(message.chatName || '');
+            $('#detailSender').text(message.displaySender || '');
+            $('#detailType').text(message.typeDisplay || '');
+            $('#detailContent').text(message.content || '');
+            
+            if (message.info && message.info.length > 0) {
+                $('#detailInfo').text(message.info.join(', '));
+                $('#detailInfoSection').show();
+            } else {
+                $('#detailInfoSection').hide();
+            }
+
+            $('#messageDetailModal').modal('show');
+        }
+
+        // 删除消息
+        function deleteMessage(id) {
+            if (!confirm('确定要删除这条消息吗？')) return;
+            
+            makeRequest(`/management/chat-config/messages/${id}/delete`, 'POST')
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('消息删除成功！', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('删除失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        }
+
+        // 导出消息记录
+        function exportMessages() {
+            const params = new URLSearchParams(window.location.search);
+            const exportUrl = '/management/chat-config/messages/export?' + params.toString();
+            window.open(exportUrl, '_blank');
+        }
+
+        // 清理方式选择
+        $('input[name="cleanupType"]').on('change', function() {
+            const type = $(this).val();
+            if (type === 'chat') {
+                $('#cleanupChatSection').show();
+                $('#cleanupTimeSection').hide();
+            } else if (type === 'time') {
+                $('#cleanupChatSection').hide();
+                $('#cleanupTimeSection').show();
+            }
+        });
+
+        // 执行清理
+        function performCleanup() {
+            const type = $('input[name="cleanupType"]:checked').val();
+
+            if (!type) {
+                showAlert('请选择清理方式', 'warning');
+                return;
+            }
+
+            if (type === 'chat') {
+                const chatId = $('#cleanupChatId').val();
+                if (!chatId) {
+                    showAlert('请选择要清理的聊天对象', 'warning');
+                    return;
+                }
+
+                if (!confirm('确定要清理该聊天的所有消息记录吗？此操作不可恢复！')) return;
+
+                makeRequest('/management/chat-config/messages/cleanup-chat', 'POST', { chatId: chatId })
+                    .done(function(response) {
+                        if (response === 'success') {
+                            showAlert('聊天消息清理成功！', 'success');
+                            $('#cleanupModal').modal('hide');
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            showAlert('清理失败: ' + response, 'danger');
+                        }
+                    })
+                    .fail(function() {
+                        showAlert('请求失败，请检查网络连接', 'danger');
+                    });
+
+            } else if (type === 'time') {
+                const beforeTime = $('#cleanupBeforeTime').val();
+                if (!beforeTime) {
+                    showAlert('请选择清理时间', 'warning');
+                    return;
+                }
+
+                if (!confirm('确定要清理指定时间之前的所有消息记录吗？此操作不可恢复！')) return;
+
+                makeRequest('/management/chat-config/messages/cleanup-before', 'POST', { beforeTime: beforeTime })
+                    .done(function(response) {
+                        if (response === 'success') {
+                            showAlert('历史消息清理成功！', 'success');
+                            $('#cleanupModal').modal('hide');
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            showAlert('清理失败: ' + response, 'danger');
+                        }
+                    })
+                    .fail(function() {
+                        showAlert('请求失败，请检查网络连接', 'danger');
+                    });
+            }
+        }
+    </script>
+</th:block>
+
+</html>

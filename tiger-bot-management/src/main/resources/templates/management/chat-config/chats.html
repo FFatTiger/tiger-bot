@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{management/layout :: layout('聊天对象管理', ~{::content}, ~{::scripts})}">
+
+<th:block th:fragment="content">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-comments me-2"></i>聊天对象管理
+                    </h5>
+                    <div>
+                        <button type="button" class="btn btn-success btn-sm me-2" data-bs-toggle="modal" data-bs-target="#batchUpdateAiModal">
+                            <i class="fas fa-cogs me-1"></i>批量配置AI
+                        </button>
+                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createChatModal">
+                            <i class="fas fa-plus me-1"></i>添加聊天对象
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>
+                                        <input type="checkbox" id="selectAll" class="form-check-input">
+                                    </th>
+                                    <th>ID</th>
+                                    <th>聊天对象</th>
+                                    <th>类型</th>
+                                    <th>AI配置</th>
+                                    <th>消息数量</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="chat : ${chats}">
+                                    <td>
+                                        <input type="checkbox" class="form-check-input chat-checkbox" th:value="${chat.id()}">
+                                    </td>
+                                    <td th:text="${chat.id()}">1</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i th:class="${chat.groupFlag() ? 'fas fa-users text-primary me-2' : 'fas fa-user text-info me-2'}"></i>
+                                            <span th:text="${chat.name()}">聊天对象名称</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span th:class="${chat.groupFlag() ? 'badge bg-primary' : 'badge bg-info'}" 
+                                              th:text="${chat.getChatTypeDisplay()}">群聊</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${chat.hasAiConfiguration()}" class="text-success">
+                                            <i class="fas fa-check-circle me-1"></i>
+                                            <small th:text="${chat.getAiConfigurationDisplay()}">已配置</small>
+                                        </span>
+                                        <span th:unless="${chat.hasAiConfiguration()}" class="text-warning">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            <small>未配置</small>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary" th:text="${chat.messageCount()}">0</span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary me-1"
+                                                th:onclick="'editChatAi(' + ${chat.id()} + ')'">
+                                            <i class="fas fa-cog"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                th:onclick="'deleteChat(' + ${chat.id()} + ')'">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 创建聊天对象模态框 -->
+    <div class="modal fade" id="createChatModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">添加聊天对象</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="createChatForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="chatName" class="form-label">聊天对象名称</label>
+                            <input type="text" class="form-control" id="chatName" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">聊天类型</label>
+                            <div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="groupFlag" id="privateChat" value="false" checked>
+                                    <label class="form-check-label" for="privateChat">私聊</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="groupFlag" id="groupChat" value="true">
+                                    <label class="form-check-label" for="groupChat">群聊</label>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <h6>AI配置（可选）</h6>
+                        <div class="mb-3">
+                            <label for="createAiProvider" class="form-label">AI提供商</label>
+                            <select class="form-select" id="createAiProvider" name="aiProviderId">
+                                <option value="">请选择...</option>
+                                <option th:each="provider : ${allProviders}" th:value="${provider.id()}" th:text="${provider.providerName()}">提供商</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="createAiModel" class="form-label">AI模型</label>
+                            <select class="form-select" id="createAiModel" name="aiModelId">
+                                <option value="">请先选择提供商...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="createAiRole" class="form-label">AI角色</label>
+                            <select class="form-select" id="createAiRole" name="aiRoleId">
+                                <option value="">请选择...</option>
+                                <option th:each="role : ${allRoles}" th:value="${role.id()}" th:text="${role.name()}">角色</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">创建</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑聊天AI配置模态框 -->
+    <div class="modal fade" id="editChatAiModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">编辑AI配置</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editChatAiForm">
+                    <input type="hidden" id="editChatId" name="id">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">聊天对象</label>
+                            <input type="text" class="form-control" id="editChatName" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editAiProvider" class="form-label">AI提供商</label>
+                            <select class="form-select" id="editAiProvider" name="aiProviderId" required>
+                                <option value="">请选择...</option>
+                                <option th:each="provider : ${allProviders}" th:value="${provider.id()}" th:text="${provider.providerName()}">提供商</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editAiModel" class="form-label">AI模型</label>
+                            <select class="form-select" id="editAiModel" name="aiModelId" required>
+                                <option value="">请先选择提供商...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editAiRole" class="form-label">AI角色</label>
+                            <select class="form-select" id="editAiRole" name="aiRoleId" required>
+                                <option value="">请选择...</option>
+                                <option th:each="role : ${allRoles}" th:value="${role.id()}" th:text="${role.name()}">角色</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 批量配置AI模态框 -->
+    <div class="modal fade" id="batchUpdateAiModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">批量配置AI设置</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="batchUpdateAiForm">
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            请先选择要配置的聊天对象，然后设置AI配置。
+                        </div>
+                        <div class="mb-3">
+                            <label for="batchAiProvider" class="form-label">AI提供商</label>
+                            <select class="form-select" id="batchAiProvider" name="aiProviderId" required>
+                                <option value="">请选择...</option>
+                                <option th:each="provider : ${allProviders}" th:value="${provider.id()}" th:text="${provider.providerName()}">提供商</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="batchAiModel" class="form-label">AI模型</label>
+                            <select class="form-select" id="batchAiModel" name="aiModelId" required>
+                                <option value="">请先选择提供商...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="batchAiRole" class="form-label">AI角色</label>
+                            <select class="form-select" id="batchAiRole" name="aiRoleId" required>
+                                <option value="">请选择...</option>
+                                <option th:each="role : ${allRoles}" th:value="${role.id()}" th:text="${role.name()}">角色</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-success">批量配置</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<th:block th:fragment="scripts">
+    <script th:inline="javascript">
+        // 聊天数据
+        const chats = /*[[${chats}]]*/ [];
+        const allModels = /*[[${allModels}]]*/ [];
+
+        // 全选功能
+        $('#selectAll').on('change', function() {
+            $('.chat-checkbox').prop('checked', this.checked);
+        });
+
+        // 提供商变化时更新模型列表
+        $('#createAiProvider, #editAiProvider, #batchAiProvider').on('change', function() {
+            const providerId = $(this).val();
+            const targetSelect = $(this).attr('id').replace('Provider', 'Model');
+            updateModelOptions('#' + targetSelect, providerId);
+        });
+
+        // 更新模型选项
+        function updateModelOptions(selectId, providerId) {
+            const $select = $(selectId);
+            $select.empty();
+            
+            if (!providerId) {
+                $select.append('<option value="">请先选择提供商...</option>');
+                return;
+            }
+
+            $select.append('<option value="">请选择...</option>');
+            allModels.filter(model => model.aiProviderId == providerId)
+                    .forEach(model => {
+                        $select.append(`<option value="${model.id}">${model.modelName}</option>`);
+                    });
+        }
+
+        // 创建聊天对象
+        $('#createChatForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = $(this).serialize();
+            
+            makeRequest('/management/chat-config/chats/create', 'POST', formData)
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('聊天对象创建成功！', 'success');
+                        $('#createChatModal').modal('hide');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('创建失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        });
+
+        // 编辑聊天AI配置
+        function editChatAi(id) {
+            const chat = chats.find(c => c.id === id);
+            if (!chat) return;
+
+            $('#editChatId').val(chat.id);
+            $('#editChatName').val(chat.name);
+            $('#editAiProvider').val(chat.aiProviderId || '');
+            
+            // 更新模型列表并设置当前值
+            updateModelOptions('#editAiModel', chat.aiProviderId);
+            setTimeout(() => {
+                $('#editAiModel').val(chat.aiModelId || '');
+            }, 100);
+            
+            $('#editAiRole').val(chat.aiRoleId || '');
+
+            $('#editChatAiModal').modal('show');
+        }
+
+        // 删除聊天对象
+        function deleteChat(id) {
+            if (!confirm('确定要删除这个聊天对象吗？这将同时删除所有相关的消息记录！')) return;
+
+            makeRequest(`/management/chat-config/chats/${id}/delete`, 'POST')
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('聊天对象删除成功！', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('删除失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        }
+
+        // 保存编辑的AI配置
+        $('#editChatAiForm').on('submit', function(e) {
+            e.preventDefault();
+
+            const id = $('#editChatId').val();
+            const formData = $(this).serialize();
+
+            makeRequest(`/management/chat-config/chats/${id}/update-ai`, 'POST', formData)
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert('AI配置更新成功！', 'success');
+                        $('#editChatAiModal').modal('hide');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('更新失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        });
+
+        // 批量配置AI
+        $('#batchUpdateAiForm').on('submit', function(e) {
+            e.preventDefault();
+
+            const selectedChats = $('.chat-checkbox:checked').map(function() {
+                return $(this).val();
+            }).get();
+
+            if (selectedChats.length === 0) {
+                showAlert('请先选择要配置的聊天对象', 'warning');
+                return;
+            }
+
+            const formData = $(this).serialize() + '&chatIds=' + selectedChats.join(',');
+
+            makeRequest('/management/chat-config/chats/batch-update-ai', 'POST', formData)
+                .done(function(response) {
+                    if (response === 'success') {
+                        showAlert(`成功为${selectedChats.length}个聊天对象配置AI设置！`, 'success');
+                        $('#batchUpdateAiModal').modal('hide');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('批量配置失败: ' + response, 'danger');
+                    }
+                })
+                .fail(function() {
+                    showAlert('请求失败，请检查网络连接', 'danger');
+                });
+        });
+    </script>
+</th:block>
+
+</html>
