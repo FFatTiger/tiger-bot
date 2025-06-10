@@ -11,37 +11,241 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-dark: #3730a3;
+            --secondary-color: #6366f1;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+            --light-bg: #f8fafc;
+            --sidebar-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --card-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--light-bg);
+        }
+
         .sidebar {
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--sidebar-bg);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
         }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            z-index: -1;
+        }
+
+        .sidebar-heading {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 1.5rem !important;
+            margin-bottom: 0.5rem !important;
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
         .sidebar .nav-link {
-            color: rgba(255, 255, 255, 0.8);
-            border-radius: 8px;
-            margin: 2px 0;
-            transition: all 0.3s;
+            color: rgba(255, 255, 255, 0.85);
+            border-radius: 10px;
+            margin: 3px 8px;
+            padding: 12px 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
         }
+
+        .sidebar .nav-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .sidebar .nav-link:hover::before {
+            left: 100%;
+        }
+
         .sidebar .nav-link:hover,
         .sidebar .nav-link.active {
             color: white;
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.15);
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
+
+        .sidebar .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-left: 4px solid white;
+        }
+
+        .sidebar .nav-link i {
+            width: 20px;
+            text-align: center;
+            margin-right: 12px;
+        }
+
         .main-content {
-            background-color: #f8f9fa;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
             min-height: 100vh;
+            padding: 0;
         }
+
+        .content-header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
         .card {
             border: none;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            background: white;
+            overflow: hidden;
         }
+
+        .card:hover {
+            box-shadow: var(--card-shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1.25rem 1.5rem;
+            font-weight: 600;
+        }
+
         .status-badge {
-            font-size: 0.8rem;
-            padding: 4px 8px;
+            font-size: 0.75rem;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
         }
+
         .navbar-brand {
-            font-weight: bold;
+            font-weight: 700;
             color: white !important;
+            font-size: 1.5rem;
+        }
+
+        .btn {
+            border-radius: 10px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .table {
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .table th {
+            background-color: #f8fafc;
+            border-bottom: 2px solid #e2e8f0;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .list-group-item {
+            border: none;
+            border-radius: 10px !important;
+            margin-bottom: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .list-group-item:hover {
+            background-color: #f8fafc;
+            transform: translateX(4px);
+        }
+
+        .alert {
+            border-radius: 12px;
+            border: none;
+            box-shadow: var(--card-shadow);
+        }
+
+        /* 响应式优化 */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: -100%;
+                width: 280px;
+                z-index: 1050;
+                transition: left 0.3s ease;
+            }
+
+            .sidebar.show {
+                left: 0;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        /* 动画效果 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        /* 滚动条样式 */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
         }
     </style>
 </head>
@@ -55,91 +259,105 @@
                         <h4 class="navbar-brand">
                             <i class="fas fa-robot me-2"></i>TigerBot
                         </h4>
-                        <small class="text-white-50">智能聊天机器人管理</small>
+                        <small class="text-white-50">智能聊天机器人管理平台</small>
                     </div>
-                    
+
+                    <!-- 系统管理 -->
+                    <h6 class="sidebar-heading text-white-50">
+                        <i class="fas fa-cog me-2"></i>系统管理
+                    </h6>
                     <ul class="nav flex-column">
                         <li class="nav-item">
                             <a class="nav-link" href="/management/">
-                                <i class="fas fa-tachometer-alt me-2"></i>
+                                <i class="fas fa-tachometer-alt"></i>
                                 仪表盘
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/management/gateway">
-                                <i class="fas fa-network-wired me-2"></i>
+                                <i class="fas fa-network-wired"></i>
                                 网关控制
                             </a>
                         </li>
+                    </ul>
+
+                    <!-- 机器人配置 -->
+                    <h6 class="sidebar-heading text-white-50">
+                        <i class="fas fa-robot me-2"></i>机器人配置
+                    </h6>
+                    <ul class="nav flex-column">
                         <li class="nav-item">
                             <a class="nav-link" href="/management/bot-config/listeners">
-                                <i class="fas fa-ear-listen me-2"></i>
+                                <i class="fas fa-ear-listen"></i>
                                 监听配置
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/management/bot-config/command-auths">
-                                <i class="fas fa-user-shield me-2"></i>
+                                <i class="fas fa-user-shield"></i>
                                 权限配置
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/management/bot-config/users">
-                                <i class="fas fa-users me-2"></i>
+                                <i class="fas fa-users"></i>
                                 用户管理
                             </a>
                         </li>
                     </ul>
 
-                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-white-50">
-                        <span>AI配置管理</span>
+                    <!-- AI配置管理 -->
+                    <h6 class="sidebar-heading text-white-50">
+                        <i class="fas fa-brain me-2"></i>AI配置管理
                     </h6>
                     <ul class="nav flex-column">
                         <li class="nav-item">
                             <a class="nav-link" href="/management/ai-config/providers">
-                                <i class="fas fa-cloud me-2"></i>
+                                <i class="fas fa-cloud"></i>
                                 AI提供商
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/management/ai-config/models">
-                                <i class="fas fa-brain me-2"></i>
+                                <i class="fas fa-microchip"></i>
                                 AI模型
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/management/ai-config/roles">
-                                <i class="fas fa-user-tie me-2"></i>
+                                <i class="fas fa-user-tie"></i>
                                 AI角色
                             </a>
                         </li>
                     </ul>
 
-                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-white-50">
-                        <span>命令管理</span>
+                    <!-- 命令管理 -->
+                    <h6 class="sidebar-heading text-white-50">
+                        <i class="fas fa-terminal me-2"></i>命令管理
                     </h6>
                     <ul class="nav flex-column">
                         <li class="nav-item">
                             <a class="nav-link" href="/management/command-config/commands">
-                                <i class="fas fa-terminal me-2"></i>
+                                <i class="fas fa-code"></i>
                                 命令配置
                             </a>
                         </li>
                     </ul>
 
-                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-white-50">
-                        <span>聊天管理</span>
+                    <!-- 聊天管理 -->
+                    <h6 class="sidebar-heading text-white-50">
+                        <i class="fas fa-comments me-2"></i>聊天管理
                     </h6>
                     <ul class="nav flex-column">
                         <li class="nav-item">
                             <a class="nav-link" href="/management/chat-config/chats">
-                                <i class="fas fa-comments me-2"></i>
+                                <i class="fas fa-comment-dots"></i>
                                 聊天对象
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/management/chat-config/messages">
-                                <i class="fas fa-envelope me-2"></i>
+                                <i class="fas fa-envelope"></i>
                                 消息记录
                             </a>
                         </li>
@@ -157,21 +375,33 @@
             </nav>
 
             <!-- 主内容区域 -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2" th:text="${pageTitle ?: '管理后台'}">管理后台</h1>
-                    <div class="btn-toolbar mb-2 mb-md-0">
-                        <div class="btn-group me-2">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="location.reload()">
-                                <i class="fas fa-sync-alt me-1"></i>刷新
+            <main class="col-md-9 ms-sm-auto col-lg-10 main-content">
+                <div class="content-header">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
+                        <div class="d-flex align-items-center">
+                            <button class="btn btn-outline-secondary btn-sm me-3 d-md-none" type="button" id="sidebarToggle">
+                                <i class="fas fa-bars"></i>
                             </button>
+                            <div>
+                                <h1 class="h2 mb-1" th:text="${pageTitle ?: '管理后台'}">管理后台</h1>
+                                <p class="text-muted mb-0">TigerBot 智能聊天机器人管理平台</p>
+                            </div>
+                        </div>
+                        <div class="btn-toolbar">
+                            <div class="btn-group me-2">
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="location.reload()">
+                                    <i class="fas fa-sync-alt me-1"></i>刷新页面
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 页面内容 -->
-                <div th:insert="${content}">
-                    <!-- 页面具体内容将在这里替换 -->
+                <div class="px-4 pb-4">
+                    <div th:insert="${content}">
+                        <!-- 页面具体内容将在这里替换 -->
+                    </div>
                 </div>
             </main>
         </div>
@@ -186,17 +416,30 @@
         // 通用工具函数
         function showAlert(message, type = 'info') {
             const alertHtml = `
-                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                    ${message}
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert" style="animation: slideInDown 0.3s ease-out;">
+                    <i class="fas fa-${getAlertIcon(type)} me-2"></i>${message}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             `;
-            $('.main-content').prepend(alertHtml);
+            $('.content-header').after(alertHtml);
 
-            // 3秒后自动消失
+            // 5秒后自动消失
             setTimeout(() => {
-                $('.alert').fadeOut();
-            }, 3000);
+                $('.alert').fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }, 5000);
+        }
+
+        function getAlertIcon(type) {
+            const icons = {
+                'success': 'check-circle',
+                'danger': 'exclamation-triangle',
+                'warning': 'exclamation-circle',
+                'info': 'info-circle',
+                'primary': 'info-circle'
+            };
+            return icons[type] || 'info-circle';
         }
 
         // AJAX请求通用处理
@@ -205,39 +448,138 @@
                 url: url,
                 method: method,
                 data: data,
-                dataType: 'text'
+                dataType: 'text',
+                beforeSend: function() {
+                    // 显示加载状态
+                    if (method !== 'GET') {
+                        showAlert('正在处理请求...', 'info');
+                    }
+                }
             });
         }
 
+        // 移动端侧边栏切换
+        function toggleSidebar() {
+            $('.sidebar').toggleClass('show');
+            if ($('.sidebar').hasClass('show')) {
+                $('body').append('<div class="sidebar-overlay" onclick="toggleSidebar()"></div>');
+                $('.sidebar-overlay').css({
+                    'position': 'fixed',
+                    'top': 0,
+                    'left': 0,
+                    'width': '100%',
+                    'height': '100%',
+                    'background': 'rgba(0,0,0,0.5)',
+                    'z-index': 1040
+                });
+            } else {
+                $('.sidebar-overlay').remove();
+            }
+        }
+
         // 设置导航活动状态
-        $(document).ready(function() {
+        function setActiveNavigation() {
             const currentPath = window.location.pathname;
             $('.nav-link').removeClass('active');
 
-            if (currentPath === '/management/' || currentPath === '/management/index') {
-                $('a[href="/management/"]').addClass('active');
-            } else if (currentPath.endsWith('/gateway')) {
-                $('a[href="/management/gateway"]').addClass('active');
-            } else if (currentPath.includes('/bot-config/listeners')) {
-                $('a[href="/management/bot-config/listeners"]').addClass('active');
-            } else if (currentPath.includes('/bot-config/command-auths')) {
-                $('a[href="/management/bot-config/command-auths"]').addClass('active');
-            } else if (currentPath.includes('/bot-config/users')) {
-                $('a[href="/management/bot-config/users"]').addClass('active');
-            } else if (currentPath.includes('/ai-config/providers')) {
-                $('a[href="/management/ai-config/providers"]').addClass('active');
-            } else if (currentPath.includes('/ai-config/models')) {
-                $('a[href="/management/ai-config/models"]').addClass('active');
-            } else if (currentPath.includes('/ai-config/roles')) {
-                $('a[href="/management/ai-config/roles"]').addClass('active');
-            } else if (currentPath.includes('/command-config/commands')) {
-                $('a[href="/management/command-config/commands"]').addClass('active');
-            } else if (currentPath.includes('/chat-config/chats')) {
-                $('a[href="/management/chat-config/chats"]').addClass('active');
-            } else if (currentPath.includes('/chat-config/messages')) {
-                $('a[href="/management/chat-config/messages"]').addClass('active');
+            // 精确匹配路径
+            const exactMatches = {
+                '/management/chat-config/messages': '/management/chat-config/messages',
+                '/management/chat-config/chats': '/management/chat-config/chats',
+                '/management/command-config/commands': '/management/command-config/commands',
+                '/management/ai-config/providers': '/management/ai-config/providers',
+                '/management/ai-config/models': '/management/ai-config/models',
+                '/management/ai-config/roles': '/management/ai-config/roles',
+                '/management/bot-config/listeners': '/management/bot-config/listeners',
+                '/management/bot-config/command-auths': '/management/bot-config/command-auths',
+                '/management/bot-config/users': '/management/bot-config/users',
+                '/management/gateway': '/management/gateway',
+                '/management/': '/management/',
+                '/management': '/management/'
+            };
+
+            // 首先尝试精确匹配
+            if (exactMatches[currentPath]) {
+                $(`a[href="${exactMatches[currentPath]}"]`).addClass('active');
+                return;
             }
+
+            // 处理带尾部斜杠的情况
+            const pathWithoutSlash = currentPath.endsWith('/') ? currentPath.slice(0, -1) : currentPath;
+            const pathWithSlash = currentPath.endsWith('/') ? currentPath : currentPath + '/';
+
+            if (exactMatches[pathWithoutSlash]) {
+                $(`a[href="${exactMatches[pathWithoutSlash]}"]`).addClass('active');
+                return;
+            }
+
+            if (exactMatches[pathWithSlash]) {
+                $(`a[href="${exactMatches[pathWithSlash]}"]`).addClass('active');
+                return;
+            }
+        }
+
+        // 页面加载完成后的初始化
+        $(document).ready(function() {
+            // 设置导航状态
+            setActiveNavigation();
+
+            // 绑定侧边栏切换按钮
+            $('#sidebarToggle').on('click', toggleSidebar);
+
+            // 添加页面加载动画
+            $('.card').each(function(index) {
+                $(this).css('animation-delay', (index * 0.1) + 's');
+            });
+
+            // 优化表格响应式
+            $('.table-responsive').each(function() {
+                if ($(this).find('table').width() > $(this).width()) {
+                    $(this).addClass('table-scroll-indicator');
+                }
+            });
+
+            // 添加工具提示
+            $('[title]').tooltip();
+
+            // 监听窗口大小变化
+            $(window).on('resize', function() {
+                if ($(window).width() > 768) {
+                    $('.sidebar').removeClass('show');
+                    $('.sidebar-overlay').remove();
+                }
+            });
         });
+
+        // 添加CSS动画
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInDown {
+                from {
+                    transform: translateY(-100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+
+            .table-scroll-indicator::after {
+                content: '→ 滑动查看更多';
+                position: absolute;
+                right: 10px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: rgba(0,0,0,0.7);
+                color: white;
+                padding: 2px 8px;
+                border-radius: 4px;
+                font-size: 12px;
+                pointer-events: none;
+            }
+        `;
+        document.head.appendChild(style);
     </script>
     
     <!-- 页面特定的JavaScript -->

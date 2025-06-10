@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>导航测试</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .nav-link { display: block; padding: 10px; margin: 5px 0; background: #f0f0f0; text-decoration: none; color: #333; }
+        .nav-link.active { background: #007bff; color: white; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; }
+        .result { margin: 10px 0; padding: 10px; background: #f8f9fa; }
+    </style>
+</head>
+<body>
+    <h1>TigerBot 导航测试</h1>
+    
+    <div class="test-section">
+        <h2>模拟导航菜单</h2>
+        <a class="nav-link" href="/management/">仪表盘</a>
+        <a class="nav-link" href="/management/gateway">网关控制</a>
+        <a class="nav-link" href="/management/bot-config/listeners">监听配置</a>
+        <a class="nav-link" href="/management/bot-config/command-auths">权限配置</a>
+        <a class="nav-link" href="/management/bot-config/users">用户管理</a>
+        <a class="nav-link" href="/management/ai-config/providers">AI提供商</a>
+        <a class="nav-link" href="/management/ai-config/models">AI模型</a>
+        <a class="nav-link" href="/management/ai-config/roles">AI角色</a>
+        <a class="nav-link" href="/management/command-config/commands">命令配置</a>
+        <a class="nav-link" href="/management/chat-config/chats">聊天对象</a>
+        <a class="nav-link" href="/management/chat-config/messages">消息记录</a>
+    </div>
+
+    <div class="test-section">
+        <h2>路径测试</h2>
+        <button onclick="testPath('/management/')">测试首页</button>
+        <button onclick="testPath('/management/gateway')">测试网关</button>
+        <button onclick="testPath('/management/bot-config/listeners')">测试监听配置</button>
+        <button onclick="testPath('/management/ai-config/providers')">测试AI提供商</button>
+        <button onclick="testPath('/management/command-config/commands')">测试命令配置</button>
+        <button onclick="testPath('/management/chat-config/chats')">测试聊天对象</button>
+        
+        <div id="testResults"></div>
+    </div>
+
+    <script>
+        // 复制layout.html中的导航逻辑
+        function setActiveNavigation(testPath) {
+            const currentPath = testPath || window.location.pathname;
+            $('.nav-link').removeClass('active');
+
+            console.log('Current path:', currentPath);
+
+            // 精确匹配路径
+            const exactMatches = {
+                '/management/chat-config/messages': '/management/chat-config/messages',
+                '/management/chat-config/chats': '/management/chat-config/chats',
+                '/management/command-config/commands': '/management/command-config/commands',
+                '/management/ai-config/providers': '/management/ai-config/providers',
+                '/management/ai-config/models': '/management/ai-config/models',
+                '/management/ai-config/roles': '/management/ai-config/roles',
+                '/management/bot-config/listeners': '/management/bot-config/listeners',
+                '/management/bot-config/command-auths': '/management/bot-config/command-auths',
+                '/management/bot-config/users': '/management/bot-config/users',
+                '/management/gateway': '/management/gateway',
+                '/management/': '/management/',
+                '/management': '/management/'
+            };
+
+            // 首先尝试精确匹配
+            if (exactMatches[currentPath]) {
+                console.log('Exact match found:', currentPath, '->', exactMatches[currentPath]);
+                $(`a[href="${exactMatches[currentPath]}"]`).addClass('active');
+                return exactMatches[currentPath];
+            }
+
+            // 处理带尾部斜杠的情况
+            const pathWithoutSlash = currentPath.endsWith('/') ? currentPath.slice(0, -1) : currentPath;
+            const pathWithSlash = currentPath.endsWith('/') ? currentPath : currentPath + '/';
+            
+            if (exactMatches[pathWithoutSlash]) {
+                console.log('Match without slash:', pathWithoutSlash, '->', exactMatches[pathWithoutSlash]);
+                $(`a[href="${exactMatches[pathWithoutSlash]}"]`).addClass('active');
+                return exactMatches[pathWithoutSlash];
+            }
+            
+            if (exactMatches[pathWithSlash]) {
+                console.log('Match with slash:', pathWithSlash, '->', exactMatches[pathWithSlash]);
+                $(`a[href="${exactMatches[pathWithSlash]}"]`).addClass('active');
+                return exactMatches[pathWithSlash];
+            }
+
+            console.log('No exact match found for path:', currentPath);
+            return null;
+        }
+
+        function testPath(path) {
+            const result = setActiveNavigation(path);
+            const activeMenu = $('.nav-link.active').text().trim();
+            
+            const resultHtml = `
+                <div class="result">
+                    <strong>测试路径:</strong> ${path}<br>
+                    <strong>匹配结果:</strong> ${result || '无匹配'}<br>
+                    <strong>活动菜单:</strong> ${activeMenu || '无'}<br>
+                    <strong>状态:</strong> ${result ? '✅ 成功' : '❌ 失败'}
+                </div>
+            `;
+            
+            $('#testResults').append(resultHtml);
+        }
+
+        // 页面加载时测试当前路径
+        $(document).ready(function() {
+            setActiveNavigation();
+            
+            // 显示当前状态
+            const currentPath = window.location.pathname;
+            const activeMenu = $('.nav-link.active').text().trim();
+            
+            $('#testResults').html(`
+                <div class="result">
+                    <strong>当前页面路径:</strong> ${currentPath}<br>
+                    <strong>活动菜单:</strong> ${activeMenu || '无'}<br>
+                    <strong>状态:</strong> ${activeMenu ? '✅ 正常' : '❌ 未匹配'}
+                </div>
+            `);
+        });
+    </script>
+</body>
+</html>

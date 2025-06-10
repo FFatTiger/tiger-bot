@@ -7,95 +7,89 @@
 <body>
     <th:block th:fragment="content">
         <!-- 状态卡片 -->
-        <div class="row mb-4">
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-primary shadow h-100 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                    系统状态
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${systemStatus}">
-                                    运行中
+        <div class="row g-4 mb-5">
+            <div class="col-xl-3 col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-primary bg-gradient rounded-3 p-3">
+                                    <i class="fas fa-server text-white fa-lg"></i>
                                 </div>
                             </div>
-                            <div class="col-auto">
-                                <i class="fas fa-server fa-2x text-gray-300"></i>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="text-muted small text-uppercase fw-bold mb-1">系统状态</div>
+                                <div class="h5 mb-0 fw-bold text-dark" th:text="${systemStatus}">运行中</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-success shadow h-100 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                    网关状态
+            <div class="col-xl-3 col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-success bg-gradient rounded-3 p-3">
+                                    <i class="fas fa-network-wired text-white fa-lg"></i>
                                 </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    <span th:text="${gatewayStatus}">连接中</span>
-                                    <span class="badge status-badge ms-2" 
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="text-muted small text-uppercase fw-bold mb-1">网关状态</div>
+                                <div class="d-flex align-items-center">
+                                    <span class="h6 mb-0 fw-bold text-dark me-2" th:text="${gatewayStatus}">连接中</span>
+                                    <span class="badge status-badge"
                                           th:classappend="${gatewayStatus == '运行中' ? 'bg-success' : (gatewayStatus == '连接中' ? 'bg-warning' : 'bg-danger')}"
                                           th:text="${gatewayStatus}">
                                     </span>
                                 </div>
                             </div>
-                            <div class="col-auto">
-                                <i class="fas fa-network-wired fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-info bg-gradient rounded-3 p-3">
+                                    <i class="fas fa-robot text-white fa-lg"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="text-muted small text-uppercase fw-bold mb-1">机器人名称</div>
+                                <div class="h5 mb-0 fw-bold text-dark" th:text="${robotName ?: '未设置'}">TigerBot</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-info shadow h-100 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                    机器人名称
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${robotName ?: '未设置'}">
-                                    TigerBot
+            <div class="col-xl-3 col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-warning bg-gradient rounded-3 p-3">
+                                    <i class="fas fa-tools text-white fa-lg"></i>
                                 </div>
                             </div>
-                            <div class="col-auto">
-                                <i class="fas fa-robot fa-2x text-gray-300"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-warning shadow h-100 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                    快速操作
+                            <div class="flex-grow-1 ms-3">
+                                <div class="text-muted small text-uppercase fw-bold mb-1">快速操作</div>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-success btn-sm" onclick="quickStartGateway()" title="启动网关">
+                                        <i class="fas fa-play"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="quickStopGateway()" title="停止网关">
+                                        <i class="fas fa-stop"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-warning btn-sm" onclick="quickRestartGateway()" title="重启网关">
+                                        <i class="fas fa-redo"></i>
+                                    </button>
                                 </div>
-                                <div class="row">
-                                    <div class="col">
-                                        <button class="btn btn-sm btn-success me-1" onclick="quickStartGateway()">
-                                            <i class="fas fa-play"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger me-1" onclick="quickStopGateway()">
-                                            <i class="fas fa-stop"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-warning" onclick="quickRestartGateway()">
-                                            <i class="fas fa-redo"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <i class="fas fa-tools fa-2x text-gray-300"></i>
                             </div>
                         </div>
                     </div>
@@ -104,143 +98,192 @@
         </div>
 
         <!-- 功能区域 -->
-        <div class="row">
+        <div class="row g-4 mb-5">
             <!-- 系统信息 -->
-            <div class="col-lg-6 mb-4">
-                <div class="card shadow">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">
-                            <i class="fas fa-info-circle me-2"></i>系统信息
-                        </h6>
+            <div class="col-lg-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-0 py-3">
+                        <h5 class="mb-0 fw-bold text-dark">
+                            <i class="fas fa-info-circle me-2 text-primary"></i>系统信息
+                        </h5>
                     </div>
                     <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-borderless">
-                                <tbody>
-                                    <tr>
-                                        <td><strong>应用名称:</strong></td>
-                                        <td>TigerBot 智能聊天机器人</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>版本:</strong></td>
-                                        <td>1.0.0</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Java版本:</strong></td>
-                                        <td th:text="${@environment.getProperty('java.version')}">17.0.1</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Spring Boot版本:</strong></td>
-                                        <td>3.4.5</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>运行环境:</strong></td>
-                                        <td th:text="${@environment.getProperty('os.name')} + ' ' + ${@environment.getProperty('os.version')}">Windows 11</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                    <span class="text-muted">应用名称</span>
+                                    <span class="fw-semibold">TigerBot 智能聊天机器人</span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                    <span class="text-muted">版本</span>
+                                    <span class="fw-semibold">1.0.0</span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                    <span class="text-muted">Java版本</span>
+                                    <span class="fw-semibold" th:text="${@environment.getProperty('java.version')}">17.0.1</span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                    <span class="text-muted">Spring Boot版本</span>
+                                    <span class="fw-semibold">3.4.5</span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center py-2">
+                                    <span class="text-muted">运行环境</span>
+                                    <span class="fw-semibold" th:text="${@environment.getProperty('os.name')} + ' ' + ${@environment.getProperty('os.version')}">Windows 11</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- 快速链接 -->
-            <div class="col-lg-6 mb-4">
-                <div class="card shadow">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">
-                            <i class="fas fa-link me-2"></i>快速链接
-                        </h6>
+            <div class="col-lg-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-0 py-3">
+                        <h5 class="mb-0 fw-bold text-dark">
+                            <i class="fas fa-rocket me-2 text-primary"></i>快速导航
+                        </h5>
                     </div>
                     <div class="card-body">
-                        <div class="list-group list-group-flush">
-                            <a href="/management/gateway" class="list-group-item list-group-item-action">
-                                <i class="fas fa-network-wired me-2 text-success"></i>
-                                Python网关控制
-                                <small class="text-muted d-block">启停微信网关服务</small>
-                            </a>
-                            <a href="/management/bot-config/listeners" class="list-group-item list-group-item-action">
-                                <i class="fas fa-ear-listen me-2 text-primary"></i>
-                                监听配置管理
-                                <small class="text-muted d-block">配置机器人监听规则</small>
-                            </a>
-                            <a href="/management/bot-config/command-auths" class="list-group-item list-group-item-action">
-                                <i class="fas fa-user-shield me-2 text-warning"></i>
-                                权限配置管理
-                                <small class="text-muted d-block">管理命令使用权限</small>
-                            </a>
-                            <a href="/management/bot-config/users" class="list-group-item list-group-item-action">
-                                <i class="fas fa-users me-2 text-info"></i>
-                                用户管理
-                                <small class="text-muted d-block">管理系统用户信息</small>
-                            </a>
-                            <div class="list-group-item bg-light">
-                                <small class="text-muted fw-bold">AI配置管理</small>
+                        <div class="row g-3">
+                            <!-- 系统管理 -->
+                            <div class="col-12">
+                                <h6 class="text-muted mb-2 fw-bold">
+                                    <i class="fas fa-cog me-1"></i>系统管理
+                                </h6>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <a href="/management/gateway" class="btn btn-outline-success btn-sm w-100 text-start">
+                                            <i class="fas fa-network-wired me-2"></i>网关控制
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
-                            <a href="/management/ai-config/providers" class="list-group-item list-group-item-action">
-                                <i class="fas fa-cloud me-2 text-primary"></i>
-                                AI提供商管理
-                                <small class="text-muted d-block">配置AI服务提供商</small>
-                            </a>
-                            <a href="/management/ai-config/models" class="list-group-item list-group-item-action">
-                                <i class="fas fa-brain me-2 text-success"></i>
-                                AI模型管理
-                                <small class="text-muted d-block">配置AI模型参数</small>
-                            </a>
-                            <a href="/management/ai-config/roles" class="list-group-item list-group-item-action">
-                                <i class="fas fa-user-tie me-2 text-warning"></i>
-                                AI角色管理
-                                <small class="text-muted d-block">配置AI角色提示词</small>
-                            </a>
+
+                            <!-- 机器人配置 -->
+                            <div class="col-12">
+                                <h6 class="text-muted mb-2 fw-bold">
+                                    <i class="fas fa-robot me-1"></i>机器人配置
+                                </h6>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <a href="/management/bot-config/listeners" class="btn btn-outline-primary btn-sm w-100 text-start">
+                                            <i class="fas fa-ear-listen me-2"></i>监听配置
+                                        </a>
+                                    </div>
+                                    <div class="col-6">
+                                        <a href="/management/bot-config/command-auths" class="btn btn-outline-warning btn-sm w-100 text-start">
+                                            <i class="fas fa-user-shield me-2"></i>权限配置
+                                        </a>
+                                    </div>
+                                    <div class="col-6">
+                                        <a href="/management/bot-config/users" class="btn btn-outline-info btn-sm w-100 text-start">
+                                            <i class="fas fa-users me-2"></i>用户管理
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- AI配置管理 -->
+                            <div class="col-12">
+                                <h6 class="text-muted mb-2 fw-bold">
+                                    <i class="fas fa-brain me-1"></i>AI配置管理
+                                </h6>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <a href="/management/ai-config/providers" class="btn btn-outline-primary btn-sm w-100 text-start">
+                                            <i class="fas fa-cloud me-2"></i>AI提供商
+                                        </a>
+                                    </div>
+                                    <div class="col-6">
+                                        <a href="/management/ai-config/models" class="btn btn-outline-success btn-sm w-100 text-start">
+                                            <i class="fas fa-microchip me-2"></i>AI模型
+                                        </a>
+                                    </div>
+                                    <div class="col-6">
+                                        <a href="/management/ai-config/roles" class="btn btn-outline-warning btn-sm w-100 text-start">
+                                            <i class="fas fa-user-tie me-2"></i>AI角色
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 最近活动 -->
+        <!-- 系统日志 -->
         <div class="row">
             <div class="col-12">
-                <div class="card shadow">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">
-                            <i class="fas fa-history me-2"></i>系统日志 (最近10条)
-                        </h6>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-0 py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 fw-bold text-dark">
+                                <i class="fas fa-history me-2 text-primary"></i>系统日志
+                            </h5>
+                            <span class="badge bg-light text-dark">最近10条</span>
+                        </div>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
                                     <tr>
-                                        <th>时间</th>
-                                        <th>级别</th>
-                                        <th>模块</th>
-                                        <th>消息</th>
+                                        <th class="border-0 fw-bold">时间</th>
+                                        <th class="border-0 fw-bold">级别</th>
+                                        <th class="border-0 fw-bold">模块</th>
+                                        <th class="border-0 fw-bold">消息</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td>2024-01-20 14:30:25</td>
-                                        <td><span class="badge bg-success">INFO</span></td>
-                                        <td>Gateway</td>
+                                        <td class="text-muted">2024-01-20 14:30:25</td>
+                                        <td><span class="badge bg-success-subtle text-success">INFO</span></td>
+                                        <td><span class="fw-semibold">Gateway</span></td>
                                         <td>WebSocket连接已建立</td>
                                     </tr>
                                     <tr>
-                                        <td>2024-01-20 14:29:15</td>
-                                        <td><span class="badge bg-primary">DEBUG</span></td>
-                                        <td>AI</td>
+                                        <td class="text-muted">2024-01-20 14:29:15</td>
+                                        <td><span class="badge bg-primary-subtle text-primary">DEBUG</span></td>
+                                        <td><span class="fw-semibold">AI</span></td>
                                         <td>处理用户消息: 你好</td>
                                     </tr>
                                     <tr>
-                                        <td>2024-01-20 14:28:45</td>
-                                        <td><span class="badge bg-warning">WARN</span></td>
-                                        <td>Memory</td>
+                                        <td class="text-muted">2024-01-20 14:28:45</td>
+                                        <td><span class="badge bg-warning-subtle text-warning">WARN</span></td>
+                                        <td><span class="fw-semibold">Memory</span></td>
                                         <td>聊天记忆文件数量接近上限</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">2024-01-20 14:27:30</td>
+                                        <td><span class="badge bg-info-subtle text-info">INFO</span></td>
+                                        <td><span class="fw-semibold">Command</span></td>
+                                        <td>执行命令: /help</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">2024-01-20 14:26:15</td>
+                                        <td><span class="badge bg-success-subtle text-success">INFO</span></td>
+                                        <td><span class="fw-semibold">Chat</span></td>
+                                        <td>新建聊天会话</td>
                                     </tr>
                                     <!-- 更多日志条目可以通过后端动态加载 -->
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 text-center">
+                        <button class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye me-1"></i>查看更多日志
+                        </button>
                     </div>
                 </div>
             </div>
