@@ -79,9 +79,19 @@ public class AiChatMessageHandler implements MessageHandler {
 						.param("chatName", chat.chat().getName())
 						.param("sender", message.sender())
 						.param("content", cleanContent))
-				.advisors(a -> a.param(ChatMemory.CONVERSATION_ID, chat.chat().getName()))
+				.advisors(a -> a.param(ChatMemory.CONVERSATION_ID, generateConversationId(chat)))
 				.call()
 				.content();
+	}
+
+	/**
+	 * 生成会话ID，格式为：roleId_chatName
+	 * 这样不同角色的记忆会分开存储，切换角色时可以保留各角色的历史记忆
+	 */
+	private String generateConversationId(MessageProcessingData chat) {
+		Long roleId = chat.chat().getAiSpecification().aiRoleId();
+		String chatName = chat.chat().getName();
+		return roleId + "_" + chatName;
 	}
 
 	@Override
