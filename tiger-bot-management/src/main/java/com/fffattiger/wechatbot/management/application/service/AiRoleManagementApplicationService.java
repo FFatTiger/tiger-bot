@@ -50,7 +50,7 @@ public class AiRoleManagementApplicationService {
             throw new IllegalArgumentException("AI角色配置无效");
         }
 
-        log.info("创建AI角色配置: {}", dto);
+        
 
         // 调用核心模块的应用服务
         coreAiRoleApplicationService.createRole(
@@ -69,7 +69,7 @@ public class AiRoleManagementApplicationService {
             throw new IllegalArgumentException("AI角色配置无效");
         }
 
-        log.info("更新AI角色配置: {} -> {}", id, dto);
+        
 
         // 调用核心模块的应用服务
         coreAiRoleApplicationService.updateRole(
@@ -85,7 +85,7 @@ public class AiRoleManagementApplicationService {
      * 删除AI角色配置
      */
     public void deleteRoleConfiguration(Long id) {
-        log.info("删除AI角色配置: {}", id);
+        
 
         // 调用核心模块的应用服务
         coreAiRoleApplicationService.deleteRole(id);

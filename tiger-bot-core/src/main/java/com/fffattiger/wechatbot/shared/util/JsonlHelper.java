@@ -53,7 +53,7 @@ public class JsonlHelper {
                 try {
                     result.add(OBJECT_MAPPER.readValue(line, clazz));
                 } catch (Exception e) {
-                    log.error("Failed to read jsonl file", e);
+                    
                 }
             }
         }

@@ -49,7 +49,7 @@ public class ChatConfigController {
      */
     @GetMapping("/chats")
     public String chats(Model model) {
-        log.info("访问聊天对象管理页面");
+        
 
         List<ChatConfigurationDto> chats = chatManagementApplicationService.getAllChatConfigurations();
         List<AiProvider> allProviders = chatManagementApplicationService.getAllAvailableProviders();
@@ -76,7 +76,7 @@ public class ChatConfigController {
                           @RequestParam(required = false) String keyword,
                           @RequestParam(required = false) String startTime,
                           @RequestParam(required = false) String endTime) {
-        log.info("访问消息记录管理页面");
+        
 
         Pageable pageable = PageRequest.of(page, size);
         Page<MessageRecordDto> messages;
@@ -132,7 +132,7 @@ public class ChatConfigController {
             chatManagementApplicationService.createChatConfiguration(dto);
             return "success";
         } catch (Exception e) {
-            log.error("创建聊天对象失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -152,7 +152,7 @@ public class ChatConfigController {
             chatManagementApplicationService.updateChatAiConfiguration(id, dto);
             return "success";
         } catch (Exception e) {
-            log.error("更新聊天AI配置失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -167,7 +167,7 @@ public class ChatConfigController {
             chatManagementApplicationService.deleteChatConfiguration(id);
             return "success";
         } catch (Exception e) {
-            log.error("删除聊天对象失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -192,7 +192,7 @@ public class ChatConfigController {
             chatManagementApplicationService.batchUpdateAiConfiguration(ids, dto);
             return "success";
         } catch (Exception e) {
-            log.error("批量更新AI配置失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -216,7 +216,7 @@ public class ChatConfigController {
             messageManagementApplicationService.deleteMessageRecord(id);
             return "success";
         } catch (Exception e) {
-            log.error("删除消息记录失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -231,7 +231,7 @@ public class ChatConfigController {
             messageManagementApplicationService.cleanupChatMessages(chatId);
             return "success";
         } catch (Exception e) {
-            log.error("清理聊天历史消息失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -250,7 +250,7 @@ public class ChatConfigController {
             messageManagementApplicationService.cleanupMessagesBeforeTime(dateTime);
             return "success";
         } catch (Exception e) {
-            log.error("清理历史消息失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -294,7 +294,7 @@ public class ChatConfigController {
                 }
             }
         } catch (Exception e) {
-            log.error("导出聊天记录失败", e);
+            
             response.setStatus(500);
         }
     }
@@ -312,7 +312,7 @@ public class ChatConfigController {
             try {
                 return LocalDateTime.parse(dateTimeStr + " 00:00:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
             } catch (DateTimeParseException ex) {
-                log.warn("无法解析日期时间: {}", dateTimeStr);
+                
                 return null;
             }
         }

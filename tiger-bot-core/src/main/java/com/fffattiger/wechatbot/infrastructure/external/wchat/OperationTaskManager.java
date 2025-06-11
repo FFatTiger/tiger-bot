@@ -30,12 +30,12 @@ public class OperationTaskManager {
         
         operationQueue.submit(() -> {
             try {
-                log.info("执行UI操作: {}", description);
+                
                 logPendingTasks();
                 T result = operationTask.call();
                 future.complete(result);
             } catch (Exception e) {
-                log.error("UI操作失败: {}", description, e);
+                
                 future.completeExceptionally(e);
             }
         });
@@ -46,7 +46,7 @@ public class OperationTaskManager {
     private void logPendingTasks() {
         List<String> pending = getPendingUiOperationTasks();
         if (!pending.isEmpty()) {
-            log.info("当前等待中的UI操作队列: {}", pending);
+            log.info("等待中的任务: {}", pending);
         }
     }
     

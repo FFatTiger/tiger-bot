@@ -42,10 +42,10 @@ public class GatewayManagementApplicationService {
      * 启动网关
      */
     public boolean startGateway() {
-        log.info("启动Python网关");
+        
         
         if (!gatewayDomainService.canStartGateway()) {
-            log.warn("当前状态不允许启动网关");
+            
             return false;
         }
         
@@ -56,10 +56,10 @@ public class GatewayManagementApplicationService {
      * 停止网关
      */
     public boolean stopGateway() {
-        log.info("停止Python网关");
+        
         
         if (!gatewayDomainService.canStopGateway()) {
-            log.warn("当前状态不允许停止网关");
+            
             return false;
         }
         
@@ -70,10 +70,10 @@ public class GatewayManagementApplicationService {
      * 重启网关
      */
     public boolean restartGateway() {
-        log.info("重启Python网关");
+        
         
         if (!gatewayDomainService.canRestartGateway()) {
-            log.warn("当前状态不允许重启网关");
+            
             return false;
         }
         

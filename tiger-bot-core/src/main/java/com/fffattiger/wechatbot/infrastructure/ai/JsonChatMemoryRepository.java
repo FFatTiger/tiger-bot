@@ -23,6 +23,7 @@ import com.fffattiger.wechatbot.shared.util.JsonlHelper;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Deprecated
 public class JsonChatMemoryRepository implements ChatMemoryRepository {
 
     private final File outputDir;
@@ -62,7 +63,7 @@ public class JsonChatMemoryRepository implements ChatMemoryRepository {
                 };
             }).collect(Collectors.toList());
         } catch (IOException e) {
-            log.error("Failed to read chat memory", e);
+            
             return Collections.emptyList();
         }
     }
@@ -73,7 +74,7 @@ public class JsonChatMemoryRepository implements ChatMemoryRepository {
         try {
             JsonlHelper.overwriteJsonLines(file, messages);
         } catch (IOException e) {
-            log.error("Failed to save chat memory", e);
+            
             throw new RuntimeException("Failed to save chat memory", e);
         }
     }

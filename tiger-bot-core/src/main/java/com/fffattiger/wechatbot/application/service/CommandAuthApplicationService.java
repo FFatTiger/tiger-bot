@@ -71,7 +71,7 @@ public class CommandAuthApplicationService {
         }
 
         chatCommandAuthRepository.save(newAuth);
-        log.info("创建命令权限: {}", newAuth);
+        
     }
 
     /**
@@ -79,7 +79,7 @@ public class CommandAuthApplicationService {
      */
     public void deleteCommandAuth(Long authId) {
         chatCommandAuthRepository.deleteById(authId);
-        log.info("删除命令权限: {}", authId);
+        
     }
 
     /**
@@ -99,7 +99,7 @@ public class CommandAuthApplicationService {
 
         ChatCommandAuth updatedAuth = new ChatCommandAuth(authId, chatId, commandId, userId);
         chatCommandAuthRepository.save(updatedAuth);
-        log.info("更新命令权限: {}", updatedAuth);
+        
     }
 
     /**
@@ -119,6 +119,6 @@ public class CommandAuthApplicationService {
     public void deleteAllCommandAuthsByChat(Long chatId) {
         List<ChatCommandAuth> auths = chatCommandAuthRepository.findByChatId(chatId);
         chatCommandAuthRepository.deleteAll(auths);
-        log.info("删除聊天 {} 的所有命令权限", chatId);
+        
     }
 }

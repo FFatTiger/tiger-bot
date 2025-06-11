@@ -28,7 +28,7 @@ public class ManagementController {
      */
     @GetMapping({"", "/"})
     public String index(Model model) {
-        log.info("访问管理主页");
+        
         
         // 获取系统状态信息
         String gatewayStatus = gatewayManagementApplicationService.getGatewayStatus();

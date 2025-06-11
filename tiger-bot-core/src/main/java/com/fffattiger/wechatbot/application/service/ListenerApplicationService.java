@@ -45,37 +45,52 @@ public class ListenerApplicationService {
     private UserApplicationService userApplicationService;
 
     public MessageProcessingData getMessageProcessingData(String chatName) {
+        log.debug("查找聊天的消息处理数据: 聊天名称={}", chatName);
+
         // 使用聊天应用服务获取聊天对象
         Chat chat = chatApplicationService.getChatByName(chatName);
+        if (chat == null) {
+            log.warn("未找到聊天对象: 聊天名称={}", chatName);
+            return null;
+        }
 
         if (!chat.canReceiveMessage()) {
-            throw new RuntimeException("Chat cannot receive messages: " + chatName);
+            log.warn("聊天对象无法接收消息: 聊天名称={}, 聊天ID={}", chatName, chat.getId());
+            return null;
         }
 
         Listener listener = listenerRepository.findByChatId(chat.getId());
         if (listener == null) {
-            throw new RuntimeException("No listener found for chat: " + chatName);
+            log.warn("未找到监听器配置: 聊天名称={}, 聊天ID={}", chatName, chat.getId());
+            return null;
         }
 
         // 使用领域对象验证监听器配置
         if (!listener.isValidConfiguration()) {
-            throw new RuntimeException("Invalid listener configuration for chat: " + chatName);
+            log.warn("监听器配置无效: 聊天名称={}, 监听器ID={}", chatName, listener.getId());
+            return null;
         }
 
+        log.debug("找到有效的监听器配置: 聊天名称={}, 监听器ID={}", chatName, listener.getId());
         return buildListenerData(listener, chat);
     }
 
     private MessageProcessingData buildListenerData(Listener listener, Chat chat) {
+        log.debug("构建监听器数据: 聊天={}, 监听器ID={}", chat.getName(), listener.getId());
 
         List<ChatCommandAuth> commandAuths = chatCommandAuthRepository.findByChatId(chat.getId());
+        log.debug("找到命令权限配置: 聊天={}, 权限数量={}", chat.getName(), commandAuths.size());
 
         if (commandAuths.isEmpty()) {
+            log.debug("无命令权限配置，返回空权限列表: 聊天={}", chat.getName());
             return new MessageProcessingData(listener, chat, List.of());
         }
 
         List<MessageProcessingData.ChatCommandAuthWithCommandAndUser> validCommandAuths =
                 buildValidCommandAuths(commandAuths, chat, listener);
 
+        log.debug("监听器数据构建完成: 聊天={}, 有效权限数量={}",
+                chat.getName(), validCommandAuths.size());
         return new MessageProcessingData(listener, chat, validCommandAuths);
     }
 
@@ -174,7 +189,7 @@ public class ListenerApplicationService {
         );
 
         listenerRepository.save(updatedListener);
-        log.info("更新监听器配置: {}", updatedListener);
+        
     }
 
     /**
@@ -203,7 +218,7 @@ public class ListenerApplicationService {
         );
 
         listenerRepository.save(newListener);
-        log.info("创建新监听器: {}", newListener);
+        
     }
 
     /**
@@ -211,6 +226,6 @@ public class ListenerApplicationService {
      */
     public void deleteListener(Long listenerId) {
         listenerRepository.deleteById(listenerId);
-        log.info("删除监听器: {}", listenerId);
+        
     }
 }

@@ -41,7 +41,7 @@ public class UserManagementApplicationService {
             throw new IllegalArgumentException("用户配置无效");
         }
 
-        log.info("创建用户配置: {}", dto);
+        
 
         // 调用核心模块的应用服务
         coreUserApplicationService.createUser(
@@ -62,7 +62,7 @@ public class UserManagementApplicationService {
             throw new IllegalArgumentException("用户配置无效");
         }
 
-        log.info("更新用户配置: id={}, dto={}", id, dto);
+        
 
         // 调用核心模块的应用服务
         coreUserApplicationService.updateUser(
@@ -80,7 +80,7 @@ public class UserManagementApplicationService {
             throw new IllegalArgumentException("用户ID无效");
         }
 
-        log.info("删除用户配置: {}", id);
+        
 
         // 调用核心模块的应用服务
         coreUserApplicationService.deleteUser(id);

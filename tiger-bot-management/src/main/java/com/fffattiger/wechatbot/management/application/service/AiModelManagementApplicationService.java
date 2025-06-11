@@ -72,7 +72,7 @@ public class AiModelManagementApplicationService {
             throw new IllegalArgumentException("AI模型配置无效");
         }
 
-        log.info("创建AI模型配置: {}", dto);
+        
 
         // 调用核心模块的应用服务
         coreAiModelApplicationService.createModel(
@@ -101,7 +101,7 @@ public class AiModelManagementApplicationService {
             throw new IllegalArgumentException("AI模型配置无效");
         }
 
-        log.info("更新AI模型配置: {} -> {}", id, dto);
+        
 
         // 调用核心模块的应用服务
         coreAiModelApplicationService.updateModel(
@@ -127,7 +127,7 @@ public class AiModelManagementApplicationService {
      * 删除AI模型配置
      */
     public void deleteModelConfiguration(Long id) {
-        log.info("删除AI模型配置: {}", id);
+        
 
         // 调用核心模块的应用服务
         coreAiModelApplicationService.deleteModel(id);
@@ -137,7 +137,7 @@ public class AiModelManagementApplicationService {
      * 切换AI模型启用状态
      */
     public void toggleModelEnabled(Long id) {
-        log.info("切换AI模型启用状态: {}", id);
+        
 
         // 调用核心模块的应用服务
         coreAiModelApplicationService.toggleModelEnabled(id);
@@ -189,7 +189,7 @@ public class AiModelManagementApplicationService {
         AiModel model = coreAiModelApplicationService.getModelById(id)
                 .orElseThrow(() -> new RuntimeException("AI模型不存在: " + id));
 
-        log.info("测试AI模型: {}", model);
+        
 
         // TODO: 实现实际的模型测试逻辑
         // 这里可以发送一个简单的测试请求来验证模型是否可用

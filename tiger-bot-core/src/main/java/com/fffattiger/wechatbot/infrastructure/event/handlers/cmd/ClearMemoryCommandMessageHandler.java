@@ -1,4 +1,4 @@
-package com.fffattiger.wechatbot.interfaces.event.handlers.cmd;
+package com.fffattiger.wechatbot.infrastructure.event.handlers.cmd;
 
 import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepository;
 import org.springframework.stereotype.Service;
@@ -54,7 +54,7 @@ public class ClearMemoryCommandMessageHandler extends AbstractCommandMessageHand
         String conversationId = currentRoleId + "_" + chatName;
         
         chatMemoryRepository.deleteByConversationId(conversationId);
-        log.info("已清除聊天 {} 当前角色 {} 的记忆", chatName, currentRoleId);
+        
         
         context.wx().sendText(chatName, "✅ 已清除当前角色的聊天记忆！");
     }
@@ -73,7 +73,7 @@ public class ClearMemoryCommandMessageHandler extends AbstractCommandMessageHand
         
         String conversationId = role.id() + "_" + chatName;
         chatMemoryRepository.deleteByConversationId(conversationId);
-        log.info("已清除聊天 {} 角色 {} 的记忆", chatName, roleName);
+        
         
         context.wx().sendText(chatName, "✅ 已清除角色 '" + roleName + "' 的聊天记忆！");
     }

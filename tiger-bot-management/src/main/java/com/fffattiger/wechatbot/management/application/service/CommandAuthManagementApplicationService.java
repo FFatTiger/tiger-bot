@@ -81,7 +81,7 @@ public class CommandAuthManagementApplicationService {
             throw new IllegalArgumentException("命令权限配置无效");
         }
 
-        log.info("创建命令权限配置: {}", dto);
+        
         
         // 调用核心模块的应用服务
         coreCommandAuthApplicationService.createCommandAuth(
@@ -103,7 +103,7 @@ public class CommandAuthManagementApplicationService {
             throw new IllegalArgumentException("命令权限配置无效");
         }
 
-        log.info("更新命令权限配置: id={}, dto={}", id, dto);
+        
         
         // 调用核心模块的应用服务
         coreCommandAuthApplicationService.updateCommandAuth(
@@ -122,7 +122,7 @@ public class CommandAuthManagementApplicationService {
             throw new IllegalArgumentException("命令权限ID无效");
         }
 
-        log.info("删除命令权限配置: {}", id);
+        
         
         // 调用核心模块的应用服务
         coreCommandAuthApplicationService.deleteCommandAuth(id);

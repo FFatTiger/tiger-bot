@@ -34,7 +34,7 @@ public class ListenerConfigController {
      */
     @GetMapping("/listeners")
     public String listeners(Model model) {
-        log.info("访问监听对象配置页面");
+        
 
         List<ListenerConfigurationDto> listeners = listenerManagementApplicationService.getAllListenerConfigurations();
         List<Chat> allChats = listenerManagementApplicationService.getAllAvailableChats();
@@ -69,10 +69,10 @@ public class ListenerConfigController {
 
             listenerManagementApplicationService.updateListenerConfiguration(id, dto);
 
-            log.info("更新监听器配置成功: {}", id);
+            
             return "success";
         } catch (Exception e) {
-            log.error("更新监听器配置失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -101,10 +101,10 @@ public class ListenerConfigController {
 
             listenerManagementApplicationService.createListenerConfiguration(dto);
 
-            log.info("创建监听器成功: {}", chatId);
+            
             return "success";
         } catch (Exception e) {
-            log.error("创建监听器失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -117,10 +117,10 @@ public class ListenerConfigController {
     public String deleteListener(@PathVariable Long id) {
         try {
             listenerManagementApplicationService.deleteListenerConfiguration(id);
-            log.info("删除监听器成功: {}", id);
+            
             return "success";
         } catch (Exception e) {
-            log.error("删除监听器失败", e);
+            
             return "error: " + e.getMessage();
         }
     }

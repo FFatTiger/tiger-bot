@@ -36,7 +36,7 @@ public class CommandAuthConfigController {
      */
     @GetMapping("/command-auths")
     public String commandAuths(Model model) {
-        log.info("访问命令权限配置页面");
+        
         
         List<CommandAuthConfigurationDto> commandAuths = commandAuthManagementApplicationService.getAllCommandAuthConfigurations();
         List<Chat> allChats = commandAuthManagementApplicationService.getAllAvailableChats();
@@ -66,10 +66,10 @@ public class CommandAuthConfigController {
                 chatId, commandId, userId);
             
             commandAuthManagementApplicationService.createCommandAuthConfiguration(dto);
-            log.info("创建命令权限成功: chatId={}, commandId={}, userId={}", chatId, commandId, userId);
+            
             return "success";
         } catch (Exception e) {
-            log.error("创建命令权限失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -90,10 +90,10 @@ public class CommandAuthConfigController {
                 chatId, commandId, userId);
             
             commandAuthManagementApplicationService.updateCommandAuthConfiguration(id, dto);
-            log.info("更新命令权限成功: {}", id);
+            
             return "success";
         } catch (Exception e) {
-            log.error("更新命令权限失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -106,10 +106,10 @@ public class CommandAuthConfigController {
     public String deleteCommandAuth(@PathVariable Long id) {
         try {
             commandAuthManagementApplicationService.deleteCommandAuthConfiguration(id);
-            log.info("删除命令权限成功: {}", id);
+            
             return "success";
         } catch (Exception e) {
-            log.error("删除命令权限失败", e);
+            
             return "error: " + e.getMessage();
         }
     }

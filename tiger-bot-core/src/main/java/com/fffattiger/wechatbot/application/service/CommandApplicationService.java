@@ -52,7 +52,7 @@ public class CommandApplicationService {
         }
         
         Command savedCommand = commandRepository.save(newCommand);
-        log.info("创建命令: {}", savedCommand);
+        
         return savedCommand;
     }
 
@@ -72,7 +72,7 @@ public class CommandApplicationService {
         }
         
         Command savedCommand = commandRepository.save(updatedCommand);
-        log.info("更新命令: {}", savedCommand);
+        
         return savedCommand;
     }
 
@@ -84,7 +84,7 @@ public class CommandApplicationService {
         getCommandById(commandId);
         
         commandRepository.deleteById(commandId);
-        log.info("删除命令: {}", commandId);
+        
     }
 
     /**

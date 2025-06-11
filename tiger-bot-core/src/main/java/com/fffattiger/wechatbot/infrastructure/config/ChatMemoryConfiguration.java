@@ -28,13 +28,13 @@ package com.fffattiger.wechatbot.infrastructure.config;
 //     ) {
 //         ChatMemoryRepository repository = jdbcChatMemoryRepositoryProvider.getIfAvailable();
 //         if (repository != null) {
-//             log.info("Creating jdbc chat memory");
+//             
 //             return MessageWindowChatMemory.builder()
 //                     .chatMemoryRepository(repository)
 //                     .maxMessages(chatBotProperties.getChatMemoryFileMaxCount())
 //                     .build();
 //         } else {
-//             log.info("Creating jsonl chat memory");
+//             
 //             return MessageWindowChatMemory.builder()
 //                     .chatMemoryRepository(new JsonChatMemoryRepository(chatBotProperties.getChatMemoryDir()))
 //                     .maxMessages(chatBotProperties.getChatMemoryFileMaxCount())

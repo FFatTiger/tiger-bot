@@ -1,4 +1,4 @@
-package com.fffattiger.wechatbot.interfaces.event.handlers.cmd;
+package com.fffattiger.wechatbot.infrastructure.event.handlers.cmd;
 // package com.fffattiger.wechatbot.core.handler.cmd;
 
 // import org.springframework.stereotype.Service;

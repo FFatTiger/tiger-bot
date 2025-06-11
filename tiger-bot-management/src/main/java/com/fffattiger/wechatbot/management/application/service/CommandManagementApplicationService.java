@@ -65,7 +65,7 @@ public class CommandManagementApplicationService {
             throw new IllegalArgumentException("命令配置无效");
         }
 
-        log.info("创建命令配置: {}", dto);
+        
 
         // 构建AI配置
         AiSpecification aiSpecification = null;
@@ -93,7 +93,7 @@ public class CommandManagementApplicationService {
             throw new IllegalArgumentException("命令配置无效");
         }
 
-        log.info("更新命令配置: {} -> {}", id, dto);
+        
 
         // 构建AI配置
         AiSpecification aiSpecification = null;
@@ -122,7 +122,7 @@ public class CommandManagementApplicationService {
             throw new IllegalArgumentException("命令ID无效");
         }
 
-        log.info("删除命令配置: {}", id);
+        
         
         // 调用核心模块的应用服务
         coreCommandApplicationService.deleteCommand(id);

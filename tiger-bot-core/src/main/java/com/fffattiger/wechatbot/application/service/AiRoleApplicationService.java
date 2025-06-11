@@ -71,7 +71,7 @@ public class AiRoleApplicationService {
         AiRole newRole = new AiRole(null, name.trim(), promptContent.trim(), 
                                    extraMemory != null ? extraMemory.trim() : "", promptType.trim());
         AiRole savedRole = aiRoleRepository.save(newRole);
-        log.info("创建AI角色: {}", savedRole);
+        
         return savedRole;
     }
 
@@ -101,7 +101,7 @@ public class AiRoleApplicationService {
         AiRole updatedRole = new AiRole(id, name.trim(), promptContent.trim(),
                                        extraMemory != null ? extraMemory.trim() : "", promptType.trim());
         AiRole savedRole = aiRoleRepository.save(updatedRole);
-        log.info("更新AI角色: {}", savedRole);
+        
         return savedRole;
     }
 
@@ -114,7 +114,7 @@ public class AiRoleApplicationService {
         }
         
         aiRoleRepository.deleteById(id);
-        log.info("删除AI角色: {}", id);
+        
     }
 
     /**

@@ -97,7 +97,7 @@ public class ChatManagementApplicationService {
             throw new IllegalArgumentException("聊天配置无效");
         }
 
-        log.info("创建聊天配置: {}", dto);
+        
 
         AiSpecification aiSpecification = null;
         if (dto.isValidAiConfiguration()) {
@@ -120,7 +120,7 @@ public class ChatManagementApplicationService {
             throw new IllegalArgumentException("AI配置无效");
         }
 
-        log.info("更新聊天AI配置: {} -> {}", chatId, dto);
+        
 
         AiSpecification newSpecification = dto.toAiSpecification();
         coreChatApplicationService.updateAiConfiguration(chatId, newSpecification);
@@ -130,7 +130,7 @@ public class ChatManagementApplicationService {
      * 删除聊天配置
      */
     public void deleteChatConfiguration(Long chatId) {
-        log.info("删除聊天配置: {}", chatId);
+        
 
         // 先删除相关的消息记录
         coreMessageApplicationService.deleteMessagesByChatId(chatId);
@@ -147,14 +147,14 @@ public class ChatManagementApplicationService {
             throw new IllegalArgumentException("AI配置无效");
         }
 
-        log.info("批量更新聊天AI配置: {} -> {}", chatIds, dto);
+        
 
         AiSpecification newSpecification = dto.toAiSpecification();
         for (Long chatId : chatIds) {
             try {
                 coreChatApplicationService.updateAiConfiguration(chatId, newSpecification);
             } catch (Exception e) {
-                log.error("批量更新聊天{}的AI配置失败", chatId, e);
+                
             }
         }
     }
@@ -185,7 +185,7 @@ public class ChatManagementApplicationService {
                 aiRoleName = coreAiRoleApplicationService.getRoleById(aiRoleId)
                         .map(AiRole::name).orElse("未知角色");
             } catch (Exception e) {
-                log.warn("获取AI配置显示名称失败", e);
+                
             }
         }
 

@@ -1,4 +1,4 @@
-package com.fffattiger.wechatbot.interfaces.event.handlers;
+package com.fffattiger.wechatbot.infrastructure.event.handlers;
 
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -34,7 +34,6 @@ public class GroupMessageHandler implements MessageHandler {
         }
 
         if (!listenerData.listener().shouldProcessMessage(content, botName, listenerData.chat().isGroupChat())) {
-            log.info("监听器判断不应处理此消息，跳过");
             return false;
         }
 

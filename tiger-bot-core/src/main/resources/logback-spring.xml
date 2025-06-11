@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- 控制台输出配置 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- 彩色控制台输出配置 -->
+    <appender name="CONSOLE_COLOR" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight([%thread]) %highlight(%-5level) %cyan(%logger{50}) - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- 根据profile选择不同的appender -->
+    <springProfile name="!prod">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE_COLOR"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="prod">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <!-- 应用特定的日志级别 -->
+    <logger name="com.fffattiger.wechatbot" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE_COLOR"/>
+    </logger>
+
+    <!-- 消息处理相关的详细日志 -->
+    <logger name="com.fffattiger.wechatbot.interfaces.event" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE_COLOR"/>
+    </logger>
+
+    <!-- WebSocket连接日志 -->
+    <logger name="com.fffattiger.wechatbot.infrastructure.external.wchat" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE_COLOR"/>
+    </logger>
+
+    <!-- AI聊天日志 -->
+    <logger name="com.fffattiger.wechatbot.interfaces.event.handlers.AiChatMessageHandler" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE_COLOR"/>
+    </logger>
+
+    <!-- 命令处理日志 -->
+    <logger name="com.fffattiger.wechatbot.interfaces.event.handlers.cmd" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE_COLOR"/>
+    </logger>
+
+    <!-- 应用服务日志 -->
+    <logger name="com.fffattiger.wechatbot.application.service" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE_COLOR"/>
+    </logger>
+
+    <!-- 外部API调用日志 -->
+    <logger name="com.fffattiger.wechatbot.infrastructure.external" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE_COLOR"/>
+    </logger>
+
+    <!-- Spring框架日志级别调整 -->
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.springframework.boot" level="INFO"/>
+    <logger name="org.springframework.web" level="WARN"/>
+    <logger name="org.springframework.security" level="WARN"/>
+    <logger name="org.springframework.ai" level="INFO"/>
+
+    <!-- 数据库相关日志 -->
+    <logger name="org.hibernate" level="WARN"/>
+    <logger name="org.hibernate.SQL" level="WARN"/>
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="WARN"/>
+    <logger name="com.zaxxer.hikari" level="WARN"/>
+
+    <!-- HTTP客户端日志 -->
+    <logger name="org.springframework.web.reactive.function.client" level="WARN"/>
+    <logger name="reactor.netty" level="WARN"/>
+
+    <!-- WebSocket相关日志 -->
+    <logger name="org.java_websocket" level="INFO"/>
+
+    <!-- JSON处理日志 -->
+    <logger name="com.fasterxml.jackson" level="WARN"/>
+
+    <!-- 其他第三方库日志级别 -->
+    <logger name="io.netty" level="WARN"/>
+    <logger name="org.apache.http" level="WARN"/>
+    <logger name="httpclient" level="WARN"/>
+</configuration>

@@ -117,7 +117,7 @@ public class MessageApplicationService {
             throw new RuntimeException("消息不存在: " + id);
         }
         messageRepository.deleteById(id);
-        log.info("删除消息: {}", id);
+        
     }
 
     /**
@@ -126,7 +126,7 @@ public class MessageApplicationService {
     public void deleteMessagesByChatId(Long chatId) {
         long count = countMessagesByChatId(chatId);
         messageRepository.deleteByChatId(chatId);
-        log.info("删除聊天{}的所有消息，共{}条", chatId, count);
+        
     }
 
     /**
@@ -134,7 +134,7 @@ public class MessageApplicationService {
      */
     public void cleanupMessagesBeforeTime(LocalDateTime beforeTime) {
         messageRepository.deleteByTimeBefore(beforeTime);
-        log.info("清理{}之前的历史消息", beforeTime);
+        
     }
 
     /**

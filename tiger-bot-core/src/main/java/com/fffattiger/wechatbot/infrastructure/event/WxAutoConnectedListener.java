@@ -1,4 +1,4 @@
-package com.fffattiger.wechatbot.interfaces.event;
+package com.fffattiger.wechatbot.infrastructure.event;
 
 import org.springframework.context.ApplicationListener;
 import org.springframework.lang.NonNull;
@@ -18,7 +18,7 @@ public class WxAutoConnectedListener implements ApplicationListener<WxAutoConnec
 
     @Override
     public void onApplicationEvent(@NonNull WxAutoConnectedEvent event) {
-        log.info("WxAutoConnectedEvent: {}", event);
+        
         listenerApplicationService.findAll().forEach(listenerAggregate -> {
             event.getWxAuto().addListenChat(listenerAggregate.chat().getName(), listenerAggregate.listener().isSavePic(),
                     listenerAggregate.listener().isSaveVoice(), listenerAggregate.listener().isParseLinks());

@@ -1,4 +1,4 @@
-package com.fffattiger.wechatbot.interfaces.event.handlers;
+package com.fffattiger.wechatbot.infrastructure.event.handlers;
 // package com.tiger.wechatbot.core.handler;
 
 // import java.util.List;

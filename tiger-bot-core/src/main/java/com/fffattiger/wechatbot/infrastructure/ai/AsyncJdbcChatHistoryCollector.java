@@ -38,7 +38,7 @@ public class AsyncJdbcChatHistoryCollector implements ChatHistoryCollector {
                 MessageProcessingData listenerAggregate = listenerApplicationService.getMessageProcessingData(chatName);
                 messageApplicationService.save(messageAssembler.toMessage(message, listenerAggregate.chat(), timestamp));
             } catch (Exception e) {
-                log.error("collect chat history error", e);
+                
             }
         });
     }

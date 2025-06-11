@@ -109,7 +109,7 @@ public class MessageManagementApplicationService {
      * 删除消息记录
      */
     public void deleteMessageRecord(Long messageId) {
-        log.info("删除消息记录: {}", messageId);
+        
         coreMessageApplicationService.deleteMessage(messageId);
     }
 
@@ -117,7 +117,7 @@ public class MessageManagementApplicationService {
      * 清理聊天对象的历史消息
      */
     public void cleanupChatMessages(Long chatId) {
-        log.info("清理聊天{}的历史消息", chatId);
+        
         coreMessageApplicationService.deleteMessagesByChatId(chatId);
     }
 
@@ -125,7 +125,7 @@ public class MessageManagementApplicationService {
      * 清理指定时间之前的历史消息
      */
     public void cleanupMessagesBeforeTime(LocalDateTime beforeTime) {
-        log.info("清理{}之前的历史消息", beforeTime);
+        
         coreMessageApplicationService.cleanupMessagesBeforeTime(beforeTime);
     }
 
@@ -140,7 +140,7 @@ public class MessageManagementApplicationService {
      * 导出聊天记录（返回消息列表，由控制器处理导出格式）
      */
     public List<MessageRecordDto> exportChatRecords(Long chatId, LocalDateTime startTime, LocalDateTime endTime) {
-        log.info("导出聊天记录: chatId={}, startTime={}, endTime={}", chatId, startTime, endTime);
+        
         return searchMessageRecords(chatId, null, startTime, endTime);
     }
 

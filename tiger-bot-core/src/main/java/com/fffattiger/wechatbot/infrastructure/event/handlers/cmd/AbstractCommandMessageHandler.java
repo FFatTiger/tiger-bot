@@ -1,4 +1,4 @@
-package com.fffattiger.wechatbot.interfaces.event.handlers.cmd;
+package com.fffattiger.wechatbot.infrastructure.event.handlers.cmd;
 
 import java.util.List;
 
@@ -27,28 +27,50 @@ public abstract class AbstractCommandMessageHandler implements MessageHandler {
         String sender = message.sender();
         String cleanContent = context.cleanContent();
         String commandPrefix = context.chatBotProperties().getCommandPrefix();
+        String chatName = context.currentChat().chat().getName();
+
+        // 检查是否为命令消息
         if (message.type() == null || !message.type().equals(MessageType.FRIEND) || !StringUtils.hasLength(cleanContent)
                 || !cleanContent.startsWith(commandPrefix)) {
+            log.debug("非命令消息，跳过处理: 聊天={}, 发送者={}, 内容={}",
+                    chatName, sender, cleanContent);
             return chain.handle(context);
         }
 
         boolean isCommand = false;
-
         String[] args = cleanContent.split(" ");
         String command = args[0];
         String[] args2 = new String[args.length - 1];
         System.arraycopy(args, 1, args2, 0, args.length - 1);
 
-        if (canHandle(cleanContent) && hasPermission(command, sender, context)) {
-            log.debug("处理命令: {}, Handler: {}", cleanContent, this.getClass().getSimpleName());
-            try {
+        log.info("检测到命令消息: 聊天={}, 发送者={}, 命令={}, 参数数量={}",
+                chatName, sender, command, args2.length);
 
-                doHandle(command, args2, context);
-                isCommand = true;
-            } catch (Exception e) {
-                log.error("命令处理失败, content: {}", cleanContent, e);
-                context.wx().sendText(context.currentChat().chat().getName(), "命令格式错误，请参考帮助");
+        if (canHandle(cleanContent)) {
+            log.info("命令处理器匹配: handler={}, 命令={}", this.getClass().getSimpleName(), command);
+
+            if (hasPermission(command, sender, context)) {
+                log.info("命令权限验证通过: 聊天={}, 发送者={}, 命令={}", chatName, sender, command);
+
+                try {
+                    long startTime = System.currentTimeMillis();
+                    doHandle(command, args2, context);
+                    long duration = System.currentTimeMillis() - startTime;
+
+                    log.info("命令执行成功: 聊天={}, 发送者={}, 命令={}, 耗时={}ms",
+                            chatName, sender, command, duration);
+                    isCommand = true;
+
+                } catch (Exception e) {
+                    log.error("命令执行异常: 聊天={}, 发送者={}, 命令={}, 错误信息={}",
+                            chatName, sender, command, e.getMessage(), e);
+                    context.wx().sendText(chatName, "命令格式错误，请参考帮助");
+                }
+            } else {
+                log.warn("命令权限验证失败: 聊天={}, 发送者={}, 命令={}", chatName, sender, command);
             }
+        } else {
+            log.debug("命令处理器不匹配: handler={}, 命令={}", this.getClass().getSimpleName(), command);
         }
 
         if (isCommand) {
@@ -56,13 +78,12 @@ public abstract class AbstractCommandMessageHandler implements MessageHandler {
         }
 
         return chain.handle(context);
-
     }
 
     private boolean hasPermission(String cleanContent, String sender, MessageHandlerContext context) {
         List<MessageProcessingData.ChatCommandAuthWithCommandAndUser> commandAuthList = context.currentChat().commandAuths();
         if (commandAuthList.isEmpty()) {
-            log.info("命令未开启, command: {}", cleanContent);
+            
             return false;
         }
 
@@ -91,12 +112,12 @@ public abstract class AbstractCommandMessageHandler implements MessageHandler {
         }
 
         if (!hasPermission) {
-            log.info("命令权限不足, command: {}, sender: {}", cleanContent, sender);
+            log.warn("用户无权限执行命令: 发送者={}, 命令={}", sender, cleanContent);
             context.wx().sendText(context.currentChat().chat().getName(), "您无权限调用此命令");
             return false;
         }
 
-        log.info("命令权限验证通过, command: {}, sender: {}", cleanContent, sender);
+        log.debug("命令权限验证通过: 发送者={}, 命令={}", sender, cleanContent);
         return true;
     }
 

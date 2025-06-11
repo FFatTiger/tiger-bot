@@ -50,7 +50,7 @@ public class AiProviderManagementApplicationService {
             throw new IllegalArgumentException("AI提供商配置无效");
         }
 
-        log.info("创建AI提供商配置: {}", dto);
+        
 
         // 调用核心模块的应用服务
         coreAiProviderApplicationService.createProvider(
@@ -69,7 +69,7 @@ public class AiProviderManagementApplicationService {
             throw new IllegalArgumentException("AI提供商配置无效");
         }
 
-        log.info("更新AI提供商配置: {} -> {}", id, dto);
+        
 
         // 调用核心模块的应用服务
         coreAiProviderApplicationService.updateProvider(
@@ -85,7 +85,7 @@ public class AiProviderManagementApplicationService {
      * 删除AI提供商配置
      */
     public void deleteProviderConfiguration(Long id) {
-        log.info("删除AI提供商配置: {}", id);
+        
 
         // 调用核心模块的应用服务
         coreAiProviderApplicationService.deleteProvider(id);
@@ -98,7 +98,7 @@ public class AiProviderManagementApplicationService {
         AiProvider provider = coreAiProviderApplicationService.getProviderById(id)
                 .orElseThrow(() -> new RuntimeException("AI提供商不存在: " + id));
 
-        log.info("测试AI提供商连接: {}", provider);
+        
 
         // TODO: 实现实际的连接测试逻辑
         // 这里可以根据不同的提供商类型实现具体的连接测试

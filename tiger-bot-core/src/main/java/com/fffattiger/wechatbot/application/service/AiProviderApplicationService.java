@@ -60,7 +60,7 @@ public class AiProviderApplicationService {
         AiProvider newProvider = new AiProvider(null, providerType.trim(), providerName.trim(), 
                                                apiKey.trim(), baseUrl.trim());
         AiProvider savedProvider = aiProviderRepository.save(newProvider);
-        log.info("创建AI提供商: {}", savedProvider);
+        
         return savedProvider;
     }
 
@@ -87,7 +87,7 @@ public class AiProviderApplicationService {
         AiProvider updatedProvider = new AiProvider(id, providerType.trim(), providerName.trim(), 
                                                    apiKey.trim(), baseUrl.trim());
         AiProvider savedProvider = aiProviderRepository.save(updatedProvider);
-        log.info("更新AI提供商: {}", savedProvider);
+        
         return savedProvider;
     }
 
@@ -100,7 +100,7 @@ public class AiProviderApplicationService {
         }
         
         aiProviderRepository.deleteById(id);
-        log.info("删除AI提供商: {}", id);
+        
     }
 
     /**

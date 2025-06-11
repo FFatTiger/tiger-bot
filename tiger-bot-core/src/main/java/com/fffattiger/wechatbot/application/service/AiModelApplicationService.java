@@ -65,7 +65,7 @@ public class AiModelApplicationService {
                                       presencePenalty, topK, topP, reasoningFlg, streamFlg, enabled, toolCallFlg);
         
         AiModel savedModel = aiModelRepository.save(newModel);
-        log.info("创建AI模型: {}", savedModel);
+        
         return savedModel;
     }
 
@@ -88,7 +88,7 @@ public class AiModelApplicationService {
                                           presencePenalty, topK, topP, reasoningFlg, streamFlg, enabled, toolCallFlg);
         
         AiModel savedModel = aiModelRepository.save(updatedModel);
-        log.info("更新AI模型: {}", savedModel);
+        
         return savedModel;
     }
 
@@ -101,7 +101,7 @@ public class AiModelApplicationService {
         }
         
         aiModelRepository.deleteById(id);
-        log.info("删除AI模型: {}", id);
+        
     }
 
     /**

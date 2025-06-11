@@ -1,4 +1,4 @@
-package com.fffattiger.wechatbot.interfaces.event;
+package com.fffattiger.wechatbot.infrastructure.event;
 
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;

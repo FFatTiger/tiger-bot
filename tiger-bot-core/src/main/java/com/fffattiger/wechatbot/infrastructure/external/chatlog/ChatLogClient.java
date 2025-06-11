@@ -25,8 +25,10 @@ public class ChatLogClient {
     }
 
     public String getChatHistory(String talker, String timeRange, Integer limit) {
+        log.info("获取聊天历史: 对话者={}, 时间范围={}, 限制数量={}", talker, timeRange, limit);
+
         try {
-            log.info("调用Chatlog API: /api/v1/chatlog, 参数: talker={}, time={}, limit={}", talker, timeRange, limit);
+            long startTime = System.currentTimeMillis();
 
             RestClient.RequestHeadersSpec<?> request = restClient.get()
                     .uri(uriBuilder -> {
@@ -42,14 +44,20 @@ public class ChatLogClient {
                 request = request.header(HttpHeaders.AUTHORIZATION, "Bearer " + properties.getApiKey());
             }
 
-            return request
+            String response = request
                     .retrieve()
                     .body(String.class);
+
+            long duration = System.currentTimeMillis() - startTime;
+            log.info("聊天历史获取成功: 对话者={}, 响应长度={}, 耗时={}ms",
+                    talker, response != null ? response.length() : 0, duration);
+
+            return response;
 
 //            log.debug("API响应内容(前100字符): {}", response != null ? response.substring(0, Math.min(100, response.length())) : "无内容");
 //            return WeChatMessageProcessor.processMessages(response);
         } catch (Exception e) {
-            log.error("调用chatlog API时出错: {}", e.getMessage(), e);
+            log.error("调用chatlog API时出错: 对话者={}, 错误信息={}", talker, e.getMessage(), e);
             return "";
         }
     }
@@ -68,7 +76,7 @@ public class ChatLogClient {
 
     private String fetchRawContent(String path, Integer limit) {
         try {
-            log.info("调用Chatlog API: {}, 参数: limit={}", path, limit);
+            
 
             RestClient.RequestHeadersSpec<?> request = restClient.get()
                     .uri(uriBuilder -> uriBuilder

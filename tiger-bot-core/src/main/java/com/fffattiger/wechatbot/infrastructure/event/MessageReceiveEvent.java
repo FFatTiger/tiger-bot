@@ -1,4 +1,4 @@
-package com.fffattiger.wechatbot.interfaces.event;
+package com.fffattiger.wechatbot.infrastructure.event;
 
 import org.springframework.context.ApplicationEvent;
 

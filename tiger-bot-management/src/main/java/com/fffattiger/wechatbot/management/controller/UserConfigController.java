@@ -33,7 +33,7 @@ public class UserConfigController {
      */
     @GetMapping("/users")
     public String users(Model model) {
-        log.info("访问用户管理页面");
+        
 
         List<UserConfigurationDto> allUsers = userManagementApplicationService.getAllUserConfigurations();
         model.addAttribute("users", allUsers);
@@ -53,14 +53,14 @@ public class UserConfigController {
         try {
             UserConfigurationDto dto = UserConfigurationDto.forCreation(username, remark);
             userManagementApplicationService.createUserConfiguration(dto);
-            log.info("创建用户成功: {}", username);
+            
             return "success";
         } catch (Exception e) {
-            log.error("创建用户失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
-
+    
     /**
      * 更新用户
      */
@@ -74,10 +74,10 @@ public class UserConfigController {
         try {
             UserConfigurationDto dto = UserConfigurationDto.forCreation(username, remark);
             userManagementApplicationService.updateUserConfiguration(id, dto);
-            log.info("更新用户成功: {}", id);
+            
             return "success";
         } catch (Exception e) {
-            log.error("更新用户失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -90,10 +90,10 @@ public class UserConfigController {
     public String deleteUser(@PathVariable Long id) {
         try {
             userManagementApplicationService.deleteUserConfiguration(id);
-            log.info("删除用户成功: {}", id);
+            
             return "success";
         } catch (Exception e) {
-            log.error("删除用户失败", e);
+            
             return "error: " + e.getMessage();
         }
     }

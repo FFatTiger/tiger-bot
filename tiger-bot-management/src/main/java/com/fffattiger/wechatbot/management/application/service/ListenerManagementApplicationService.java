@@ -53,7 +53,7 @@ public class ListenerManagementApplicationService {
             throw new IllegalArgumentException("监听器配置无效");
         }
 
-        log.info("创建监听器配置: {}", dto);
+        
 
         // 调用核心模块的应用服务，需要提供creatorId，这里使用默认值1
         coreListenerApplicationService.createListener(
@@ -80,7 +80,7 @@ public class ListenerManagementApplicationService {
             throw new IllegalArgumentException("监听器配置无效");
         }
 
-        log.info("更新监听器配置: id={}, dto={}", id, dto);
+        
         
         // 调用核心模块的应用服务
         coreListenerApplicationService.updateListener(
@@ -102,7 +102,7 @@ public class ListenerManagementApplicationService {
             throw new IllegalArgumentException("监听器ID无效");
         }
 
-        log.info("删除监听器配置: {}", id);
+        
         
         // 调用核心模块的应用服务
         coreListenerApplicationService.deleteListener(id);

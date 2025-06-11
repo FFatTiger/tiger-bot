@@ -36,7 +36,7 @@ public class CommandConfigController {
      */
     @GetMapping("/commands")
     public String commands(Model model) {
-        log.info("访问命令配置页面");
+        
         
         List<CommandConfigurationDto> commands = commandManagementApplicationService.getAllCommandConfigurations();
         List<AiProvider> allProviders = commandManagementApplicationService.getAllAvailableAiProviders();
@@ -68,10 +68,10 @@ public class CommandConfigController {
                 pattern, description, aiProviderId, aiModelId, aiRoleId);
             
             commandManagementApplicationService.createCommandConfiguration(dto);
-            log.info("创建命令成功: pattern={}, description={}", pattern, description);
+            
             return "success";
         } catch (Exception e) {
-            log.error("创建命令失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -94,10 +94,10 @@ public class CommandConfigController {
                 pattern, description, aiProviderId, aiModelId, aiRoleId);
             
             commandManagementApplicationService.updateCommandConfiguration(id, dto);
-            log.info("更新命令成功: {}", id);
+            
             return "success";
         } catch (Exception e) {
-            log.error("更新命令失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -110,10 +110,10 @@ public class CommandConfigController {
     public String deleteCommand(@PathVariable Long id) {
         try {
             commandManagementApplicationService.deleteCommandConfiguration(id);
-            log.info("删除命令成功: {}", id);
+            
             return "success";
         } catch (Exception e) {
-            log.error("删除命令失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -127,7 +127,7 @@ public class CommandConfigController {
         try {
             return commandManagementApplicationService.getCommandConfigurationById(id);
         } catch (Exception e) {
-            log.error("获取命令详情失败", e);
+            
             return null;
         }
     }

@@ -23,6 +23,8 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fffattiger.wechatbot.infrastructure.event.MessageReceiveEvent;
+import com.fffattiger.wechatbot.infrastructure.event.WxAutoConnectedEvent;
 import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler.AddListenChatRequest;
 import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler.BatchedSanitizedWechatMessages;
 import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler.ChatWithRequest;
@@ -32,8 +34,6 @@ import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler.Sen
 import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler.SendFileByUrlRequest;
 import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler.SendTextRequest;
 import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler.VoiceCallRequest;
-import com.fffattiger.wechatbot.interfaces.event.MessageReceiveEvent;
-import com.fffattiger.wechatbot.interfaces.event.WxAutoConnectedEvent;
 import com.fffattiger.wechatbot.shared.properties.ChatBotProperties;
 
 import jakarta.annotation.PostConstruct;
@@ -75,40 +75,47 @@ public class WxAutoWebSocketHttpClient implements WxAuto{
         webSocketClient = new WebSocketClient(new URI(chatBotProperties.getWxAutoGatewayWsUrl())) {
             @Override
             public void onOpen(ServerHandshake handshakedata) {
-                log.info("WebSocket连接已建立");
+                log.info("WebSocket连接已建立: 服务器={}, 状态码={}",
+                        chatBotProperties.getWxAutoGatewayWsUrl(), handshakedata.getHttpStatus());
+                isConnected.set(true);
                 applicationEventPublisher.publishEvent(new WxAutoConnectedEvent(WxAutoWebSocketHttpClient.this, WxAutoWebSocketHttpClient.this));
             }
 
             @Override
             public void onMessage(String message) {
-                log.debug("收到WebSocket消息: {}", message);
+                log.debug("接收到WebSocket消息: 长度={}", message.length());
                 handleWebSocketMessage(message);
             }
 
             @Override
             public void onClose(int code, String reason, boolean remote) {
-                log.info("WebSocket连接关闭: {}", reason);
+                log.warn("WebSocket连接关闭: 代码={}, 原因={}, 远程关闭={}", code, reason, remote);
+                isConnected.set(false);
                 // 自动重连
                 scheduleReconnect();
             }
 
             @Override
             public void onError(Exception ex) {
-                log.error("WebSocket连接错误: {}", ex.getMessage());
+                log.error("WebSocket连接错误: {}", ex.getMessage(), ex);
+                isConnected.set(false);
             }
         };
-        
-        log.info("开始连接WebSocket...");
+
+        log.info("开始连接WebSocket服务器: {}", chatBotProperties.getWxAutoGatewayWsUrl());
         webSocketClient.connectBlocking();
+        log.info("WebSocket连接建立成功");
     }
 
     private void scheduleReconnect() {
+        log.info("计划在5秒后重新连接WebSocket");
         CompletableFuture.delayedExecutor(5, TimeUnit.SECONDS).execute(() -> {
             try {
-                log.info("尝试重连WebSocket...");
+                log.info("开始重新连接WebSocket");
                 initializeWebSocketClient();
+                log.info("WebSocket重连成功");
             } catch (Exception e) {
-                log.error("重连WebSocket失败", e);
+                log.error("WebSocket重连失败: {}", e.getMessage(), e);
                 scheduleReconnect(); // 继续重连
             }
         });
@@ -118,19 +125,28 @@ public class WxAutoWebSocketHttpClient implements WxAuto{
         try {
             BatchedSanitizedWechatMessages batchedMessages = objectMapper.readValue(
                 message, BatchedSanitizedWechatMessages.class);
-            
-            if ("wechat_messages".equals(batchedMessages.eventType())) {
+
+            String eventType = batchedMessages.eventType();
+            log.debug("处理WebSocket消息: 事件类型={}", eventType);
+
+            if ("wechat_messages".equals(eventType)) {
+                log.info("接收到微信消息事件: 时间戳={}, 聊天数量={}",
+                        batchedMessages.timestamp(),
+                        batchedMessages.data() != null ? batchedMessages.data().size() : 0);
                 applicationEventPublisher.publishEvent(new MessageReceiveEvent(this, batchedMessages, WxAutoWebSocketHttpClient.this));
-            } else if ("connected".equals(batchedMessages.eventType())) {
+            } else if ("connected".equals(eventType)) {
                 log.info("WebSocket连接确认: {}", batchedMessages.message());
-            } else if ("heartbeat".equals(batchedMessages.eventType())) {   
-                log.debug("收到心跳消息");
+            } else if ("heartbeat".equals(eventType)) {
+                log.debug("接收到心跳消息，发送响应");
                 // 发送心跳响应
                 sendHeartbeatResponse();
+            } else {
+                log.debug("未知的WebSocket事件类型: {}", eventType);
             }
-            
+
         } catch (Exception e) {
-            log.error("处理WebSocket消息失败: {}", message, e);
+            log.error("处理WebSocket消息失败: 消息长度={}, 错误信息={}",
+                    message.length(), e.getMessage(), e);
         }
     }
 
@@ -141,7 +157,7 @@ public class WxAutoWebSocketHttpClient implements WxAuto{
             pong.put("timestamp", System.currentTimeMillis());
             webSocketClient.send(objectMapper.writeValueAsString(pong));
         } catch (Exception e) {
-            log.error("发送心跳响应失败", e);
+            
         }
     }
 
@@ -166,7 +182,7 @@ public class WxAutoWebSocketHttpClient implements WxAuto{
             }
             return result;
         } catch (Exception e) {
-            log.error("添加监听聊天失败", e);
+            
             return new Result<>(false, e.getMessage(), null, null);
         }
     }
@@ -186,7 +202,7 @@ public class WxAutoWebSocketHttpClient implements WxAuto{
                     .block(chatBotProperties.getHttpTimeout());
             }).get();
         } catch (Exception e) {
-            log.error("切换聊天失败", e);
+            
             return new Result<>(false, e.getMessage(), null, null);
         }
     }
@@ -201,7 +217,7 @@ public class WxAutoWebSocketHttpClient implements WxAuto{
                 .bodyToMono(new ParameterizedTypeReference<Result<RobotNameResponse>>() {})
                 .block(chatBotProperties.getHttpTimeout())).get();
         } catch (Exception e) {
-            log.error("获取机器人名称失败", e);
+            
             return new Result<>(false, e.getMessage(), null, null);
         }
     }
@@ -221,15 +237,19 @@ public class WxAutoWebSocketHttpClient implements WxAuto{
                     .block(chatBotProperties.getHttpTimeout());
             }).get();
         } catch (Exception e) {
-            log.error("发送文件失败", e);
+            
             return new Result<>(false, e.getMessage(), null, null);
         }
     }
 
     @Override
     public Result<String> sendText(String toWho, String text) {
+        log.info("发送文本消息: 接收者={}, 消息长度={}", toWho, text.length());
+        log.debug("发送文本消息内容: 接收者={}, 内容={}", toWho, text.length() > 100 ? text.substring(0, 100) + "..." : text);
+
         try {
-            return taskManager.submitTask("发送文本消息给: " + toWho, () -> {
+            long startTime = System.currentTimeMillis();
+            Result<String> result = taskManager.submitTask("发送文本消息给: " + toWho, () -> {
                 SendTextRequest request = new SendTextRequest(toWho, text);
 
                 return webClient
@@ -240,8 +260,17 @@ public class WxAutoWebSocketHttpClient implements WxAuto{
                     .bodyToMono(new ParameterizedTypeReference<Result<String>>() {})
                     .block(chatBotProperties.getHttpTimeout());
             }).get();
+
+            long duration = System.currentTimeMillis() - startTime;
+            if (result.success()) {
+                log.info("文本消息发送成功: 接收者={}, 耗时={}ms", toWho, duration);
+            } else {
+                log.warn("文本消息发送失败: 接收者={}, 错误={}, 耗时={}ms", toWho, result.message(), duration);
+            }
+
+            return result;
         } catch (Exception e) {
-            log.error("发送文本消息失败", e);
+            log.error("文本消息发送异常: 接收者={}, 错误信息={}", toWho, e.getMessage(), e);
             return new Result<>(false, e.getMessage(), null, null);
         }
     }
@@ -261,7 +290,7 @@ public class WxAutoWebSocketHttpClient implements WxAuto{
                     .block(chatBotProperties.getHttpTimeout());
             }).get();
         } catch (Exception e) {
-            log.error("语音通话失败", e);
+            
             return new Result<>(false, e.getMessage(), null, null);
         }
     }
@@ -280,7 +309,7 @@ public class WxAutoWebSocketHttpClient implements WxAuto{
                     .block(chatBotProperties.getHttpTimeout());
             }).get();
         } catch (Exception e) {
-            log.error("通过URL发送文件失败", e);
+            
             return new Result<>(false, e.getMessage(), null, null);
         }
     }
@@ -304,7 +333,7 @@ public class WxAutoWebSocketHttpClient implements WxAuto{
                     .block(chatBotProperties.getHttpTimeout());
             }).get();
         } catch (Exception e) {
-            log.error("上传文件发送失败", e);
+            
             return new Result<>(false, e.getMessage(), null, null);
         }
     }
@@ -324,10 +353,6 @@ public class WxAutoWebSocketHttpClient implements WxAuto{
         return isConnected.get();
     }
 
-    // 获取等待中的任务
-    public List<String> getPendingTasks() {
-        return taskManager.getPendingUiOperationTasks();
-    }
 
     @Override
     public void setMessageHandlerChain(MessageHandlerChain messageHandlerChain) {
@@ -336,9 +361,15 @@ public class WxAutoWebSocketHttpClient implements WxAuto{
 
     @PreDestroy
     public void shutdown() {
-        log.info("Shutting down WxAutoWebSocketHttpClient...");
+        log.info("开始关闭微信自动化客户端");
+
+        if (webSocketClient != null && !webSocketClient.isClosed()) {
+            log.info("关闭WebSocket连接");
+            webSocketClient.close();
+        }
 
         taskManager.shutdown();
+        log.info("微信自动化客户端关闭完成");
     }
 
     @Override

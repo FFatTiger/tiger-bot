@@ -44,8 +44,25 @@ public class ChatApplicationService {
      * 根据名称获取聊天对象
      */
     public Chat getChatByName(String chatName) {
-        return chatRepository.findByName(chatName)
-                .orElseThrow(() -> new RuntimeException("Chat not found: " + chatName));
+        log.debug("根据名称查找聊天对象: 聊天名称={}", chatName);
+
+        try {
+            Chat chat = chatRepository.findByName(chatName)
+                    .orElse(null);
+
+            if (chat != null) {
+                log.debug("找到聊天对象: ID={}, 名称={}, 群聊={}, AI配置={}",
+                        chat.getId(), chat.getName(), chat.isGroupFlag(),
+                        chat.hasAiConfiguration() ? "已配置" : "未配置");
+            } else {
+                log.debug("未找到聊天对象: 聊天名称={}", chatName);
+            }
+
+            return chat;
+        } catch (Exception e) {
+            log.error("查找聊天对象失败: 聊天名称={}, 错误信息={}", chatName, e.getMessage(), e);
+            throw new RuntimeException("Chat not found: " + chatName, e);
+        }
     }
 
     /**
@@ -60,7 +77,7 @@ public class ChatApplicationService {
         }
         
         Chat savedChat = chatRepository.save(newChat);
-        log.info("创建聊天对象: {}", savedChat);
+        
         return savedChat;
     }
 
@@ -68,14 +85,24 @@ public class ChatApplicationService {
      * 更新聊天的AI配置
      */
     public Chat updateAiConfiguration(Long chatId, AiSpecification newSpecification) {
-        Chat chat = getChatById(chatId);
-        
-        // 使用领域对象的业务方法更新AI配置
-        chat.updateAiConfiguration(newSpecification);
-        
-        Chat savedChat = chatRepository.save(chat);
-        log.info("更新聊天AI配置: {}", savedChat);
-        return savedChat;
+        log.info("更新聊天AI配置: 聊天ID={}, 新配置=提供商ID:{}, 模型ID:{}, 角色ID:{}",
+                chatId, newSpecification.aiProviderId(),
+                newSpecification.aiModelId(), newSpecification.aiRoleId());
+
+        try {
+            Chat chat = getChatById(chatId);
+
+            // 使用领域对象的业务方法更新AI配置
+            chat.updateAiConfiguration(newSpecification);
+
+            Chat savedChat = chatRepository.save(chat);
+            log.info("聊天AI配置更新成功: 聊天ID={}, 聊天名称={}", chatId, savedChat.getName());
+
+            return savedChat;
+        } catch (Exception e) {
+            log.error("更新聊天AI配置失败: 聊天ID={}, 错误信息={}", chatId, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -86,7 +113,7 @@ public class ChatApplicationService {
         getChatById(chatId);
         
         chatRepository.deleteById(chatId);
-        log.info("删除聊天对象: {}", chatId);
+        
     }
 
     /**

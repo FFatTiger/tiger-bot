@@ -46,7 +46,7 @@ public class PythonGatewayManager {
             
             return "已停止";
         } catch (Exception e) {
-            log.error("获取网关状态失败", e);
+            
             return "未知";
         }
     }
@@ -75,7 +75,7 @@ public class PythonGatewayManager {
             metrics.put("threadCount", ManagementFactory.getThreadMXBean().getThreadCount());
             
         } catch (Exception e) {
-            log.error("获取系统指标失败", e);
+            
             metrics.put("error", "获取失败: " + e.getMessage());
         }
         
@@ -88,7 +88,7 @@ public class PythonGatewayManager {
     public boolean start() {
         try {
             if (pythonProcess != null && pythonProcess.isAlive()) {
-                log.warn("Python网关已在运行中");
+                
                 return true;
             }
             
@@ -103,15 +103,15 @@ public class PythonGatewayManager {
             Thread.sleep(2000);
             
             if (pythonProcess.isAlive()) {
-                log.info("Python网关启动成功");
+                
                 return true;
             } else {
-                log.error("Python网关启动失败");
+                
                 return false;
             }
             
         } catch (Exception e) {
-            log.error("启动Python网关异常", e);
+            
             return false;
         }
     }
@@ -132,15 +132,15 @@ public class PythonGatewayManager {
                     pythonProcess.destroyForcibly();
                 }
                 
-                log.info("Python网关已停止");
+                
                 return true;
             } else {
-                log.warn("Python网关未在运行");
+                
                 return true;
             }
             
         } catch (Exception e) {
-            log.error("停止Python网关异常", e);
+            
             return false;
         }
     }
@@ -149,7 +149,7 @@ public class PythonGatewayManager {
      * 重启Python网关
      */
     public boolean restart() {
-        log.info("重启Python网关");
+        
         
         boolean stopped = stop();
         if (!stopped) {

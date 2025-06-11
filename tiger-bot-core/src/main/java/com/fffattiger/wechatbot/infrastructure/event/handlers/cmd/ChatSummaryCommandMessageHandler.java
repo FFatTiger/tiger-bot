@@ -1,4 +1,4 @@
-package com.fffattiger.wechatbot.interfaces.event.handlers.cmd;
+package com.fffattiger.wechatbot.infrastructure.event.handlers.cmd;
 
 import java.io.File;
 import java.time.LocalDate;
@@ -62,7 +62,7 @@ public class ChatSummaryCommandMessageHandler extends AbstractCommandMessageHand
 
         String chatLog = chatLogClient.getChatHistory(summaryTargetChatName, dateStr, null);
         if (!StringUtils.hasLength(chatLog)) {
-            log.error("没有找到聊天记录: {}", summaryTargetChatName);
+            
             context.wx().sendText(chatName, "没有找到聊天记录");
             return;
         }
@@ -90,7 +90,7 @@ public class ChatSummaryCommandMessageHandler extends AbstractCommandMessageHand
 
         boolean b = MarkdownToImageConverter.convertMarkdownToImage(aiSummary, outputFile, 900, "png");
         if (!b) {
-            log.error("生成图片失败");
+            
             return null;
         }
         return new File(outputFile);
@@ -104,7 +104,7 @@ public class ChatSummaryCommandMessageHandler extends AbstractCommandMessageHand
                     .call()
                     .content();
         } catch (Exception e) {
-            log.error("服务繁忙，稍后再试", e);
+            
             return null;
         }
     }

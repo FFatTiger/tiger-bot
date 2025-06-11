@@ -8,7 +8,7 @@ package com.fffattiger.wechatbot.infrastructure.ai;
 // import org.springframework.lang.NonNull;
 
 // /**
-//  * 模拟真实打字速度的顾问 最终打字速度 = 字数 * random(typeOneWordSpeedMin, typeOneWordSpeedMax) 趋近 typeAvgSpeed
+//  * TODO 模拟真实打字速度的顾问 最终打字速度 = 字数 * random(typeOneWordSpeedMin, typeOneWordSpeedMax) 趋近 typeAvgSpeed
 //  */
 // public class MockRealTypeSpeedAdvisor implements BaseAdvisor {
 //     /**

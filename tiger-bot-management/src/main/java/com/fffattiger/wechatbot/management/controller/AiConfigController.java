@@ -46,7 +46,7 @@ public class AiConfigController {
      */
     @GetMapping("/providers")
     public String providers(Model model) {
-        log.info("访问AI提供商管理页面");
+        
 
         List<AiProviderConfigurationDto> providers = aiProviderManagementApplicationService.getAllProviderConfigurations();
         List<String> supportedTypes = aiProviderManagementApplicationService.getSupportedProviderTypes();
@@ -72,7 +72,7 @@ public class AiConfigController {
             aiProviderManagementApplicationService.createProviderConfiguration(dto);
             return "success";
         } catch (Exception e) {
-            log.error("创建AI提供商失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -93,7 +93,7 @@ public class AiConfigController {
             aiProviderManagementApplicationService.updateProviderConfiguration(id, dto);
             return "success";
         } catch (Exception e) {
-            log.error("更新AI提供商失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -108,7 +108,7 @@ public class AiConfigController {
             aiProviderManagementApplicationService.deleteProviderConfiguration(id);
             return "success";
         } catch (Exception e) {
-            log.error("删除AI提供商失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -123,7 +123,7 @@ public class AiConfigController {
             boolean success = aiProviderManagementApplicationService.testProviderConnection(id);
             return success ? "success" : "failed";
         } catch (Exception e) {
-            log.error("测试AI提供商连接失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -144,7 +144,7 @@ public class AiConfigController {
      */
     @GetMapping("/models")
     public String models(Model model) {
-        log.info("访问AI模型管理页面");
+        
 
         List<AiModelConfigurationDto> models = aiModelManagementApplicationService.getAllModelConfigurations();
         List<AiProvider> allProviders = aiModelManagementApplicationService.getAllAvailableProviders();
@@ -182,7 +182,7 @@ public class AiConfigController {
             aiModelManagementApplicationService.createModelConfiguration(dto);
             return "success";
         } catch (Exception e) {
-            log.error("创建AI模型失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -215,7 +215,7 @@ public class AiConfigController {
             aiModelManagementApplicationService.updateModelConfiguration(id, dto);
             return "success";
         } catch (Exception e) {
-            log.error("更新AI模型失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -230,7 +230,7 @@ public class AiConfigController {
             aiModelManagementApplicationService.deleteModelConfiguration(id);
             return "success";
         } catch (Exception e) {
-            log.error("删除AI模型失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -245,7 +245,7 @@ public class AiConfigController {
             aiModelManagementApplicationService.toggleModelEnabled(id);
             return "success";
         } catch (Exception e) {
-            log.error("切换AI模型状态失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -260,7 +260,7 @@ public class AiConfigController {
             boolean success = aiModelManagementApplicationService.testModel(id);
             return success ? "success" : "failed";
         } catch (Exception e) {
-            log.error("测试AI模型失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -282,7 +282,7 @@ public class AiConfigController {
      */
     @GetMapping("/roles")
     public String roles(Model model) {
-        log.info("访问AI角色管理页面");
+        
 
         List<AiRoleConfigurationDto> roles = aiRoleManagementApplicationService.getAllRoleConfigurations();
         List<String> supportedPromptTypes = aiRoleManagementApplicationService.getSupportedPromptTypes();
@@ -308,7 +308,7 @@ public class AiConfigController {
             aiRoleManagementApplicationService.createRoleConfiguration(dto);
             return "success";
         } catch (Exception e) {
-            log.error("创建AI角色失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -329,7 +329,7 @@ public class AiConfigController {
             aiRoleManagementApplicationService.updateRoleConfiguration(id, dto);
             return "success";
         } catch (Exception e) {
-            log.error("更新AI角色失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -344,7 +344,7 @@ public class AiConfigController {
             aiRoleManagementApplicationService.deleteRoleConfiguration(id);
             return "success";
         } catch (Exception e) {
-            log.error("删除AI角色失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -363,7 +363,7 @@ public class AiConfigController {
                 null, name, promptContent, extraMemory, promptType);
             return aiRoleManagementApplicationService.previewRole(dto);
         } catch (Exception e) {
-            log.error("预览AI角色失败", e);
+            
             return "预览失败: " + e.getMessage();
         }
     }

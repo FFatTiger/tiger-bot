@@ -51,7 +51,7 @@ public class UserApplicationService {
         }
         
         User savedUser = userRepository.save(newUser);
-        log.info("创建用户: {}", savedUser);
+        
         return savedUser;
     }
 
@@ -71,7 +71,7 @@ public class UserApplicationService {
         }
         
         User savedUser = userRepository.save(updatedUser);
-        log.info("更新用户: {}", savedUser);
+        
         return savedUser;
     }
 
@@ -84,7 +84,7 @@ public class UserApplicationService {
                 .orElseThrow(() -> new RuntimeException("User not found: " + userId));
                 
         userRepository.deleteById(userId);
-        log.info("删除用户: {}", userId);
+        
     }
 
     /**

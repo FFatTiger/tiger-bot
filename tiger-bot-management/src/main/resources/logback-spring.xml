@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- 控制台输出配置 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- 彩色控制台输出配置 -->
+    <appender name="CONSOLE_COLOR" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight([%thread]) %highlight(%-5level) %cyan(%logger{50}) - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- 根据profile选择不同的appender -->
+    <springProfile name="!prod">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE_COLOR"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="prod">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <!-- 管理后台特定的日志级别 -->
+    <logger name="com.fffattiger.wechatbot.management" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE_COLOR"/>
+    </logger>
+
+    <!-- 核心模块日志 -->
+    <logger name="com.fffattiger.wechatbot" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE_COLOR"/>
+    </logger>
+
+    <!-- Web控制器日志 -->
+    <logger name="com.fffattiger.wechatbot.management.interfaces.web" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE_COLOR"/>
+    </logger>
+
+    <!-- 应用服务日志 -->
+    <logger name="com.fffattiger.wechatbot.management.application.service" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE_COLOR"/>
+    </logger>
+
+    <!-- Spring框架日志级别调整 -->
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.springframework.boot" level="INFO"/>
+    <logger name="org.springframework.web" level="WARN"/>
+    <logger name="org.springframework.security" level="WARN"/>
+
+    <!-- 数据库相关日志 -->
+    <logger name="org.hibernate" level="WARN"/>
+    <logger name="org.hibernate.SQL" level="WARN"/>
+    <logger name="com.zaxxer.hikari" level="WARN"/>
+
+    <!-- Thymeleaf模板引擎日志 -->
+    <logger name="org.thymeleaf" level="WARN"/>
+
+    <!-- JSON处理日志 -->
+    <logger name="com.fasterxml.jackson" level="WARN"/>
+
+    <!-- 其他第三方库日志级别 -->
+    <logger name="io.netty" level="WARN"/>
+    <logger name="org.apache.http" level="WARN"/>
+</configuration>

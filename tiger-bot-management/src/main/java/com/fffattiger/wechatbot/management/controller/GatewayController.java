@@ -30,7 +30,7 @@ public class GatewayController {
      */
     @GetMapping("")
     public String gateway(Model model) {
-        log.info("访问网关控制页面");
+        
         
         String gatewayStatus = gatewayManagementApplicationService.getGatewayStatus();
         Map<String, Object> systemMetrics = gatewayManagementApplicationService.getSystemMetrics();
@@ -70,7 +70,7 @@ public class GatewayController {
             boolean success = gatewayManagementApplicationService.startGateway();
             return success ? "success" : "failed";
         } catch (Exception e) {
-            log.error("启动网关失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -85,7 +85,7 @@ public class GatewayController {
             boolean success = gatewayManagementApplicationService.stopGateway();
             return success ? "success" : "failed";
         } catch (Exception e) {
-            log.error("停止网关失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
@@ -100,7 +100,7 @@ public class GatewayController {
             boolean success = gatewayManagementApplicationService.restartGateway();
             return success ? "success" : "failed";
         } catch (Exception e) {
-            log.error("重启网关失败", e);
+            
             return "error: " + e.getMessage();
         }
     }
