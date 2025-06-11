@@ -74,14 +74,8 @@ public class MessageReceiveListener implements ApplicationListener<MessageReceiv
                 continue;
             }
 
-            log.info("找到监听配置: 聊天={}, 监听器ID={}",
-                    chat.chatName(), messageProcessingData.listener().getId());
 
             for (BatchedSanitizedWechatMessages.Chat.Message msg : chat.messages()) {
-                log.info("提交消息处理任务: 聊天={}, 发送者={}, 消息类型={}, 内容长度={}",
-                        chat.chatName(), msg.sender(), msg.type(),
-                        msg.content() != null ? msg.content().length() : 0);
-
                 messageProcessorPool.submit(() -> {
                     try {
                         log.debug("开始处理消息: 聊天={}, 发送者={}, 消息ID={}",

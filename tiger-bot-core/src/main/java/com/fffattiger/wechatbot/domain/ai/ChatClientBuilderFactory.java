@@ -25,22 +25,29 @@ public class ChatClientBuilderFactory {
                     .restClientBuilder(restClientBuilderProvider.getIfAvailable(RestClient::builder))
                     .apiKey(aiProvider.apiKey()).build();
 
+            // 使用通用反射工具动态配置参数
+            DeepSeekChatOptions.Builder optionsBuilder = DeepSeekChatOptions.builder()
+                    .model(aiModel.modelName());
+            
+            // 应用动态参数配置
+            optionsBuilder = ReflectionParameterConfigurer.configureParameters(optionsBuilder, aiModel.params());
+
             chatModel = DeepSeekChatModel.builder().deepSeekApi(deepSeekApi)
-                    .defaultOptions(DeepSeekChatOptions.builder()
-                            .model(aiModel.modelName())
-                            // .temperature(aiProvider.temperature())
-                            // .maxTokens(aiProvider.maxTokens())
-                            // .frequencyPenalty(aiProvider.frequencyPenalty())
-                            // .topP(aiProvider.topP())
-                            .build())
+                    .defaultOptions(optionsBuilder.build())
                     .build();
         } else if (aiProvider.providerType()
                 .equals(org.springframework.ai.observation.conventions.AiProvider.OPENAI.value())) {
             OpenAiApi openAiApi = OpenAiApi.builder().restClientBuilder(restClientBuilderProvider.getIfAvailable(RestClient::builder)).baseUrl(aiProvider.baseUrl()).apiKey(aiProvider.apiKey()).build();
+            
+            // 使用通用反射工具动态配置参数
+            OpenAiChatOptions.Builder optionsBuilder = OpenAiChatOptions.builder()
+                    .model(aiModel.modelName());
+            
+            // 应用动态参数配置
+            optionsBuilder = ReflectionParameterConfigurer.configureParameters(optionsBuilder, aiModel.params());
+            
             chatModel = OpenAiChatModel.builder().openAiApi(openAiApi)
-                    .defaultOptions(OpenAiChatOptions.builder()
-                            .model(aiModel.modelName())
-                            .build())
+                    .defaultOptions(optionsBuilder.build())
                     .build();
         } else {
             throw new IllegalArgumentException("Invalid provider type: " + aiProvider.providerType());

@@ -43,9 +43,6 @@ public abstract class AbstractCommandMessageHandler implements MessageHandler {
         String[] args2 = new String[args.length - 1];
         System.arraycopy(args, 1, args2, 0, args.length - 1);
 
-        log.info("检测到命令消息: 聊天={}, 发送者={}, 命令={}, 参数数量={}",
-                chatName, sender, command, args2.length);
-
         if (canHandle(cleanContent)) {
             log.info("命令处理器匹配: handler={}, 命令={}", this.getClass().getSimpleName(), command);
 

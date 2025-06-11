@@ -25,12 +25,6 @@ spring:
     username: admin
     password: 123
     driver-class-name: org.postgresql.Driver
-  # sql:
-  #   init:
-  #     mode: never
-  #     platform: postgresql
-  #     schema-locations: classpath:scripts/schema-postgresql.sql
-  #     data-locations: classpath:scripts/data.sql
 
 chatbot:
   # 聊天记录API地址
@@ -38,3 +32,8 @@ chatbot:
   # 微信网关基础URL
   wx-auto-gateway-http-url: http://192.168.31.77:8000
   wx-auto-gateway-ws-url: ws://192.168.31.77:8765
+  # 数据库初始化配置
+  database:
+    init:
+      enabled: true  # 是否启用数据库初始化检查
+      force-recreate: false  # 是否强制重新创建表（慎用）

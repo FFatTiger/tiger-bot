@@ -4,7 +4,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestClient;
 
 import com.fffattiger.wechatbot.shared.properties.ChatBotProperties;
-import com.fffattiger.wechatbot.shared.util.WeChatMessageProcessor;
 
 import lombok.extern.slf4j.Slf4j;
 

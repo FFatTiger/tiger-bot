@@ -108,23 +108,11 @@ spring:
     username: your_username
     password: your_password
     driver-class-name: org.postgresql.Driver
-  sql:
-    init:
-      mode: always  # 首次启动设置为always，后续可改为never
-      platform: postgresql
-      schema-locations: classpath:scripts/schema-postgresql.sql
-      data-locations: classpath:scripts/data.sql
 
 chatbot:
   wx-auto-gateway-http-url: http://localhost:8000
   wx-auto-gateway-ws-url: ws://localhost:8765
 ```
-
-**重要说明**：
-- `sql.init.mode: always` 用于首次启动时自动创建表结构和初始化数据
-- 首次启动成功后，建议改为 `never` 避免重复初始化
-- 系统会自动创建所有必要的表和初始化示例数据
-
 ### 4. 安装 Python 依赖
 
 ```bash
@@ -153,17 +141,11 @@ cd tiger-bot-management
 mvn spring-boot:run
 ```
 
-**方式二：Docker启动（推荐生产）**
-
-```bash
-docker-compose up -d
-```
-
 ### 6. 首次启动配置
 
 **重要**：首次启动前确保配置正确：
 
-1. **数据库初始化**: 确保 `sql.init.mode: always` 用于自动创建表和数据
+1. **数据库初始化**: 应用启动时会自动检查并创建表和数据
 2. **API密钥配置**: 在 `data.sql` 中更新你的DeepSeek API密钥：
    ```sql
    -- 修改这行中的API密钥
@@ -171,7 +153,7 @@ docker-compose up -d
    VALUES ('deepseek', 'deepseek', 'sk-your-actual-api-key', 'https://api.deepseek.com/v1');
    ```
 
-3. **启动后修改配置**: 首次启动成功后，将 `sql.init.mode` 改为 `never`
+3. **配置数据库初始化**: 可通过配置控制初始化行为（详见配置管理章节）
 
 ### 7. 访问系统
 
@@ -217,12 +199,21 @@ docker-compose up -d
 
 ### 数据库自动初始化
 
-系统采用数据库配置方式，首次启动时会自动：
+应用启动时会自动检查数据库表是否存在，如果不存在则会：
 
 1. **创建表结构**: 自动执行 `schema-postgresql.sql` 创建所有必要的表
 2. **初始化数据**: 自动执行 `data.sql` 插入示例配置数据
 3. **AI配置**: 预置DeepSeek提供商、模型和多个AI角色
 4. **示例聊天**: 创建测试群聊和权限配置
+
+**配置选项**:
+```yaml
+chatbot:
+  database:
+    init:
+      enabled: true              # 是否启用自动初始化
+      force-recreate: false      # 是否强制重新创建表（慎用）
+```
 
 ### 预置AI角色
 

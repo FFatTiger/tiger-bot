@@ -130,9 +130,6 @@ public class WxAutoWebSocketHttpClient implements WxAuto{
             log.debug("处理WebSocket消息: 事件类型={}", eventType);
 
             if ("wechat_messages".equals(eventType)) {
-                log.info("接收到微信消息事件: 时间戳={}, 聊天数量={}",
-                        batchedMessages.timestamp(),
-                        batchedMessages.data() != null ? batchedMessages.data().size() : 0);
                 applicationEventPublisher.publishEvent(new MessageReceiveEvent(this, batchedMessages, WxAutoWebSocketHttpClient.this));
             } else if ("connected".equals(eventType)) {
                 log.info("WebSocket连接确认: {}", batchedMessages.message());

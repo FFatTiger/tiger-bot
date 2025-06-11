@@ -123,61 +123,85 @@
                                     <label for="maxOutputTokens" class="form-label">最大输出令牌数</label>
                                     <input type="number" class="form-control" id="maxOutputTokens" name="maxOutputTokens" min="1" required>
                                 </div>
-                                <div class="mb-3">
-                                    <label for="temperature" class="form-label">温度 (0.0-2.0)</label>
-                                    <input type="number" class="form-control" id="temperature" name="temperature" 
-                                           min="0" max="2" step="0.1" value="0.7">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="reasoningFlg" name="reasoningFlg">
+                                            <label class="form-check-label" for="reasoningFlg">推理功能</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="streamFlg" name="streamFlg" checked>
+                                            <label class="form-check-label" for="streamFlg">流式输出</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="enabled" name="enabled" checked>
+                                            <label class="form-check-label" for="enabled">启用模型</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="toolCallFlg" name="toolCallFlg">
+                                            <label class="form-check-label" for="toolCallFlg">工具调用</label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         
+                        <!-- 动态参数配置区域 -->
                         <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="frequencyPenalty" class="form-label">频率惩罚 (-2.0-2.0)</label>
-                                    <input type="number" class="form-control" id="frequencyPenalty" name="frequencyPenalty" 
-                                           min="-2" max="2" step="0.1" value="0">
+                            <div class="col-12">
+                                <h6 class="mb-3">
+                                    <i class="fas fa-cog me-2"></i>模型参数配置 
+                                    <small class="text-muted">(格式: key:value)</small>
+                                </h6>
+                                <div id="parametersContainer">
+                                    <div class="parameter-row mb-2">
+                                        <div class="row">
+                                            <div class="col-4">
+                                                <input type="text" class="form-control param-key" placeholder="参数名 (如: temperature)" 
+                                                       value="temperature">
+                                            </div>
+                                            <div class="col-6">
+                                                <input type="text" class="form-control param-value" placeholder="参数值 (如: 0.7)" 
+                                                       value="0.7">
+                                            </div>
+                                            <div class="col-2">
+                                                <button type="button" class="btn btn-sm btn-outline-danger remove-param">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="parameter-row mb-2">
+                                        <div class="row">
+                                            <div class="col-4">
+                                                <input type="text" class="form-control param-key" placeholder="参数名 (如: topP)" 
+                                                       value="topP">
+                                            </div>
+                                            <div class="col-6">
+                                                <input type="text" class="form-control param-value" placeholder="参数值 (如: 0.9)" 
+                                                       value="0.9">
+                                            </div>
+                                            <div class="col-2">
+                                                <button type="button" class="btn btn-sm btn-outline-danger remove-param">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="mb-3">
-                                    <label for="presencePenalty" class="form-label">存在惩罚 (-2.0-2.0)</label>
-                                    <input type="number" class="form-control" id="presencePenalty" name="presencePenalty" 
-                                           min="-2" max="2" step="0.1" value="0">
+                                <button type="button" class="btn btn-sm btn-outline-success" id="addParameterBtn">
+                                    <i class="fas fa-plus me-1"></i>添加参数
+                                </button>
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        常用参数: temperature(温度), topP(Top-P采样), maxTokens(最大令牌), frequencyPenalty(频率惩罚), presencePenalty(存在惩罚)
+                                    </small>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="topK" class="form-label">Top-K</label>
-                                    <input type="number" class="form-control" id="topK" name="topK" 
-                                           min="0" step="0.1" value="0">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="topP" class="form-label">Top-P (0.0-1.0)</label>
-                                    <input type="number" class="form-control" id="topP" name="topP" 
-                                           min="0" max="1" step="0.1" value="0">
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" id="reasoningFlg" name="reasoningFlg">
-                                    <label class="form-check-label" for="reasoningFlg">推理功能</label>
-                                </div>
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" id="streamFlg" name="streamFlg" checked>
-                                    <label class="form-check-label" for="streamFlg">流式输出</label>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" id="enabled" name="enabled" checked>
-                                    <label class="form-check-label" for="enabled">启用模型</label>
-                                </div>
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" id="toolCallFlg" name="toolCallFlg">
-                                    <label class="form-check-label" for="toolCallFlg">工具调用</label>
-                                </div>
+                                <!-- 隐藏的params字段，用于提交表单 -->
+                                <input type="hidden" id="params" name="params">
                             </div>
                         </div>
                     </div>
@@ -201,7 +225,6 @@
                 <form id="editModelForm">
                     <input type="hidden" id="editModelId" name="id">
                     <div class="modal-body">
-                        <!-- 编辑表单内容与创建表单类似，但字段ID前缀为edit -->
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
@@ -229,61 +252,52 @@
                                     <label for="editMaxOutputTokens" class="form-label">最大输出令牌数</label>
                                     <input type="number" class="form-control" id="editMaxOutputTokens" name="maxOutputTokens" min="1" required>
                                 </div>
-                                <div class="mb-3">
-                                    <label for="editTemperature" class="form-label">温度 (0.0-2.0)</label>
-                                    <input type="number" class="form-control" id="editTemperature" name="temperature" 
-                                           min="0" max="2" step="0.1">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="editReasoningFlg" name="reasoningFlg">
+                                            <label class="form-check-label" for="editReasoningFlg">推理功能</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="editStreamFlg" name="streamFlg">
+                                            <label class="form-check-label" for="editStreamFlg">流式输出</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="editEnabled" name="enabled">
+                                            <label class="form-check-label" for="editEnabled">启用模型</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="editToolCallFlg" name="toolCallFlg">
+                                            <label class="form-check-label" for="editToolCallFlg">工具调用</label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         
+                        <!-- 动态参数配置区域 (编辑) -->
                         <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="editFrequencyPenalty" class="form-label">频率惩罚 (-2.0-2.0)</label>
-                                    <input type="number" class="form-control" id="editFrequencyPenalty" name="frequencyPenalty" 
-                                           min="-2" max="2" step="0.1">
+                            <div class="col-12">
+                                <h6 class="mb-3">
+                                    <i class="fas fa-cog me-2"></i>模型参数配置 
+                                    <small class="text-muted">(格式: key:value)</small>
+                                </h6>
+                                <div id="editParametersContainer">
+                                    <!-- 编辑时的参数将在这里动态生成 -->
                                 </div>
-                                <div class="mb-3">
-                                    <label for="editPresencePenalty" class="form-label">存在惩罚 (-2.0-2.0)</label>
-                                    <input type="number" class="form-control" id="editPresencePenalty" name="presencePenalty" 
-                                           min="-2" max="2" step="0.1">
+                                <button type="button" class="btn btn-sm btn-outline-success" id="editAddParameterBtn">
+                                    <i class="fas fa-plus me-1"></i>添加参数
+                                </button>
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        常用参数: temperature(温度), topP(Top-P采样), maxTokens(最大令牌), frequencyPenalty(频率惩罚), presencePenalty(存在惩罚)
+                                    </small>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="editTopK" class="form-label">Top-K</label>
-                                    <input type="number" class="form-control" id="editTopK" name="topK" 
-                                           min="0" step="0.1">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="editTopP" class="form-label">Top-P (0.0-1.0)</label>
-                                    <input type="number" class="form-control" id="editTopP" name="topP" 
-                                           min="0" max="1" step="0.1">
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" id="editReasoningFlg" name="reasoningFlg">
-                                    <label class="form-check-label" for="editReasoningFlg">推理功能</label>
-                                </div>
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" id="editStreamFlg" name="streamFlg">
-                                    <label class="form-check-label" for="editStreamFlg">流式输出</label>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" id="editEnabled" name="enabled">
-                                    <label class="form-check-label" for="editEnabled">启用模型</label>
-                                </div>
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" id="editToolCallFlg" name="toolCallFlg">
-                                    <label class="form-check-label" for="editToolCallFlg">工具调用</label>
-                                </div>
+                                <!-- 隐藏的params字段，用于提交表单 -->
+                                <input type="hidden" id="editParams" name="params">
                             </div>
                         </div>
                     </div>
@@ -338,16 +352,93 @@
                 .done(function(config) {
                     $('#maxTokens').val(config.maxTokens);
                     $('#maxOutputTokens').val(config.maxOutputTokens);
-                    $('#temperature').val(config.temperature);
                 })
                 .fail(function() {
                     console.warn('无法加载默认配置');
                 });
         }
 
+        // 动态参数管理
+        function addParameterRow(container, key = '', value = '') {
+            const parameterRow = $(`
+                <div class="parameter-row mb-2">
+                    <div class="row">
+                        <div class="col-4">
+                            <input type="text" class="form-control param-key" placeholder="参数名 (如: temperature)" value="${key}">
+                        </div>
+                        <div class="col-6">
+                            <input type="text" class="form-control param-value" placeholder="参数值 (如: 0.7)" value="${value}">
+                        </div>
+                        <div class="col-2">
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-param">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `);
+            container.append(parameterRow);
+        }
+
+        // 移除参数行
+        $(document).on('click', '.remove-param', function() {
+            $(this).closest('.parameter-row').remove();
+        });
+
+        // 添加参数按钮事件
+        $('#addParameterBtn').on('click', function() {
+            addParameterRow($('#parametersContainer'));
+        });
+
+        $('#editAddParameterBtn').on('click', function() {
+            addParameterRow($('#editParametersContainer'));
+        });
+
+        // 收集参数并生成参数字符串
+        function collectParameters(container) {
+            let paramString = '';
+            container.find('.parameter-row').each(function() {
+                const key = $(this).find('.param-key').val().trim();
+                const value = $(this).find('.param-value').val().trim();
+                if (key && value) {
+                    paramString += `${key}:${value};`;
+                }
+            });
+            return paramString;
+        }
+
+        // 解析参数字符串并填充界面
+        function parseAndFillParameters(container, paramString) {
+            container.empty();
+            if (!paramString || paramString.trim() === '') {
+                addParameterRow(container); // 添加一个空行
+                return;
+            }
+
+            const pairs = paramString.split(';');
+            let hasParams = false;
+            pairs.forEach(pair => {
+                if (pair.trim()) {
+                    const [key, value] = pair.split(':');
+                    if (key && value) {
+                        addParameterRow(container, key.trim(), value.trim());
+                        hasParams = true;
+                    }
+                }
+            });
+
+            if (!hasParams) {
+                addParameterRow(container); // 如果没有有效参数，添加一个空行
+            }
+        }
+
         // 创建模型
         $('#createModelForm').on('submit', function(e) {
             e.preventDefault();
+            
+            // 收集动态参数
+            const paramsString = collectParameters($('#parametersContainer'));
+            $('#params').val(paramsString);
             
             const formData = $(this).serialize();
             
@@ -377,15 +468,13 @@
             $('#editDescription').val(model.description);
             $('#editMaxTokens').val(model.maxTokens);
             $('#editMaxOutputTokens').val(model.maxOutputTokens);
-            $('#editTemperature').val(model.temperature);
-            $('#editFrequencyPenalty').val(model.frequencyPenalty);
-            $('#editPresencePenalty').val(model.presencePenalty);
-            $('#editTopK').val(model.topK);
-            $('#editTopP').val(model.topP);
             $('#editReasoningFlg').prop('checked', model.reasoningFlg);
             $('#editStreamFlg').prop('checked', model.streamFlg);
             $('#editEnabled').prop('checked', model.enabled);
             $('#editToolCallFlg').prop('checked', model.toolCallFlg);
+
+            // 解析并填充参数
+            parseAndFillParameters($('#editParametersContainer'), model.params || '');
 
             $('#editModelModal').modal('show');
         }
@@ -393,6 +482,10 @@
         // 保存编辑
         $('#editModelForm').on('submit', function(e) {
             e.preventDefault();
+            
+            // 收集动态参数
+            const paramsString = collectParameters($('#editParametersContainer'));
+            $('#editParams').val(paramsString);
             
             const id = $('#editModelId').val();
             const formData = $(this).serialize();

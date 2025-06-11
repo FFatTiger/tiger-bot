@@ -8,9 +8,12 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.client.RestClient;
 
 import com.fffattiger.wechatbot.infrastructure.event.MessageReceiveListener;
+import com.fffattiger.wechatbot.infrastructure.startup.DatabaseStartupInitializer;
 import com.fffattiger.wechatbot.infrastructure.external.chatlog.ChatLogClient;
 import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler;
 import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler.RobotNameResponse;
@@ -18,12 +21,13 @@ import com.fffattiger.wechatbot.infrastructure.external.wchat.OperationTaskManag
 import com.fffattiger.wechatbot.infrastructure.external.wchat.WxAuto;
 import com.fffattiger.wechatbot.infrastructure.external.wchat.WxAutoWebSocketHttpClient;
 import com.fffattiger.wechatbot.shared.properties.ChatBotProperties;
+import com.fffattiger.wechatbot.shared.properties.DatabaseInitProperties;
 
 import lombok.extern.slf4j.Slf4j;
 
 
 @Configuration
-@EnableConfigurationProperties(ChatBotProperties.class)
+@EnableConfigurationProperties({ChatBotProperties.class, DatabaseInitProperties.class})
 @Slf4j
 public class ChatBotConfiguration {
 
@@ -33,9 +37,16 @@ public class ChatBotConfiguration {
         return new ChatLogClient(restClientBuilder, properties);
     }
 
+    @Bean
+    public DatabaseStartupInitializer databaseStartupInitializer(JdbcTemplate jdbcTemplate, ResourceLoader resourceLoader, DatabaseInitProperties properties) {
+        return new DatabaseStartupInitializer(jdbcTemplate, resourceLoader, properties);
+    }
+
 
     @Bean
-    public WxAuto wxAuto(ChatBotProperties chatBotProperties, OperationTaskManager operationTaskManager, ApplicationEventPublisher applicationEventPublisher, MessageReceiveListener messageReceiveListener) throws Exception {
+    public WxAuto wxAuto(ChatBotProperties chatBotProperties, OperationTaskManager operationTaskManager, ApplicationEventPublisher applicationEventPublisher, MessageReceiveListener messageReceiveListener, DatabaseStartupInitializer databaseStartupInitializer) throws Exception {
+        databaseStartupInitializer.initDatabase();  
+        
         log.info("初始化微信自动化客户端: 网关地址={}", chatBotProperties.getWxAutoGatewayHttpUrl());
 
         WxAutoWebSocketHttpClient wxAuto = new WxAutoWebSocketHttpClient(chatBotProperties, operationTaskManager, applicationEventPublisher);

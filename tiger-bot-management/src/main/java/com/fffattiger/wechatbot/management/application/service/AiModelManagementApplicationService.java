@@ -81,15 +81,11 @@ public class AiModelManagementApplicationService {
             dto.description(),
             dto.maxTokens(),
             dto.maxOutputTokens(),
-            dto.temperature(),
-            dto.frequencyPenalty(),
-            dto.presencePenalty(),
-            dto.topK(),
-            dto.topP(),
             dto.reasoningFlg(),
             dto.streamFlg(),
             dto.enabled(),
-            dto.toolCallFlg()
+            dto.toolCallFlg(),
+            dto.params()
         );
     }
 
@@ -111,15 +107,11 @@ public class AiModelManagementApplicationService {
             dto.description(),
             dto.maxTokens(),
             dto.maxOutputTokens(),
-            dto.temperature(),
-            dto.frequencyPenalty(),
-            dto.presencePenalty(),
-            dto.topK(),
-            dto.topP(),
             dto.reasoningFlg(),
             dto.streamFlg(),
             dto.enabled(),
-            dto.toolCallFlg()
+            dto.toolCallFlg(),
+            dto.params()
         );
     }
 
@@ -150,17 +142,6 @@ public class AiModelManagementApplicationService {
         // 根据提供商类型设置默认值
         int defaultMaxTokens = 4096;
         int defaultMaxOutputTokens = 4096;
-        double defaultTemperature = 0.7;
-
-        if ("deepseek".equalsIgnoreCase(providerType)) {
-            defaultMaxTokens = 100000;
-            defaultMaxOutputTokens = 100000;
-            defaultTemperature = 0.5;
-        } else if ("openai".equalsIgnoreCase(providerType)) {
-            defaultMaxTokens = 128000;
-            defaultMaxOutputTokens = 4096;
-            defaultTemperature = 0.7;
-        }
 
         return new AiModelConfigurationDto(
             null,
@@ -170,15 +151,11 @@ public class AiModelManagementApplicationService {
             "",
             defaultMaxTokens,
             defaultMaxOutputTokens,
-            defaultTemperature,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
             false,
             true,
             true,
-            false
+            false,
+            ""
         );
     }
 
@@ -220,15 +197,11 @@ public class AiModelManagementApplicationService {
             model.description(),
             model.maxTokens(),
             model.maxOutputTokens(),
-            model.temperature(),
-            model.frequencyPenalty(),
-            model.presencePenalty(),
-            model.topK(),
-            model.topP(),
             model.reasoningFlg(),
             model.streamFlg(),
             model.enabled(),
-            model.toolCallFlg()
+            model.toolCallFlg(),
+            model.params()
         );
     }
 }

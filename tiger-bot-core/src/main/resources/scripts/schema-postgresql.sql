@@ -22,15 +22,11 @@ CREATE TABLE IF NOT EXISTS ai_models (
     description TEXT NOT NULL,
     max_tokens INT NOT NULL,
     max_output_tokens INT NOT NULL,
-    temperature DOUBLE PRECISION NOT NULL,
-    frequency_penalty DOUBLE PRECISION NOT NULL,
-    presence_penalty DOUBLE PRECISION NOT NULL,
-    top_k DOUBLE PRECISION NOT NULL,
-    top_p DOUBLE PRECISION NOT NULL,
     reasoning_flg BOOLEAN NOT NULL,
     stream_flg BOOLEAN NOT NULL,
     enabled BOOLEAN NOT NULL,
-    tool_call_flg BOOLEAN NOT NULL
+    tool_call_flg BOOLEAN NOT NULL,
+    params VARCHAR(255) NOT NULL
 );
 
 COMMENT ON TABLE ai_models IS 'AI模型表';
@@ -39,15 +35,11 @@ COMMENT ON COLUMN ai_models.ai_provider_id IS 'AI供应商ID';
 COMMENT ON COLUMN ai_models.model_name IS '模型名称';
 COMMENT ON COLUMN ai_models.max_tokens IS '最大令牌数';
 COMMENT ON COLUMN ai_models.max_output_tokens IS '最大输出令牌数';
-COMMENT ON COLUMN ai_models.temperature IS '温度';
-COMMENT ON COLUMN ai_models.frequency_penalty IS '频率惩罚';
-COMMENT ON COLUMN ai_models.presence_penalty IS '存在惩罚';
-COMMENT ON COLUMN ai_models.top_k IS 'Top-K';
-COMMENT ON COLUMN ai_models.top_p IS 'Top-P';
 COMMENT ON COLUMN ai_models.reasoning_flg IS '推理功能';
 COMMENT ON COLUMN ai_models.stream_flg IS '流式输出';
 COMMENT ON COLUMN ai_models.enabled IS '是否激活';
 COMMENT ON COLUMN ai_models.tool_call_flg IS '工具调用';
+COMMENT ON COLUMN ai_models.params IS '参数';
 
 
 -- AI角色表

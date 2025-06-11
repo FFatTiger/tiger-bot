@@ -18,22 +18,14 @@ public record AiModel(
 
     int maxOutputTokens,
 
-    Double temperature,
-
-    Double frequencyPenalty,
-
-    Double presencePenalty,
-
-    Double topK,
-
-    Double topP,
-
     boolean reasoningFlg,
 
     boolean streamFlg,
 
     boolean enabled,
     
-    boolean toolCallFlg
+    boolean toolCallFlg,
+    
+    String params
 ) {
 }

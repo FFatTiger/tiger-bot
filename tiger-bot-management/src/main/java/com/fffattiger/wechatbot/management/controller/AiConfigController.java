@@ -165,20 +165,15 @@ public class AiConfigController {
                              @RequestParam String description,
                              @RequestParam int maxTokens,
                              @RequestParam int maxOutputTokens,
-                             @RequestParam(required = false) Double temperature,
-                             @RequestParam(required = false) Double frequencyPenalty,
-                             @RequestParam(required = false) Double presencePenalty,
-                             @RequestParam(required = false) Double topK,
-                             @RequestParam(required = false) Double topP,
                              @RequestParam(defaultValue = "false") boolean reasoningFlg,
                              @RequestParam(defaultValue = "true") boolean streamFlg,
                              @RequestParam(defaultValue = "true") boolean enabled,
-                             @RequestParam(defaultValue = "false") boolean toolCallFlg) {
+                             @RequestParam(defaultValue = "false") boolean toolCallFlg,
+                             @RequestParam String params) {
         try {
             AiModelConfigurationDto dto = new AiModelConfigurationDto(
                 null, aiProviderId, "", modelName, description, maxTokens, maxOutputTokens,
-                temperature, frequencyPenalty, presencePenalty, topK, topP,
-                reasoningFlg, streamFlg, enabled, toolCallFlg);
+                reasoningFlg, streamFlg, enabled, toolCallFlg, params);
             aiModelManagementApplicationService.createModelConfiguration(dto);
             return "success";
         } catch (Exception e) {
@@ -198,20 +193,15 @@ public class AiConfigController {
                              @RequestParam String description,
                              @RequestParam int maxTokens,
                              @RequestParam int maxOutputTokens,
-                             @RequestParam(required = false) Double temperature,
-                             @RequestParam(required = false) Double frequencyPenalty,
-                             @RequestParam(required = false) Double presencePenalty,
-                             @RequestParam(required = false) Double topK,
-                             @RequestParam(required = false) Double topP,
                              @RequestParam(defaultValue = "false") boolean reasoningFlg,
                              @RequestParam(defaultValue = "true") boolean streamFlg,
                              @RequestParam(defaultValue = "true") boolean enabled,
-                             @RequestParam(defaultValue = "false") boolean toolCallFlg) {
+                             @RequestParam(defaultValue = "false") boolean toolCallFlg,
+                             @RequestParam String params) {
         try {
             AiModelConfigurationDto dto = new AiModelConfigurationDto(
                 id, aiProviderId, "", modelName, description, maxTokens, maxOutputTokens,
-                temperature, frequencyPenalty, presencePenalty, topK, topP,
-                reasoningFlg, streamFlg, enabled, toolCallFlg);
+                reasoningFlg, streamFlg, enabled, toolCallFlg, params);
             aiModelManagementApplicationService.updateModelConfiguration(id, dto);
             return "success";
         } catch (Exception e) {

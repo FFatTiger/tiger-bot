@@ -1,5 +1,8 @@
 package com.fffattiger.wechatbot.management.application.dto;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * AI模型配置DTO
  * 用于管理界面的数据传输
@@ -12,15 +15,11 @@ public record AiModelConfigurationDto(
     String description,
     int maxTokens,
     int maxOutputTokens,
-    Double temperature,
-    Double frequencyPenalty,
-    Double presencePenalty,
-    Double topK,
-    Double topP,
     boolean reasoningFlg,
     boolean streamFlg,
     boolean enabled,
-    boolean toolCallFlg
+    boolean toolCallFlg,
+    String params
 ) {
     
     /**
@@ -31,38 +30,9 @@ public record AiModelConfigurationDto(
                modelName != null && !modelName.trim().isEmpty() &&
                description != null && !description.trim().isEmpty() &&
                maxTokens > 0 &&
-               maxOutputTokens > 0 &&
-               isValidTemperature() &&
-               isValidPenalties() &&
-               isValidTopValues();
+               maxOutputTokens > 0;
     }
 
-    /**
-     * 验证温度值
-     */
-    private boolean isValidTemperature() {
-        return temperature == null || (temperature >= 0.0 && temperature <= 2.0);
-    }
-
-    /**
-     * 验证惩罚值
-     */
-    private boolean isValidPenalties() {
-        boolean freqValid = frequencyPenalty == null || 
-                           (frequencyPenalty >= -2.0 && frequencyPenalty <= 2.0);
-        boolean presValid = presencePenalty == null || 
-                           (presencePenalty >= -2.0 && presencePenalty <= 2.0);
-        return freqValid && presValid;
-    }
-
-    /**
-     * 验证Top值
-     */
-    private boolean isValidTopValues() {
-        boolean topKValid = topK == null || topK >= 0.0;
-        boolean topPValid = topP == null || (topP >= 0.0 && topP <= 1.0);
-        return topKValid && topPValid;
-    }
 
     /**
      * 获取状态标识
@@ -98,31 +68,6 @@ public record AiModelConfigurationDto(
     }
 
     /**
-     * 获取模型参数摘要
-     */
-    public String getParameterSummary() {
-        StringBuilder summary = new StringBuilder();
-        
-        if (temperature != null) {
-            summary.append("温度: ").append(temperature).append(" ");
-        }
-        if (frequencyPenalty != null && frequencyPenalty != 0.0) {
-            summary.append("频率惩罚: ").append(frequencyPenalty).append(" ");
-        }
-        if (presencePenalty != null && presencePenalty != 0.0) {
-            summary.append("存在惩罚: ").append(presencePenalty).append(" ");
-        }
-        if (topK != null && topK != 0.0) {
-            summary.append("Top-K: ").append(topK).append(" ");
-        }
-        if (topP != null && topP != 0.0) {
-            summary.append("Top-P: ").append(topP).append(" ");
-        }
-        
-        return summary.toString().trim();
-    }
-
-    /**
      * 获取令牌限制摘要
      */
     public String getTokenSummary() {
@@ -136,11 +81,54 @@ public record AiModelConfigurationDto(
         if (description == null || description.isEmpty()) {
             return "无描述";
         }
-        
-        if (description.length() <= 50) {
-            return description;
+        return description.length() > 50 ? description.substring(0, 47) + "..." : description;
+    }
+
+    /**
+     * 获取参数摘要 - 解析新的参数格式
+     */
+    public String getParameterSummary() {
+        if (params == null || params.trim().isEmpty()) {
+            return "无参数";
         }
         
-        return description.substring(0, 50) + "...";
+        List<String> paramSummaries = new ArrayList<>();
+        
+        try {
+            // 解析 key:value; 格式的参数
+            String[] pairs = params.split(";");
+            for (String pair : pairs) {
+                if (pair.trim().isEmpty()) {
+                    continue;
+                }
+                
+                String[] keyValue = pair.split(":", 2);
+                if (keyValue.length == 2) {
+                    String key = keyValue[0].trim();
+                    String value = keyValue[1].trim();
+                    
+                    // 只显示前几个参数，避免过长
+                    if (paramSummaries.size() < 3) {
+                        paramSummaries.add(key + ": " + value);
+                    }
+                }
+            }
+            
+            if (paramSummaries.isEmpty()) {
+                return "无有效参数";
+            }
+            
+            String result = String.join(", ", paramSummaries);
+            
+            // 如果还有更多参数，显示省略号
+            if (pairs.length > paramSummaries.size()) {
+                result += "...";
+            }
+            
+            return result;
+            
+        } catch (Exception e) {
+            return "参数格式错误";
+        }
     }
 }
