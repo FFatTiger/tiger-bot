@@ -1,5 +1,6 @@
 package com.fffattiger.wechatbot.domain.ai;
 
+import java.net.URL;
 import java.util.Map;
 
 import org.springframework.ai.chat.client.ChatClient;
@@ -21,50 +22,93 @@ public class ChatClientBuilderFactory {
         ChatModel chatModel = null;
         if (aiProvider.providerType()
                 .equals(org.springframework.ai.observation.conventions.AiProvider.DEEPSEEK.value())) {
-            DeepSeekApi deepSeekApi = DeepSeekApi.builder()
-                    .restClientBuilder(restClientBuilderProvider.getIfAvailable(RestClient::builder))
-                    .apiKey(aiProvider.apiKey()).build();
-
-            // 使用通用反射工具动态配置参数
-            DeepSeekChatOptions.Builder optionsBuilder = DeepSeekChatOptions.builder()
-                    .model(aiModel.modelName());
-            
-            // 应用动态参数配置
-            optionsBuilder = ReflectionParameterConfigurer.configureParameters(optionsBuilder, aiModel.params());
-
-            chatModel = DeepSeekChatModel.builder().deepSeekApi(deepSeekApi)
-                    .defaultOptions(optionsBuilder.build())
-                    .build();
+            chatModel = buildDeepSeekModel(aiProvider, aiModel, restClientBuilderProvider);
         } else if (aiProvider.providerType()
                 .equals(org.springframework.ai.observation.conventions.AiProvider.OPENAI.value())) {
-            OpenAiApi openAiApi = OpenAiApi.builder().restClientBuilder(restClientBuilderProvider.getIfAvailable(RestClient::builder)).baseUrl(aiProvider.baseUrl()).apiKey(aiProvider.apiKey()).build();
-            
-            // 使用通用反射工具动态配置参数
-            OpenAiChatOptions.Builder optionsBuilder = OpenAiChatOptions.builder()
-                    .model(aiModel.modelName());
-            
-            // 应用动态参数配置
-            optionsBuilder = ReflectionParameterConfigurer.configureParameters(optionsBuilder, aiModel.params());
-            
-            chatModel = OpenAiChatModel.builder().openAiApi(openAiApi)
-                    .defaultOptions(optionsBuilder.build())
-                    .build();
+            chatModel = builderOpenAiModel(aiProvider, aiModel, restClientBuilderProvider);
         } else {
             throw new IllegalArgumentException("Invalid provider type: " + aiProvider.providerType());
         }
 
         ChatClient.Builder builder = ChatClient.builder(chatModel);
-        switch (MessageType.fromValue(aiRole.promptType())) {
-            case SYSTEM:
-                builder.defaultSystem(t -> t.text(aiRole.promptContent()).params(params));
-                break;
-            case USER:
-                builder.defaultUser(t -> t.text(aiRole.promptContent()).params(params));
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid prompt type: " + aiRole.promptType());
+
+        if (aiRole != null) {
+            switch (MessageType.fromValue(aiRole.promptType())) {
+                case SYSTEM:
+                    builder.defaultSystem(t -> t.text(aiRole.promptContent()).params(params));
+                    break;
+                case USER:
+                    builder.defaultUser(t -> t.text(aiRole.promptContent()).params(params));
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid prompt type: " + aiRole.promptType());
+            }
         }
 
         return builder;
+    }
+
+    private static ChatModel builderOpenAiModel(AiProvider aiProvider, AiModel aiModel,
+            ObjectProvider<RestClient.Builder> restClientBuilderProvider) {
+        ChatModel chatModel;
+        // 处理baseUrl和completionPath
+        String baseUrl = aiProvider.baseUrl();
+        String completionPath = extractCompletionPath(baseUrl);
+        OpenAiApi.Builder openAiApiBuilder = OpenAiApi.builder()
+                .restClientBuilder(restClientBuilderProvider.getIfAvailable(RestClient::builder))
+                .baseUrl(aiProvider.baseUrl())
+                .apiKey(aiProvider.apiKey());
+        if (completionPath != null) {
+            openAiApiBuilder.baseUrl(baseUrl.replace(completionPath, ""));
+            openAiApiBuilder.completionsPath(completionPath);
+        }
+        OpenAiApi openAiApi = openAiApiBuilder.build();
+
+        OpenAiChatOptions.Builder optionsBuilder = OpenAiChatOptions.builder()
+                .model(aiModel.modelName());
+
+        // 应用动态参数配置
+        optionsBuilder = ReflectionParameterConfigurer.configureParameters(optionsBuilder, aiModel.params());
+
+        chatModel = OpenAiChatModel.builder().openAiApi(openAiApi)
+                .defaultOptions(optionsBuilder.build())
+                .build();
+        return chatModel;
+    }
+
+    private static ChatModel buildDeepSeekModel(AiProvider aiProvider, AiModel aiModel,
+            ObjectProvider<RestClient.Builder> restClientBuilderProvider) {
+        ChatModel chatModel;
+        DeepSeekApi deepSeekApi = DeepSeekApi.builder()
+                .restClientBuilder(restClientBuilderProvider.getIfAvailable(RestClient::builder))
+                .apiKey(aiProvider.apiKey()).build();
+
+        // 使用通用反射工具动态配置参数
+        DeepSeekChatOptions.Builder optionsBuilder = DeepSeekChatOptions.builder()
+                .model(aiModel.modelName());
+
+        // 应用动态参数配置
+        optionsBuilder = ReflectionParameterConfigurer.configureParameters(optionsBuilder, aiModel.params());
+
+        chatModel = DeepSeekChatModel.builder().deepSeekApi(deepSeekApi)
+                .defaultOptions(optionsBuilder.build())
+                .build();
+        return chatModel;
+    }
+
+    private static String extractCompletionPath(String baseUrl) {
+        String completionPath = null;
+        try {
+            URL url = new URL(baseUrl);
+            String path = url.getPath();
+            if (path != null && !path.isEmpty() && !"/".equals(path)) {
+                // 如果有路径,则分离baseUrl和completionPath
+                baseUrl = url.getProtocol() + "://" + url.getHost() + (url.getPort() != -1 ? ":" + url.getPort() : "");
+                completionPath = path;
+            }
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid baseUrl: " + baseUrl, e);
+        }
+        return completionPath;
     }
 }

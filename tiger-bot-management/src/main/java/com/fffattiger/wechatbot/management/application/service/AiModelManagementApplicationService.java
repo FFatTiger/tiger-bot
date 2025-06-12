@@ -1,15 +1,24 @@
 package com.fffattiger.wechatbot.management.application.service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestClient;
 
 import com.fffattiger.wechatbot.application.service.AiModelApplicationService;
 import com.fffattiger.wechatbot.application.service.AiProviderApplicationService;
+import com.fffattiger.wechatbot.application.service.AiRoleApplicationService;
 import com.fffattiger.wechatbot.domain.ai.AiModel;
 import com.fffattiger.wechatbot.domain.ai.AiProvider;
+import com.fffattiger.wechatbot.domain.ai.AiRole;
+import com.fffattiger.wechatbot.domain.ai.ChatClientBuilderFactory;
 import com.fffattiger.wechatbot.management.application.dto.AiModelConfigurationDto;
 
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +36,12 @@ public class AiModelManagementApplicationService {
 
     @Autowired
     private AiProviderApplicationService coreAiProviderApplicationService;
+
+    @Autowired
+    private AiRoleApplicationService coreAiRoleApplicationService;
+
+    @Autowired
+    private ObjectProvider<RestClient.Builder> restClientBuilderProvider;
 
     /**
      * 获取所有AI模型配置
@@ -166,18 +181,63 @@ public class AiModelManagementApplicationService {
         AiModel model = coreAiModelApplicationService.getModelById(id)
                 .orElseThrow(() -> new RuntimeException("AI模型不存在: " + id));
 
-        
+        log.info("开始测试AI模型: 模型ID={}, 模型名称={}", id, model.modelName());
 
-        // TODO: 实现实际的模型测试逻辑
-        // 这里可以发送一个简单的测试请求来验证模型是否可用
         try {
-            // 模拟模型测试
-            Thread.sleep(2000);
-            return true;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            // 获取模型对应的提供商
+            AiProvider provider = coreAiProviderApplicationService.getProviderById(model.aiProviderId())
+                    .orElseThrow(() -> new RuntimeException("AI提供商不存在: " + model.aiProviderId()));
+
+            // 获取一个简单的测试角色
+            AiRole testRole = getSimpleTestRole();
+
+            log.debug("模型测试配置: 提供商={}, 模型={}, 角色={}", 
+                     provider.providerName(), model.modelName(), testRole.name());
+
+            // 构建ChatClient进行测试
+            Map<String, Object> params = new HashMap<>();
+            ChatClient chatClient = ChatClientBuilderFactory.builder(provider, model, testRole, params, restClientBuilderProvider)
+                    .build();
+
+            // 发送简单的测试消息
+            String testMessage = "你好";
+            String response = chatClient.prompt()
+                    .user(testMessage)
+                    .call()
+                    .content();
+
+            log.info("模型测试响应: 输入={}, 输出={}", testMessage, response);
+
+            // 检查响应是否有效
+            boolean success = StringUtils.hasLength(response) && response.trim().length() > 0;
+            
+            if (success) {
+                log.info("模型测试成功: 模型ID={}, 模型名称={}, 响应长度={}", 
+                        id, model.modelName(), response.length());
+            } else {
+                log.warn("模型测试失败: 模型ID={}, 模型名称={}, 响应为空", 
+                        id, model.modelName());
+            }
+
+            return success;
+
+        } catch (Exception e) {
+            log.error("模型测试出错: 模型ID={}, 模型名称={}, 错误信息={}", 
+                     id, model.modelName(), e.getMessage(), e);
             return false;
         }
+    }
+
+    /**
+     * 获取用于测试的简单角色
+     */
+    private AiRole getSimpleTestRole() {
+
+        // 如果没有任何角色，创建一个临时的简单角色
+        log.debug("没有可用角色，创建临时测试角色");
+        return new AiRole(null, "临时测试助手", 
+                         "你是一个友善的AI助手，会简短地回答用户的问题。", 
+                         "", "system");
     }
 
     /**

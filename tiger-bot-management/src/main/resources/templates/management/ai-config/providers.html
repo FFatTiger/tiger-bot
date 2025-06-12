@@ -46,10 +46,6 @@
                                               th:text="${provider.getStatusBadge()}">云端</span>
                                     </td>
                                     <td>
-                                        <button type="button" class="btn btn-sm btn-outline-success me-1"
-                                                th:onclick="'testProvider(' + ${provider.id()} + ')'">
-                                            <i class="fas fa-plug"></i>
-                                        </button>
                                         <button type="button" class="btn btn-sm btn-outline-primary me-1"
                                                 th:onclick="'editProvider(' + ${provider.id()} + ')'">
                                             <i class="fas fa-edit"></i>
@@ -147,25 +143,7 @@
         </div>
     </div>
 
-    <!-- 测试结果模态框 -->
-    <div class="modal fade" id="testResultModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">连接测试结果</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="testResultContent">
-                        <!-- 测试结果将在这里显示 -->
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
-                </div>
-            </div>
-        </div>
-    </div>
+
 </th:block>
 
 <th:block th:fragment="scripts">
@@ -269,30 +247,7 @@
                 });
         }
 
-        // 测试提供商连接
-        function testProvider(id) {
-            const provider = providers.find(p => p.id === id);
-            if (!provider) return;
 
-            $('#testResultContent').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> 正在测试连接...</div>');
-            $('#testResultModal').modal('show');
-            
-            makeRequest(`/management/ai-config/providers/${id}/test`, 'POST')
-                .done(function(response) {
-                    let resultHtml = '';
-                    if (response === 'success') {
-                        resultHtml = '<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>连接测试成功！</div>';
-                    } else if (response === 'failed') {
-                        resultHtml = '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>连接测试失败，请检查配置。</div>';
-                    } else {
-                        resultHtml = '<div class="alert alert-danger"><i class="fas fa-times-circle me-2"></i>测试出错: ' + response + '</div>';
-                    }
-                    $('#testResultContent').html(resultHtml);
-                })
-                .fail(function() {
-                    $('#testResultContent').html('<div class="alert alert-danger"><i class="fas fa-times-circle me-2"></i>请求失败，请检查网络连接</div>');
-                });
-        }
     </script>
 </th:block>
 

@@ -113,20 +113,7 @@ public class AiConfigController {
         }
     }
 
-    /**
-     * 测试AI提供商连接
-     */
-    @PostMapping("/providers/{id}/test")
-    @ResponseBody
-    public String testProvider(@PathVariable Long id) {
-        try {
-            boolean success = aiProviderManagementApplicationService.testProviderConnection(id);
-            return success ? "success" : "failed";
-        } catch (Exception e) {
-            
-            return "error: " + e.getMessage();
-        }
-    }
+
 
     /**
      * 获取提供商类型的默认配置

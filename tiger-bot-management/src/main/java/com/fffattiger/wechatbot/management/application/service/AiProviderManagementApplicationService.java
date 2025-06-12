@@ -91,26 +91,7 @@ public class AiProviderManagementApplicationService {
         coreAiProviderApplicationService.deleteProvider(id);
     }
 
-    /**
-     * 测试AI提供商连接
-     */
-    public boolean testProviderConnection(Long id) {
-        AiProvider provider = coreAiProviderApplicationService.getProviderById(id)
-                .orElseThrow(() -> new RuntimeException("AI提供商不存在: " + id));
 
-        
-
-        // TODO: 实现实际的连接测试逻辑
-        // 这里可以根据不同的提供商类型实现具体的连接测试
-        try {
-            // 模拟连接测试
-            Thread.sleep(1000);
-            return true;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return false;
-        }
-    }
 
     /**
      * 获取支持的提供商类型列表
