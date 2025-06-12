@@ -1,4 +1,4 @@
-# TigerBot - 智能微信聊天机器人
+# TigerBot - 智能微信聊天机器人（开发中，README仅供参考）
 
 <div align="center">
 
