@@ -5,11 +5,10 @@ import java.util.List;
 import org.springframework.util.StringUtils;
 
 import com.fffattiger.wechatbot.application.dto.MessageProcessingData;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler;
-
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandlerChain;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandlerContext;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageType;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandlerChain;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandlerContext;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageType;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,14 +22,14 @@ public abstract class AbstractCommandMessageHandler implements MessageHandler {
 
     @Override
     public boolean handle(MessageHandlerContext context, MessageHandlerChain chain) {
-        BatchedSanitizedWechatMessages.Chat.Message message = context.message();
-        String sender = message.sender();
+        WechatMessageSpecification.ChatSpecification.MessageSpecification messageSpecification = context.message();
+        String sender = messageSpecification.sender();
         String cleanContent = context.cleanContent();
         String commandPrefix = context.chatBotProperties().getCommandPrefix();
         String chatName = context.currentChat().chat().getName();
 
         // 检查是否为命令消息
-        if (message.type() == null || !message.type().equals(MessageType.FRIEND) || !StringUtils.hasLength(cleanContent)
+        if (messageSpecification.type() == null || !messageSpecification.type().equals(MessageType.FRIEND) || !StringUtils.hasLength(cleanContent)
                 || !cleanContent.startsWith(commandPrefix)) {
             log.debug("非命令消息，跳过处理: 聊天={}, 发送者={}, 内容={}",
                     chatName, sender, cleanContent);

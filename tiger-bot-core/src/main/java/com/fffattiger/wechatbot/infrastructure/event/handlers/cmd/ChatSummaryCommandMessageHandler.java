@@ -12,7 +12,7 @@ import com.fffattiger.wechatbot.application.service.AiChatApplicationService;
 import com.fffattiger.wechatbot.domain.command.repository.CommandRepository;
 import com.fffattiger.wechatbot.domain.shared.valueobject.AiSpecification;
 import com.fffattiger.wechatbot.infrastructure.external.chatlog.ChatLogClient;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandlerContext;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandlerContext;
 import com.fffattiger.wechatbot.shared.util.MarkdownToImageConverter;
 
 import cn.hutool.core.io.FileUtil;

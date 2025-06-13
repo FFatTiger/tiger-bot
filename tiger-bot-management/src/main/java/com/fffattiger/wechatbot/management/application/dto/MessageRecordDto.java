@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageType;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageType;
 
 /**
  * 消息记录DTO

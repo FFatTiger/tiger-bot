@@ -6,7 +6,10 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import com.fffattiger.wechatbot.domain.shared.valueobject.AiSpecification;
 
+import lombok.Data;
+
 @Table("chats")
+@Data
 public class Chat {
     @Id
     private Long id;
@@ -68,39 +71,5 @@ public class Chat {
     public boolean containsMember(String memberName) {
         // 简单的成员检查逻辑，实际可能需要更复杂的实现
         return memberName != null && !memberName.trim().isEmpty();
-    }
-
-    // Getters
-    public Long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public boolean isGroupFlag() {
-        return groupFlag;
-    }
-
-    public AiSpecification getAiSpecification() {
-        return aiSpecification;
-    }
-
-    // Setters (仅用于框架)
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setGroupFlag(boolean groupFlag) {
-        this.groupFlag = groupFlag;
-    }
-
-    public void setAiSpecification(AiSpecification aiSpecification) {
-        this.aiSpecification = aiSpecification;
     }
 }

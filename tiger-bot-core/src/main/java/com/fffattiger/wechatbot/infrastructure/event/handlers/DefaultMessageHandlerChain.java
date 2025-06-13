@@ -3,9 +3,9 @@ package com.fffattiger.wechatbot.infrastructure.event.handlers;
 import java.util.Iterator;
 import java.util.List;
 
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandlerChain;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandlerContext;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandlerChain;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandlerContext;
 
 import lombok.extern.slf4j.Slf4j;
 

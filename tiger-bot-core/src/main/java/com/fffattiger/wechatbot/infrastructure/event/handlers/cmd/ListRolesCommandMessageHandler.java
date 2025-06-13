@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 import com.fffattiger.wechatbot.application.service.AiChatApplicationService;
 import com.fffattiger.wechatbot.domain.ai.AiRole;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandlerContext;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandlerContext;
 
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;

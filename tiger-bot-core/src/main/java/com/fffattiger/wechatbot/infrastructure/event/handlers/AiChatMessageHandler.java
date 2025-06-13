@@ -13,10 +13,10 @@ import org.springframework.util.StringUtils;
 
 import com.fffattiger.wechatbot.application.dto.MessageProcessingData;
 import com.fffattiger.wechatbot.application.service.AiChatApplicationService;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandlerChain;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandlerContext;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageType;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandlerChain;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandlerContext;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageType;
 
 import cn.hutool.core.date.DateUtil;
 import jakarta.annotation.Resource;
@@ -40,16 +40,16 @@ public class AiChatMessageHandler implements MessageHandler {
 	@Override
 	public boolean handle(MessageHandlerContext context, MessageHandlerChain chain) {
 		String cleanContent = context.cleanContent();
-		BatchedSanitizedWechatMessages.Chat.Message message = context.message();
+		WechatMessageSpecification.ChatSpecification.MessageSpecification messageSpecification = context.message();
 		MessageProcessingData chat = context.currentChat();
 		String chatName = chat.chat().getName();
-		String sender = message.sender();
+		String sender = messageSpecification.sender();
 
 		// 检查是否为有效的AI聊天消息
-		if (message == null || message.type() == null || !message.type().equals(MessageType.FRIEND)
+		if (messageSpecification == null || messageSpecification.type() == null || !messageSpecification.type().equals(MessageType.FRIEND)
 				|| !StringUtils.hasLength(cleanContent)) {
 			log.debug("非AI聊天消息，跳过处理: 聊天={}, 发送者={}, 消息类型={}",
-					chatName, sender, message != null ? message.type() : "null");
+					chatName, sender, messageSpecification != null ? messageSpecification.type() : "null");
 			return chain.handle(context);
 		}
 
@@ -64,7 +64,7 @@ public class AiChatMessageHandler implements MessageHandler {
 				chatType, chat.chat().getAiSpecification() != null ? "已配置" : "未配置");
 
 		long startTime = System.currentTimeMillis();
-		String content = chat(context, cleanContent, message, chat, params);
+		String content = chat(context, cleanContent, messageSpecification, chat, params);
 		long duration = System.currentTimeMillis() - startTime;
 
 		if (!StringUtils.hasLength(content)) {
@@ -91,9 +91,9 @@ public class AiChatMessageHandler implements MessageHandler {
 	}
 
 	private String chat(MessageHandlerContext context, String cleanContent,
-			BatchedSanitizedWechatMessages.Chat.Message message, MessageProcessingData chat, Map<String, Object> params) {
+						WechatMessageSpecification.ChatSpecification.MessageSpecification messageSpecification, MessageProcessingData chat, Map<String, Object> params) {
 		String chatName = chat.chat().getName();
-		String sender = message.sender();
+		String sender = messageSpecification.sender();
 		String conversationId = generateConversationId(chat);
 
 		log.debug("构建AI聊天请求: 聊天={}, 发送者={}, 会话ID={}", chatName, sender, conversationId);

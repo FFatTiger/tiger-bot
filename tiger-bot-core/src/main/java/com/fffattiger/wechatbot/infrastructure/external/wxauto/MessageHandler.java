@@ -1,4 +1,4 @@
-package com.fffattiger.wechatbot.infrastructure.external.wchat;
+package com.fffattiger.wechatbot.infrastructure.external.wxauto;
 
 import java.util.List;
 
@@ -42,18 +42,18 @@ public interface MessageHandler extends Ordered {
     boolean handle(MessageHandlerContext context, MessageHandlerChain chain);
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    record BatchedSanitizedWechatMessages(
+    record WechatMessageSpecification(
             @JsonProperty("event_type") String eventType,
             @JsonProperty("message") String message,
             @JsonProperty("timestamp") Long timestamp,
-            @JsonProperty("data") List<Chat> data) {
+            @JsonProperty("data") List<ChatSpecification> data) {
         @JsonIgnoreProperties(ignoreUnknown = true)
-        public record Chat(
+        public record ChatSpecification(
                 @JsonProperty("chat_name") String chatName,
-                @JsonProperty("messages") List<Message> messages) {
+                @JsonProperty("messages") List<MessageSpecification> messageSpecifications) {
             @JsonIgnoreProperties(ignoreUnknown = true)
             @Table("messages") 
-            public record Message(
+            public record MessageSpecification(
                     @JsonProperty("type") MessageType type,
                     @JsonProperty("content") String content,
                     @JsonProperty("sender") String sender,
@@ -68,7 +68,7 @@ public interface MessageHandler extends Ordered {
 
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    record Result<T>(
+    record ResultSpecification<T>(
             boolean success,
             String message,
             String requestId,
@@ -77,21 +77,21 @@ public interface MessageHandler extends Ordered {
 
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    record SendTextRequest(
+    record SendTextSpecification(
             @JsonProperty("to_who") String toWho,
             @JsonProperty("text_content") String textContent) {
     }
 
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    record SendFileByPathRequest(
+    record SendFileByPathSpecification(
             @JsonProperty("to_who") String toWho,
             @JsonProperty("filepath") String filepath) {
     }
 
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    record SendFileByUrlRequest(
+    record SendFileByUrlSpecification(
             @JsonProperty("to_who") String toWho,
             @JsonProperty("file_url") String fileUrl,
             @JsonProperty("filename") String filename) {
@@ -99,7 +99,7 @@ public interface MessageHandler extends Ordered {
 
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    record AddListenChatRequest(
+    record AddListenChatSpecification(
             String who,
             @JsonProperty("savepic") boolean savePic,
             @JsonProperty("savevoice") boolean saveVoice,
@@ -108,19 +108,19 @@ public interface MessageHandler extends Ordered {
 
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    record ChatWithRequest(
+    record ChatWithSpecification(
             String who) {
     }
 
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    record VoiceCallRequest(
+    record VoiceCallSpecification(
             @JsonProperty("user_id") String userId) {
     }
 
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    record RobotNameResponse(
+    record RobotNameSpecification(
             @JsonProperty("robot_name") String robotName) {
     }
 

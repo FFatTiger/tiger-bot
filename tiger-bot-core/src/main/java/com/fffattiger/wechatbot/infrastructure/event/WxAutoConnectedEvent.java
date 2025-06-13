@@ -3,7 +3,7 @@ package com.fffattiger.wechatbot.infrastructure.event;
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
-import com.fffattiger.wechatbot.infrastructure.external.wchat.WxAuto;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.WxAuto;
 
 @Getter
 public class WxAutoConnectedEvent extends ApplicationEvent {

@@ -1,8 +1,8 @@
-package com.fffattiger.wechatbot.infrastructure.external.wchat.predicates;
+package com.fffattiger.wechatbot.infrastructure.external.wxauto.predicates;
 
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandlerContext;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessagePredicate;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageType;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandlerContext;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessagePredicate;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageType;
 
 /**
  * 消息类型谓词

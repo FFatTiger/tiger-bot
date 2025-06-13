@@ -68,7 +68,7 @@ public class AiProviderApplicationService {
      * 更新AI提供商
      */
     public AiProvider updateProvider(Long id, String providerType, String providerName, String apiKey, String baseUrl) {
-        AiProvider existingProvider = aiProviderRepository.findById(id)
+        aiProviderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("AI提供商不存在: " + id));
 
         if (providerType == null || providerType.trim().isEmpty()) {

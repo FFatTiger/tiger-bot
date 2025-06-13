@@ -1,7 +1,6 @@
-package com.fffattiger.wechatbot.infrastructure.external.wchat;
+package com.fffattiger.wechatbot.infrastructure.external.wxauto;
 
 import com.fffattiger.wechatbot.application.dto.MessageProcessingData;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler.BatchedSanitizedWechatMessages.Chat.Message;
 import com.fffattiger.wechatbot.shared.properties.ChatBotProperties;
 
 public interface MessageHandlerContext {
@@ -24,13 +23,13 @@ public interface MessageHandlerContext {
      * 获取微信消息
      * @return 微信消息
      */
-    Message message();
+    MessageHandler.WechatMessageSpecification.ChatSpecification.MessageSpecification message();
 
     /**
      * 设置微信消息
-     * @param message 微信消息
+     * @param messageSpecification 微信消息
      */
-    void setMessage(Message message);
+    void setMessage(MessageHandler.WechatMessageSpecification.ChatSpecification.MessageSpecification messageSpecification);
 
     /** 
      * 获取微信消息时间戳

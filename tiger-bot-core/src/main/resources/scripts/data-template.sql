@@ -89,7 +89,7 @@ INSERT INTO ai_roles (name, prompt_content, extra_memory, prompt_type) VALUES ('
 INSERT INTO ai_providers (provider_type, provider_name, api_key, base_url) VALUES ('deepseek', 'deepseek', 'sk-xxxx', 'https://api.deepseek.com/v1'); -- id=1
 
 -- AI模型
-INSERT INTO ai_models (ai_provider_id, model_name, description, max_tokens, max_output_tokens, temperature, frequency_penalty, presence_penalty, top_k, top_p, reasoning_flg, stream_flg, enabled, tool_call_flg) VALUES (1, 'deepseek-chat', 'deepseek-chat', 100000, 100000, 0.5, 0, 0, 0, 0, TRUE, TRUE, TRUE, TRUE); -- id=1
+INSERT INTO ai_models (ai_provider_id, model_name, description, max_tokens, max_output_tokens, temperature, frequency_penalty, presence_penalty, top_k, top_p, reasoning_flg, stream_flg, enabled, tool_call_flg) VALUES (1, 'deepseek-chatSpecification', 'deepseek-chatSpecification', 100000, 100000, 0.5, 0, 0, 0, 0, TRUE, TRUE, TRUE, TRUE); -- id=1
 INSERT INTO ai_models (ai_provider_id, model_name, description, max_tokens, max_output_tokens, temperature, frequency_penalty, presence_penalty, top_k, top_p, reasoning_flg, stream_flg, enabled, tool_call_flg) VALUES (1, 'deepseek-reasoner', 'deepseek-reasoner', 100000, 100000, 0.5, 0, 0, 0, 0, TRUE, TRUE, TRUE, TRUE); -- id=2
 
 -- 聊天对象

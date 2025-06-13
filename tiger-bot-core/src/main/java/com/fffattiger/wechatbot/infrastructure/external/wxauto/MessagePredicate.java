@@ -1,4 +1,4 @@
-package com.fffattiger.wechatbot.infrastructure.external.wchat;
+package com.fffattiger.wechatbot.infrastructure.external.wxauto;
 
 /**
  * 消息谓词接口，用于判断消息是否满足特定条件

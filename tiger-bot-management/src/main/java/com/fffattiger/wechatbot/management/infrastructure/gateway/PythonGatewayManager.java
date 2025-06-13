@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.fffattiger.wechatbot.infrastructure.external.wchat.WxAuto;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.WxAuto;
 
 import lombok.extern.slf4j.Slf4j;
 

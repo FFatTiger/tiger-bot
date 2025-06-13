@@ -4,7 +4,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandlerContext;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandlerContext;
 
 @Service
 public class StatusCommandMessageHandler extends AbstractCommandMessageHandler {

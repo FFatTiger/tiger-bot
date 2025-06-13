@@ -13,13 +13,13 @@ import org.springframework.web.client.RestClient;
 import com.fffattiger.wechatbot.domain.ai.AiModel;
 import com.fffattiger.wechatbot.domain.ai.AiProvider;
 import com.fffattiger.wechatbot.domain.ai.AiRole;
-import com.fffattiger.wechatbot.domain.ai.ChatClientBuilderFactory;
 import com.fffattiger.wechatbot.domain.ai.repository.AiModelRepository;
 import com.fffattiger.wechatbot.domain.ai.repository.AiProviderRepository;
 import com.fffattiger.wechatbot.domain.ai.repository.AiRoleRepository;
 import com.fffattiger.wechatbot.domain.chat.Chat;
 import com.fffattiger.wechatbot.domain.chat.repository.ChatRepository;
 import com.fffattiger.wechatbot.domain.shared.valueobject.AiSpecification;
+import com.fffattiger.wechatbot.infrastructure.ai.ChatClientBuilderFactory;
 
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;

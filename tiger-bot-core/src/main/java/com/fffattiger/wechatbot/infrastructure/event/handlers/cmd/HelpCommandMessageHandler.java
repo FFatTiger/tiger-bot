@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandlerContext;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandlerContext;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;

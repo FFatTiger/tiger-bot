@@ -1,4 +1,4 @@
-package com.fffattiger.wechatbot.infrastructure.external.wchat;
+package com.fffattiger.wechatbot.infrastructure.external.wxauto;
 
 import lombok.extern.slf4j.Slf4j;
 

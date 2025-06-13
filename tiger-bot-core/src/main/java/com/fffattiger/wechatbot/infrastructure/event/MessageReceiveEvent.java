@@ -2,22 +2,22 @@ package com.fffattiger.wechatbot.infrastructure.event;
 
 import org.springframework.context.ApplicationEvent;
 
-import com.fffattiger.wechatbot.infrastructure.external.wchat.WxAuto;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler.BatchedSanitizedWechatMessages;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.WxAuto;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler.WechatMessageSpecification;
 
 public class MessageReceiveEvent extends ApplicationEvent {
 
-    private final BatchedSanitizedWechatMessages message;
+    private final WechatMessageSpecification message;
 
     private final WxAuto wxAuto;
 
-    public MessageReceiveEvent(Object source, BatchedSanitizedWechatMessages message, WxAuto wxAuto) {
+    public MessageReceiveEvent(Object source, WechatMessageSpecification message, WxAuto wxAuto) {
         super(source);
         this.message = message;
         this.wxAuto = wxAuto;
     }
 
-    public BatchedSanitizedWechatMessages getMessage() {
+    public WechatMessageSpecification getMessage() {
         return message;
     }
 

@@ -3,16 +3,18 @@ package com.fffattiger.wechatbot.interfaces.context;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.alibaba.ttl.TransmittableThreadLocal;
 import com.fffattiger.wechatbot.application.dto.MessageProcessingData;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandlerContext;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.WxAuto;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler.BatchedSanitizedWechatMessages.Chat.Message;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandlerContext;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.WxAuto;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler.WechatMessageSpecification.ChatSpecification.MessageSpecification;
 import com.fffattiger.wechatbot.shared.properties.ChatBotProperties;
 
 @SuppressWarnings("unchecked")
 public class DefaultMessageHandlerContext implements MessageHandlerContext {
 
-    private final ThreadLocal<Map<String, Object>> threadLocal = new ThreadLocal<>();
+    private final TransmittableThreadLocal<Map<String, Object>> threadLocal = new TransmittableThreadLocal<>();
 
     public DefaultMessageHandlerContext() {
         threadLocal.set(new ConcurrentHashMap<>());
@@ -28,13 +30,13 @@ public class DefaultMessageHandlerContext implements MessageHandlerContext {
     }
 
     @Override
-    public Message message() {
+    public MessageSpecification message() {
         return get("message");
     }
 
     @Override
-    public void setMessage(Message message) {
-        set("message", message);
+    public void setMessage(MessageHandler.WechatMessageSpecification.ChatSpecification.MessageSpecification messageSpecification) {
+        set("message", messageSpecification);
     }
 
     @Override

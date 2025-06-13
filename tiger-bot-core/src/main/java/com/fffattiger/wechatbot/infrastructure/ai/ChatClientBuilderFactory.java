@@ -1,4 +1,4 @@
-package com.fffattiger.wechatbot.domain.ai;
+package com.fffattiger.wechatbot.infrastructure.ai;
 
 import java.net.URL;
 import java.util.Map;
@@ -14,6 +14,10 @@ import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.client.RestClient;
+
+import com.fffattiger.wechatbot.domain.ai.AiModel;
+import com.fffattiger.wechatbot.domain.ai.AiProvider;
+import com.fffattiger.wechatbot.domain.ai.AiRole;
 
 public class ChatClientBuilderFactory {
 

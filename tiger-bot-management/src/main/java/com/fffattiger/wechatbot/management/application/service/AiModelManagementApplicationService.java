@@ -14,11 +14,10 @@ import org.springframework.web.client.RestClient;
 
 import com.fffattiger.wechatbot.application.service.AiModelApplicationService;
 import com.fffattiger.wechatbot.application.service.AiProviderApplicationService;
-import com.fffattiger.wechatbot.application.service.AiRoleApplicationService;
 import com.fffattiger.wechatbot.domain.ai.AiModel;
 import com.fffattiger.wechatbot.domain.ai.AiProvider;
 import com.fffattiger.wechatbot.domain.ai.AiRole;
-import com.fffattiger.wechatbot.domain.ai.ChatClientBuilderFactory;
+import com.fffattiger.wechatbot.infrastructure.ai.ChatClientBuilderFactory;
 import com.fffattiger.wechatbot.management.application.dto.AiModelConfigurationDto;
 
 import lombok.extern.slf4j.Slf4j;
@@ -36,10 +35,7 @@ public class AiModelManagementApplicationService {
 
     @Autowired
     private AiProviderApplicationService coreAiProviderApplicationService;
-
-    @Autowired
-    private AiRoleApplicationService coreAiRoleApplicationService;
-
+    
     @Autowired
     private ObjectProvider<RestClient.Builder> restClientBuilderProvider;
 

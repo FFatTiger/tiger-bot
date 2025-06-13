@@ -15,11 +15,11 @@ import org.springframework.web.client.RestClient;
 import com.fffattiger.wechatbot.infrastructure.event.MessageReceiveListener;
 import com.fffattiger.wechatbot.infrastructure.startup.DatabaseStartupInitializer;
 import com.fffattiger.wechatbot.infrastructure.external.chatlog.ChatLogClient;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler.RobotNameResponse;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.OperationTaskManager;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.WxAuto;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.WxAutoWebSocketHttpClient;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.OperationTaskManager;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.WxAuto;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.WxAutoWebSocketHttpClient;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler.RobotNameSpecification;
 import com.fffattiger.wechatbot.shared.properties.ChatBotProperties;
 import com.fffattiger.wechatbot.shared.properties.DatabaseInitProperties;
 
@@ -52,7 +52,7 @@ public class ChatBotConfiguration {
         WxAutoWebSocketHttpClient wxAuto = new WxAutoWebSocketHttpClient(chatBotProperties, operationTaskManager, applicationEventPublisher);
 
         log.info("获取机器人名称...");
-        MessageHandler.Result<RobotNameResponse> robotName = wxAuto.getRobotName();
+        MessageHandler.ResultSpecification<RobotNameSpecification> robotName = wxAuto.getRobotName();
         if (robotName.success()) {
             String botName = robotName.data().robotName();
             chatBotProperties.setRobotName(botName);

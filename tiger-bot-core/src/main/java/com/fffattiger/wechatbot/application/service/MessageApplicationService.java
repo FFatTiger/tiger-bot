@@ -124,7 +124,6 @@ public class MessageApplicationService {
      * 删除聊天对象的所有消息
      */
     public void deleteMessagesByChatId(Long chatId) {
-        long count = countMessagesByChatId(chatId);
         messageRepository.deleteByChatId(chatId);
         
     }

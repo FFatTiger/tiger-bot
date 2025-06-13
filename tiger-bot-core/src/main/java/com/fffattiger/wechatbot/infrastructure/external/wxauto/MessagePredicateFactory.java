@@ -1,13 +1,13 @@
-package com.fffattiger.wechatbot.infrastructure.external.wchat;
+package com.fffattiger.wechatbot.infrastructure.external.wxauto;
 
 import org.springframework.stereotype.Component;
 
-import com.fffattiger.wechatbot.infrastructure.external.wchat.predicates.CommandPrefixPredicate;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.predicates.ContentMatchesPredicate;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.predicates.GroupChatPredicate;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.predicates.HasContentPredicate;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.predicates.MessageTypePredicate;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.predicates.SenderPredicate;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.predicates.CommandPrefixPredicate;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.predicates.ContentMatchesPredicate;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.predicates.GroupChatPredicate;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.predicates.HasContentPredicate;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.predicates.MessageTypePredicate;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.predicates.SenderPredicate;
 
 /**
  * 消息谓词工厂

@@ -40,7 +40,7 @@
     </logger>
 
     <!-- WebSocket连接日志 -->
-    <logger name="com.fffattiger.wechatbot.infrastructure.external.wchat" level="INFO" additivity="false">
+    <logger name="com.fffattiger.wechatbot.infrastructure.external.wxauto" level="INFO" additivity="false">
         <appender-ref ref="CONSOLE_COLOR"/>
     </logger>
 

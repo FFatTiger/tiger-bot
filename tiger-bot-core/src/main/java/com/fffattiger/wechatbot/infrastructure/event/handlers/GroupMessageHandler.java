@@ -4,11 +4,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.fffattiger.wechatbot.application.dto.MessageProcessingData;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandler;
-
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandlerChain;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageHandlerContext;
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageType;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandlerChain;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandlerContext;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageType;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,8 +18,8 @@ public class GroupMessageHandler implements MessageHandler {
     @Override
     public boolean handle(MessageHandlerContext context, MessageHandlerChain chain) {
         MessageProcessingData listenerData = context.currentChat();
-        BatchedSanitizedWechatMessages.Chat.Message message = context.message();
-        String content = message.content();
+        WechatMessageSpecification.ChatSpecification.MessageSpecification messageSpecification = context.message();
+        String content = messageSpecification.content();
         String botName = context.chatBotProperties().getRobotName();
 
         if (!listenerData.chat().isGroupChat()) {
@@ -28,7 +27,7 @@ public class GroupMessageHandler implements MessageHandler {
             return chain.handle(context);
         }
 
-        if (message == null || message.type() == null || !message.type().equals(MessageType.FRIEND)
+        if (messageSpecification == null || messageSpecification.type() == null || !messageSpecification.type().equals(MessageType.FRIEND)
                 || !StringUtils.hasLength(content)) {
             return chain.handle(context);
         }

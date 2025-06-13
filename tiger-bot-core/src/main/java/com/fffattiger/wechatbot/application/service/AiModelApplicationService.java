@@ -73,7 +73,7 @@ public class AiModelApplicationService {
                               int maxTokens, int maxOutputTokens,
                               boolean reasoningFlg, boolean streamFlg, boolean enabled, boolean toolCallFlg, String params) {
         
-        AiModel existingModel = aiModelRepository.findById(id)
+        aiModelRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("AI模型不存在: " + id));
 
         validateModelParameters(aiProviderId, modelName, description, maxTokens, maxOutputTokens);

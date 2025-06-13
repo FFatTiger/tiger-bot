@@ -6,9 +6,12 @@ import java.util.List;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
-import com.fffattiger.wechatbot.infrastructure.external.wchat.MessageType;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageType;
+
+import lombok.Data;
 
 @Table("messages")
+@Data
 public class Message {
     @Id
     private Long id;
@@ -89,69 +92,4 @@ public class Message {
         return sender;
     }
 
-    // Getters
-    public Long getId() {
-        return id;
-    }
-
-    public Long getChatId() {
-        return chatId;
-    }
-
-    public MessageType getType() {
-        return type;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public String getSender() {
-        return sender;
-    }
-
-    public List<String> getInfo() {
-        return info;
-    }
-
-    public LocalDateTime getTime() {
-        return time;
-    }
-
-    public String getSenderRemark() {
-        return senderRemark;
-    }
-
-    // Setters (仅用于框架)
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public void setChatId(Long chatId) {
-        this.chatId = chatId;
-    }
-
-    public void setType(MessageType type) {
-        this.type = type;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public void setSender(String sender) {
-        this.sender = sender;
-    }
-
-    public void setInfo(List<String> info) {
-        this.info = info;
-    }
-
-    public void setTime(LocalDateTime time) {
-        this.time = time;
-    }
-
-    public void setSenderRemark(String senderRemark) {
-        this.senderRemark = senderRemark;
-    }
 }

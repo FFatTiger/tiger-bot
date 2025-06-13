@@ -1,4 +1,4 @@
-package com.fffattiger.wechatbot.domain.ai;
+package com.fffattiger.wechatbot.infrastructure.ai;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;

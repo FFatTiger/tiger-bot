@@ -79,7 +79,7 @@ public class AiRoleApplicationService {
      * 更新AI角色
      */
     public AiRole updateRole(Long id, String name, String promptContent, String extraMemory, String promptType) {
-        AiRole existingRole = aiRoleRepository.findById(id)
+        aiRoleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("AI角色不存在: " + id));
 
         if (name == null || name.trim().isEmpty()) {
