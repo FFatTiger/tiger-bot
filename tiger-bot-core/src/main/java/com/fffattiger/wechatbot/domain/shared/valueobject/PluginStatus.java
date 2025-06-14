@@ -1,4 +1,4 @@
-package com.fffattiger.wechatbot.shared.valueobject;
+package com.fffattiger.wechatbot.domain.shared.valueobject;
 
 public enum PluginStatus {
     /**

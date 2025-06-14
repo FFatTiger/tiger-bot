@@ -166,3 +166,43 @@ COMMENT ON COLUMN messages.time IS '消息时间';
 COMMENT ON COLUMN messages.info IS '消息信息';
 COMMENT ON COLUMN messages.sender_remark IS '发送者备注';
 
+-- 插件表
+CREATE TABLE IF NOT EXISTS plugins (
+    id BIGSERIAL PRIMARY KEY,
+    plugin_id VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    version VARCHAR(100),
+    author VARCHAR(255),
+    description TEXT,
+    status VARCHAR(50) NOT NULL DEFAULT 'DISABLED',
+    source_url VARCHAR(500),
+    source_path VARCHAR(500),
+    size DECIMAL(10,2),
+    parameters TEXT,
+    load_type VARCHAR(50) NOT NULL,
+    plugin_type VARCHAR(50),
+    installed_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    last_loaded_at TIMESTAMP,
+    last_unloaded_at TIMESTAMP
+);
+
+COMMENT ON TABLE plugins IS '插件表';
+COMMENT ON COLUMN plugins.id IS '主键，插件ID';
+COMMENT ON COLUMN plugins.plugin_id IS '主键，插件ID';
+COMMENT ON COLUMN plugins.name IS '插件名称';
+COMMENT ON COLUMN plugins.version IS '插件版本';
+COMMENT ON COLUMN plugins.author IS '插件作者';
+COMMENT ON COLUMN plugins.description IS '插件描述';
+COMMENT ON COLUMN plugins.status IS '插件状态（ENABLED, DISABLED, ERROR）';
+COMMENT ON COLUMN plugins.source_url IS '插件源URL';
+COMMENT ON COLUMN plugins.source_path IS '插件源路径';
+COMMENT ON COLUMN plugins.size IS '插件文件大小（MB）';
+COMMENT ON COLUMN plugins.parameters IS '插件参数（JSON格式）';
+COMMENT ON COLUMN plugins.load_type IS '加载类型（REMOTE, LOCAL, SYSTEM）';
+COMMENT ON COLUMN plugins.plugin_type IS '插件类型（MESSAGE_HANDLER, COMMAND_HANDLER）';
+COMMENT ON COLUMN plugins.installed_at IS '安装时间';
+COMMENT ON COLUMN plugins.updated_at IS '更新时间';
+COMMENT ON COLUMN plugins.last_loaded_at IS '最后加载时间';
+COMMENT ON COLUMN plugins.last_unloaded_at IS '最后卸载时间';
+

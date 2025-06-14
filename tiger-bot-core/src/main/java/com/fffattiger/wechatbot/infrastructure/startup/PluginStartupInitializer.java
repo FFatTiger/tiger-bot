@@ -15,6 +15,9 @@ import org.springframework.stereotype.Component;
 
 import com.fffattiger.wechatbot.api.CommandMessageHandlerExtension;
 import com.fffattiger.wechatbot.api.MessageHandlerExtension;
+import com.fffattiger.wechatbot.application.service.PluginApplicationService;
+import com.fffattiger.wechatbot.domain.plugin.Plugin;
+import com.fffattiger.wechatbot.domain.shared.valueobject.PluginStatus;
 import com.fffattiger.wechatbot.infrastructure.event.handlers.cmd.CommandMessageHandlerWrapper;
 import com.fffattiger.wechatbot.infrastructure.plugin.PluginHolder;
 import com.fffattiger.wechatbot.shared.properties.ChatBotProperties;
@@ -35,10 +38,14 @@ public class PluginStartupInitializer implements OrderedInitializer {
 
     private final List<CommandMessageHandlerExtension> commandMessageHandlerExtensions;
 
+    private final PluginApplicationService pluginApplicationService;
+
     @Override
     public void init() {
         PluginManager pluginManager = new DefaultPluginManager(Paths.get(chatBotProperties.getPluginDir()));
-        pluginManager.loadPlugins();
+        pluginApplicationService.getAllPlugins().stream().filter(plugin -> plugin.getStatus() == PluginStatus.ENABLED).forEach(plugin -> {
+            pluginManager.loadPlugin(Paths.get(plugin.getSourcePath()));
+        });
         pluginManager.startPlugins();
 
         Map<String, List<MessageHandlerExtension>> defaultExtensions = loadDefaultExtensions();

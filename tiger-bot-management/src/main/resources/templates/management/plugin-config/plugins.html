@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{management/layout :: layout('插件管理', ~{::content}, ~{::scripts})}">
+
+<th:block th:fragment="content">
+    <!-- 错误提示 -->
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>错误：</strong><span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- 页面头部统计 -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-gradient rounded-3 p-3">
+                                <i class="fas fa-puzzle-piece text-white fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small text-uppercase fw-bold mb-1">总插件数</div>
+                            <div class="h5 mb-0 fw-bold text-dark" th:text="${totalCount}">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success bg-gradient rounded-3 p-3">
+                                <i class="fas fa-check-circle text-white fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small text-uppercase fw-bold mb-1">已启用</div>
+                            <div class="h5 mb-0 fw-bold text-dark" th:text="${enabledCount}">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-secondary bg-gradient rounded-3 p-3">
+                                <i class="fas fa-pause-circle text-white fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small text-uppercase fw-bold mb-1">已禁用</div>
+                            <div class="h5 mb-0 fw-bold text-dark" th:text="${disabledCount}">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-danger bg-gradient rounded-3 p-3">
+                                <i class="fas fa-exclamation-triangle text-white fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small text-uppercase fw-bold mb-1">错误状态</div>
+                            <div class="h5 mb-0 fw-bold text-dark" th:text="${errorCount}">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 插件上传区域 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h5 class="mb-0 fw-bold text-dark">
+                        <i class="fas fa-cloud-upload-alt me-2 text-primary"></i>插件上传
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="uploadForm" enctype="multipart/form-data" class="row g-3 align-items-end">
+                        <div class="col-md-8">
+                            <label for="pluginFile" class="form-label">选择插件文件 (.jar)</label>
+                            <input type="file" class="form-control" id="pluginFile" name="file" 
+                                   accept=".jar" required>
+                            <div class="form-text">支持的文件格式: JAR，最大大小: 50MB</div>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-upload me-2"></i>上传插件
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 插件列表 -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold text-dark">
+                        <i class="fas fa-list me-2 text-primary"></i>插件列表
+                    </h5>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="refreshPluginList()">
+                        <i class="fas fa-sync me-1"></i>刷新
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div th:if="${#lists.isEmpty(plugins)}" class="text-center py-5">
+                        <i class="fas fa-puzzle-piece fa-3x text-muted mb-3"></i>
+                        <p class="text-muted mb-0">暂无插件，请先上传插件文件</p>
+                    </div>
+                    
+                    <!-- 插件卡片网格 -->
+                    <div th:if="${!#lists.isEmpty(plugins)}" class="row g-4 p-4">
+                        <div th:each="plugin : ${plugins}" class="col-xl-4 col-lg-6 col-md-12">
+                            <div class="card h-100 border-0 shadow-sm plugin-card" 
+                                 th:id="'plugin-card-' + ${plugin.pluginId}">
+                                <div class="card-header bg-transparent border-0 pb-2">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <h6 class="card-title mb-1 fw-bold" th:text="${plugin.name}">插件名称</h6>
+                                            <small class="text-muted" th:text="'v' + ${plugin.version}">v1.0.0</small>
+                                        </div>
+                                        <span class="badge status-badge" 
+                                              th:classappend="${plugin.statusClass}"
+                                              th:text="${plugin.statusText}">状态</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="card-body pt-2">
+                                    <div class="mb-3">
+                                        <p class="card-text text-muted small mb-2" th:text="${plugin.description}">插件描述</p>
+                                        <div class="row g-2 small">
+                                            <div class="col-6">
+                                                <span class="text-muted">作者:</span>
+                                                <span th:text="${plugin.author}">作者</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <span class="text-muted">大小:</span>
+                                                <span th:text="${plugin.formattedSize}">大小</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <span class="text-muted">类型:</span>
+                                                <span th:text="${plugin.loadTypeText}">类型</span>
+                                            </div>
+                                            <div class="col-6" th:if="${plugin.isCommandPlugin}">
+                                                <span class="badge bg-info">
+                                                    <i class="fas fa-terminal me-1"></i>命令插件
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card-footer bg-transparent border-0 pt-0">
+                                    <div class="btn-group w-100" role="group">
+                                        <!-- 启用/禁用按钮 -->
+                                        <button th:if="${plugin.canBeEnabled()}" 
+                                                type="button" 
+                                                class="btn btn-success btn-sm plugin-enable-btn"
+                                                th:data-plugin-id="${plugin.pluginId}">
+                                            <i class="fas fa-play me-1"></i>启用
+                                        </button>
+                                        <button th:if="${plugin.canBeDisabled()}" 
+                                                type="button" 
+                                                class="btn btn-warning btn-sm plugin-disable-btn"
+                                                th:data-plugin-id="${plugin.pluginId}">
+                                            <i class="fas fa-pause me-1"></i>禁用
+                                        </button>
+                                        
+                                        <!-- 编辑参数按钮 -->
+                                        <button type="button" 
+                                                class="btn btn-outline-primary btn-sm plugin-params-btn"
+                                                th:data-plugin-id="${plugin.pluginId}">
+                                            <i class="fas fa-cog me-1"></i>参数
+                                        </button>
+                                        
+                                        <!-- 删除按钮 -->
+                                        <button type="button" 
+                                                class="btn btn-outline-danger btn-sm plugin-delete-btn"
+                                                th:data-plugin-id="${plugin.pluginId}">
+                                            <i class="fas fa-trash me-1"></i>删除
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 参数编辑模态框 -->
+    <div class="modal fade" id="parametersModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">编辑插件参数</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="parametersForm">
+                    <input type="hidden" id="editPluginId">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="pluginParameters" class="form-label">插件参数 (JSON格式)</label>
+                            <textarea class="form-control" id="pluginParameters" rows="8" 
+                                      placeholder='{"param1": "value1", "param2": "value2"}'></textarea>
+                            <div class="form-text">请确保参数格式为有效的JSON</div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            参数修改后，需要重新启用插件才能生效。请确保JSON格式正确，否则插件可能无法正常工作。
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">保存参数</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<th:block th:fragment="scripts">
+<script>
+// 显示提示信息
+function showAlert(type, message) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show mt-3" role="alert">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    // 移除之前的提示
+    document.querySelectorAll('.alert').forEach(alert => {
+        if (!alert.classList.contains('alert-danger') || !alert.querySelector('strong')) {
+            alert.remove();
+        }
+    });
+    
+    // 添加新提示
+    document.querySelector('.container-fluid').insertAdjacentHTML('afterbegin', alertHtml);
+    
+    // 滚动到顶部
+    window.scrollTo(0, 0);
+}
+
+// 文件上传
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>上传中...';
+    
+    fetch('/management/plugin-config/plugins/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.text())
+    .then(result => {
+        if (result === 'success') {
+            showAlert('success', '插件上传成功！');
+            document.getElementById('pluginFile').value = '';
+            refreshPluginList();
+        } else {
+            showAlert('danger', result);
+        }
+    })
+    .catch(error => {
+        showAlert('danger', '上传失败: ' + error.message);
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
+});
+
+// 启用插件
+function enablePlugin(pluginId) {
+    if (!confirm('确定要启用这个插件吗？')) return;
+    
+    fetch(`/management/plugin-config/plugins/${pluginId}/enable`, {
+        method: 'POST'
+    })
+    .then(response => response.text())
+    .then(result => {
+        if (result === 'success') {
+            showAlert('success', '插件启用成功！');
+            refreshPluginList();
+        } else {
+            showAlert('danger', result);
+        }
+    })
+    .catch(error => {
+        showAlert('danger', '启用失败: ' + error.message);
+    });
+}
+
+// 禁用插件
+function disablePlugin(pluginId) {
+    if (!confirm('确定要禁用这个插件吗？')) return;
+    
+    fetch(`/management/plugin-config/plugins/${pluginId}/disable`, {
+        method: 'POST'
+    })
+    .then(response => response.text())
+    .then(result => {
+        if (result === 'success') {
+            showAlert('success', '插件禁用成功！');
+            refreshPluginList();
+        } else {
+            showAlert('danger', result);
+        }
+    })
+    .catch(error => {
+        showAlert('danger', '禁用失败: ' + error.message);
+    });
+}
+
+// 编辑插件参数
+function editPluginParameters(pluginId) {
+    // 获取插件详情
+    fetch(`/management/plugin-config/plugins/${pluginId}`)
+    .then(response => response.json())
+    .then(plugin => {
+        document.getElementById('editPluginId').value = pluginId;
+        document.getElementById('pluginParameters').value = plugin.parameters || '{}';
+        
+        const modal = new bootstrap.Modal(document.getElementById('parametersModal'));
+        modal.show();
+    })
+    .catch(error => {
+        showAlert('danger', '获取插件信息失败: ' + error.message);
+    });
+}
+
+// 保存参数
+document.getElementById('parametersForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const pluginId = document.getElementById('editPluginId').value;
+    const parameters = document.getElementById('pluginParameters').value;
+    
+    // 验证JSON格式
+    try {
+        JSON.parse(parameters);
+    } catch (e) {
+        showAlert('danger', 'JSON格式错误: ' + e.message);
+        return;
+    }
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>保存中...';
+    
+    fetch(`/management/plugin-config/plugins/${pluginId}/parameters`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ parameters: parameters })
+    })
+    .then(response => response.text())
+    .then(result => {
+        if (result === 'success') {
+            showAlert('success', '参数更新成功！');
+            bootstrap.Modal.getInstance(document.getElementById('parametersModal')).hide();
+            refreshPluginList();
+        } else {
+            showAlert('danger', result);
+        }
+    })
+    .catch(error => {
+        showAlert('danger', '参数更新失败: ' + error.message);
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
+});
+
+// 删除插件
+function deletePlugin(pluginId) {
+    if (!confirm('确定要删除这个插件吗？此操作不可恢复！')) return;
+    
+    fetch(`/management/plugin-config/plugins/${pluginId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.text())
+    .then(result => {
+        if (result === 'success') {
+            showAlert('success', '插件删除成功！');
+            refreshPluginList();
+        } else {
+            showAlert('danger', result);
+        }
+    })
+    .catch(error => {
+        showAlert('danger', '删除失败: ' + error.message);
+    });
+}
+
+// 刷新插件列表
+function refreshPluginList() {
+    window.location.reload();
+}
+
+// 页面加载完成后的初始化
+document.addEventListener('DOMContentLoaded', function() {
+    // 添加插件卡片的悬停效果
+    document.querySelectorAll('.plugin-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.transition = 'transform 0.2s ease-in-out';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+    
+    // 使用事件委托处理插件按钮点击事件
+    document.addEventListener('click', function(e) {
+        const target = e.target.closest('button');
+        if (!target) return;
+        
+        const pluginId = target.getAttribute('data-plugin-id');
+        if (!pluginId) return;
+        
+        if (target.classList.contains('plugin-enable-btn')) {
+            enablePlugin(pluginId);
+        } else if (target.classList.contains('plugin-disable-btn')) {
+            disablePlugin(pluginId);
+        } else if (target.classList.contains('plugin-params-btn')) {
+            editPluginParameters(pluginId);
+        } else if (target.classList.contains('plugin-delete-btn')) {
+            deletePlugin(pluginId);
+        }
+    });
+});
+</script>
+</th:block>
+</html> 

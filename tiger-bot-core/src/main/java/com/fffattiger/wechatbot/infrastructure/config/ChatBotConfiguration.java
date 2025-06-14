@@ -4,6 +4,8 @@ package com.fffattiger.wechatbot.infrastructure.config;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.pf4j.DefaultPluginManager;
+import org.pf4j.PluginManager;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,5 +24,10 @@ public class ChatBotConfiguration {
     @Bean
     public ExecutorService executorService() {
         return Executors.newFixedThreadPool(10);
+    }
+
+    @Bean
+    public PluginManager pluginManager() {
+        return new DefaultPluginManager();
     }
 }
