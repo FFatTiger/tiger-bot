@@ -1,39 +1,37 @@
 package com.fffattiger.wechatbot.infrastructure.event.handlers.cmd;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandlerContext;
+import com.fffattiger.wechatbot.api.CommandMessageHandlerExtension;
+import com.fffattiger.wechatbot.api.MessageHandlerContext;
+import com.fffattiger.wechatbot.infrastructure.plugin.PluginHolder;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 
 @Service
-public class HelpCommandMessageHandler extends AbstractCommandMessageHandler {
+public class HelpCommandMessageHandler implements CommandMessageHandlerExtension {
 
     @Resource
-    private List<AbstractCommandMessageHandler> messageHandlers;
+    private PluginHolder pluginHolder;
     
-    @PostConstruct
-    public void init() {
-        messageHandlers.add(this);
-    }
 
     @Override
-    public boolean canHandle(String command) {
-        return command.startsWith("/help") || command.startsWith("/h") || command.startsWith("/?") || command.startsWith("/帮助") ;
+    public String getCommandName() {
+        return "帮助";
     }
 
     @Override
     public void doHandle(String command, String[] args, MessageHandlerContext context) {
-        String help = messageHandlers.stream().map(AbstractCommandMessageHandler::description).collect(Collectors.joining("\n"));
-        context.wx().sendText(context.currentChat().chat().getName(), help);
+        String help = pluginHolder.getAllCommandExtensions().stream().map(CommandMessageHandlerExtension::getDescription).collect(Collectors.joining("\n"));
+        context.replyText(context.getMessage().chatName(), help);
     }
 
     @Override
-    public String description() {
+    public String getDescription() {
         return "/help 查看帮助";
     }
+
+
 }

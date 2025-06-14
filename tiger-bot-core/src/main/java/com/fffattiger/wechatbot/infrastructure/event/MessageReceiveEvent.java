@@ -3,7 +3,7 @@ package com.fffattiger.wechatbot.infrastructure.event;
 import org.springframework.context.ApplicationEvent;
 
 import com.fffattiger.wechatbot.infrastructure.external.wxauto.WxAuto;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler.WechatMessageSpecification;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.WxAuto.WechatMessageSpecification;
 
 public class MessageReceiveEvent extends ApplicationEvent {
 

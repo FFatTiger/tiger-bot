@@ -3,6 +3,7 @@ package com.fffattiger.wechatbot.infrastructure.event.handlers;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.*;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
@@ -11,12 +12,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import com.fffattiger.wechatbot.api.Message;
+import com.fffattiger.wechatbot.api.MessageHandlerContext;
+import com.fffattiger.wechatbot.api.MessageHandlerExtension;
 import com.fffattiger.wechatbot.application.dto.MessageProcessingData;
 import com.fffattiger.wechatbot.application.service.AiChatApplicationService;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandlerChain;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandlerContext;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageType;
+import com.fffattiger.wechatbot.domain.shared.valueobject.AiSpecification;
 
 import cn.hutool.core.date.DateUtil;
 import jakarta.annotation.Resource;
@@ -27,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Slf4j
-public class AiChatMessageHandler implements MessageHandler {
+public class AiChatMessageHandler implements MessageHandlerExtension {
 	@Resource
 	private AiChatApplicationService aiChatApplicationService;
 
@@ -38,38 +39,34 @@ public class AiChatMessageHandler implements MessageHandler {
 	private org.springframework.core.io.Resource USER_PROMPT_RESOURCE;
 
 	@Override
-	public boolean handle(MessageHandlerContext context, MessageHandlerChain chain) {
-		String cleanContent = context.cleanContent();
-		WechatMessageSpecification.ChatSpecification.MessageSpecification messageSpecification = context.message();
-		MessageProcessingData chat = context.currentChat();
-		String chatName = chat.chat().getName();
-		String sender = messageSpecification.sender();
+	public boolean handle(MessageHandlerContext context) {
+		String cleanContent = context.getMessage().cleanContent();
+		Message message = context.getMessage();
+		String chatName = message.chatName();
+		String sender = message.senderName();
 
 		// 检查是否为有效的AI聊天消息
-		if (messageSpecification == null || messageSpecification.type() == null || !messageSpecification.type().equals(MessageType.FRIEND)
+		if (message.type() == null || message.type() != MessageType.FRIEND.getValue()
 				|| !StringUtils.hasLength(cleanContent)) {
 			log.debug("非AI聊天消息，跳过处理: 聊天={}, 发送者={}, 消息类型={}",
-					chatName, sender, messageSpecification != null ? messageSpecification.type() : "null");
-			return chain.handle(context);
+					chatName, sender, message.type());
+			return false;
 		}
 
 		log.info("开始AI聊天处理: 聊天={}, 发送者={}, 消息长度={}",
 				chatName, sender, cleanContent.length());
 
 		Map<String, Object> params = new HashMap<>();
-		String chatType = chat.chat().isGroupFlag() ? "群聊" : "私聊";
+		String chatType = context.isGroupChat() ? "群聊" : "私聊";
 		params.put("chatType", chatType);
 
-		log.debug("AI聊天参数: 聊天类型={}, AI规格={}",
-				chatType, chat.chat().getAiSpecification() != null ? "已配置" : "未配置");
-
 		long startTime = System.currentTimeMillis();
-		String content = chat(context, cleanContent, messageSpecification, chat, params);
+		String content = chat(context, cleanContent, message, params);
 		long duration = System.currentTimeMillis() - startTime;
 
 		if (!StringUtils.hasLength(content)) {
 			log.warn("AI聊天响应为空: 聊天={}, 发送者={}, 耗时={}ms", chatName, sender, duration);
-			context.wx().sendText(chatName, "繁忙， 请稍后再试");
+			context.replyText("繁忙， 请稍后再试");
 			return false;
 		}
 
@@ -84,17 +81,17 @@ public class AiChatMessageHandler implements MessageHandler {
 			String finalContent = contents[i];
 			log.debug("发送AI响应消息段: 聊天={}, 段数={}/{}, 长度={}",
 					chatName, i + 1, contents.length, finalContent.length());
-			context.wx().sendText(chatName, finalContent);
+			context.replyText(finalContent);
 		}
 
 		return true;
 	}
 
-	private String chat(MessageHandlerContext context, String cleanContent,
-						WechatMessageSpecification.ChatSpecification.MessageSpecification messageSpecification, MessageProcessingData chat, Map<String, Object> params) {
-		String chatName = chat.chat().getName();
-		String sender = messageSpecification.sender();
-		String conversationId = generateConversationId(chat);
+	private String chat(MessageHandlerContext context, String cleanContent, Message message,
+			Map<String, Object> params) {
+		String chatName = message.chatName();
+		String sender = message.senderName();
+		String conversationId = generateConversationId(chatName, ((AiSpecification) context.get("aiSpecification")).aiRoleId());
 
 		log.debug("构建AI聊天请求: 聊天={}, 发送者={}, 会话ID={}", chatName, sender, conversationId);
 
@@ -104,13 +101,14 @@ public class AiChatMessageHandler implements MessageHandler {
 					.maxMessages(10)
 					.build();
 
-			String response = aiChatApplicationService.builder(chat.chat().getAiSpecification(), params)
+			String response = aiChatApplicationService.builder(context.get("aiSpecification"), params)
 					.defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
 					.build()
 					.prompt()
 					.user(t -> t.text(USER_PROMPT_RESOURCE)
-							.param("time", DateUtil.date(context.messageTimestamp()).toString("yyyy-MM-dd HH:mm:ss EEEE"))
-							.param("chatType", chat.chat().isGroupFlag() ? "群聊" : "私聊")
+							.param("time",
+									DateUtil.date(context.getMessage().timestamp()).toString("yyyy-MM-dd HH:mm:ss EEEE"))
+							.param("chatType", context.isGroupChat() ? "群聊" : "私聊")
 							.param("chatName", chatName)
 							.param("sender", sender)
 							.param("content", cleanContent))
@@ -133,9 +131,7 @@ public class AiChatMessageHandler implements MessageHandler {
 	 * 生成会话ID，格式为：roleId_chatName
 	 * 这样不同角色的记忆会分开存储，切换角色时可以保留各角色的历史记忆
 	 */
-	private String generateConversationId(MessageProcessingData chat) {
-		Long roleId = chat.chat().getAiSpecification().aiRoleId();
-		String chatName = chat.chat().getName();
+	private String generateConversationId(String chatName, Long roleId) {
 		return roleId + "_" + chatName;
 	}
 

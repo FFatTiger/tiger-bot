@@ -8,11 +8,12 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import com.fffattiger.wechatbot.api.CommandMessageHandlerExtension;
+import com.fffattiger.wechatbot.api.MessageHandlerContext;
 import com.fffattiger.wechatbot.application.service.AiChatApplicationService;
 import com.fffattiger.wechatbot.domain.command.repository.CommandRepository;
 import com.fffattiger.wechatbot.domain.shared.valueobject.AiSpecification;
 import com.fffattiger.wechatbot.infrastructure.external.chatlog.ChatLogClient;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandlerContext;
 import com.fffattiger.wechatbot.shared.util.MarkdownToImageConverter;
 
 import cn.hutool.core.io.FileUtil;
@@ -24,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Slf4j
-public class ChatSummaryCommandMessageHandler extends AbstractCommandMessageHandler {
+public class ChatSummaryCommandMessageHandler implements CommandMessageHandlerExtension {
 
     @Resource
     private AiChatApplicationService aiChatApplicationService;
@@ -36,19 +37,19 @@ public class ChatSummaryCommandMessageHandler extends AbstractCommandMessageHand
     private CommandRepository commandRepository;
 
     @Override
-    public boolean canHandle(String command) {
-        return command.startsWith("/总结") || command.startsWith("/summary");
+    public String getCommandName() {
+        return "总结";
     }
 
     @Override
     public void doHandle(String command, String[] args, MessageHandlerContext context) {
         if (args.length > 2) {
-            context.wx().sendText(context.currentChat().chat().getName(), "命令格式错误，请参考帮助");
+            context.replyText(context.getMessage().chatName(), "命令格式错误，请参考帮助");
             return;
         }
 
         String dateStr = args[0];
-        String chatName = context.currentChat().chat().getName();
+        String chatName = context.getMessage().chatName();
         String summaryTargetChatName = chatName;
         if (args.length > 1) {
             summaryTargetChatName = args[1];
@@ -63,26 +64,26 @@ public class ChatSummaryCommandMessageHandler extends AbstractCommandMessageHand
         String chatLog = chatLogClient.getChatHistory(summaryTargetChatName, dateStr, null);
         if (!StringUtils.hasLength(chatLog)) {
             
-            context.wx().sendText(chatName, "没有找到聊天记录");
+            context.replyText(chatName, "没有找到聊天记录");
             return;
         }
 
-        context.wx().sendText(chatName, "总结中");
+        context.replyText(chatName, "总结中");
         AiSpecification aiSpecification = commandRepository.findByPattern("/总结").getAiSpecification();
         String aiSummary = chat(chatLog, aiSpecification);
         if (!StringUtils.hasLength(aiSummary)) {
-            context.wx().sendText(chatName, "服务繁忙，稍后再试");
+            context.replyText(chatName, "服务繁忙，稍后再试");
             return;
         }
         
         File outputFile = renderImageFile(context, aiSummary, summaryTargetChatName);
 
-        context.wx().sendFileByUpload(chatName, outputFile);
+        context.replyFile(outputFile);
     }
 
     private File renderImageFile(MessageHandlerContext context, String aiSummary, String chatName) {
         String tempFileDir = System.getProperty("user.home") + File.separator
-                + context.chatBotProperties().getTempFileDir() + File.separator;
+                + context.get("tempFileDir") + File.separator;
 
         FileUtil.mkdir(tempFileDir);
 
@@ -110,7 +111,7 @@ public class ChatSummaryCommandMessageHandler extends AbstractCommandMessageHand
     }
 
     @Override
-    public String description() {
+    public String getDescription() {
         return "/总结 [昨天|今天] [群聊名称] 总结聊天记录";
     }
 }

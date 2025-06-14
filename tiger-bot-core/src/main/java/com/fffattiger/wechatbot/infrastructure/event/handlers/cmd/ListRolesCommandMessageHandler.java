@@ -4,35 +4,36 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.fffattiger.wechatbot.api.CommandMessageHandlerExtension;
+import com.fffattiger.wechatbot.api.MessageHandlerContext;
 import com.fffattiger.wechatbot.application.service.AiChatApplicationService;
 import com.fffattiger.wechatbot.domain.ai.AiRole;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandlerContext;
 
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-public class ListRolesCommandMessageHandler extends AbstractCommandMessageHandler {
+public class ListRolesCommandMessageHandler implements CommandMessageHandlerExtension {
 
     @Resource
     private AiChatApplicationService aiChatApplicationService;
 
     @Override
-    public boolean canHandle(String command) {
-        return command.startsWith("/角色列表");
+    public String getCommandName() {
+        return "角色列表";
     }
 
     @Override
     public void doHandle(String command, String[] args, MessageHandlerContext context) {
-        String chatName = context.currentChat().chat().getName();
+        String chatName = context.getMessage().chatName();
         
         try {
             // 获取所有角色
             List<AiRole> roles = aiChatApplicationService.getAllRoles();
             
             if (roles.isEmpty()) {
-                context.wx().sendText(chatName, "暂无可用角色");
+                context.replyText(chatName, "暂无可用角色");
                 return;
             }
             
@@ -53,11 +54,11 @@ public class ListRolesCommandMessageHandler extends AbstractCommandMessageHandle
             
             roleList.append("💡 使用方法：/切换角色 角色名称");
             
-            context.wx().sendText(chatName, roleList.toString());
+            context.replyText(chatName, roleList.toString());
             
         } catch (Exception e) {
             log.error("获取角色列表失败: {}", e.getMessage(), e);
-            context.wx().sendText(chatName, "获取角色列表失败：" + e.getMessage());
+            context.replyText(chatName, "获取角色列表失败：" + e.getMessage());
         }
     }
 
@@ -90,7 +91,7 @@ public class ListRolesCommandMessageHandler extends AbstractCommandMessageHandle
     }
 
     @Override
-    public String description() {
+    public String getDescription() {
         return "/角色列表 - 查看所有可用的AI角色";
     }
 }

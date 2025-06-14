@@ -1,17 +1,18 @@
 package com.fffattiger.wechatbot.infrastructure.event;
 
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 import org.springframework.context.ApplicationListener;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
+import com.fffattiger.wechatbot.api.Message;
+import com.fffattiger.wechatbot.api.MessageHandlerContext;
 import com.fffattiger.wechatbot.application.dto.MessageProcessingData;
 import com.fffattiger.wechatbot.application.service.ListenerApplicationService;
 import com.fffattiger.wechatbot.infrastructure.event.handlers.DefaultMessageHandlerChain;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler.WechatMessageSpecification;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.WxAuto.WechatMessageSpecification;
+import com.fffattiger.wechatbot.infrastructure.plugin.PluginHolder;
 import com.fffattiger.wechatbot.interfaces.context.DefaultMessageHandlerContext;
 import com.fffattiger.wechatbot.shared.properties.ChatBotProperties;
 
@@ -30,11 +31,10 @@ public class MessageReceiveListener implements ApplicationListener<MessageReceiv
     private ChatBotProperties chatBotProperties;
 
     @Resource
-    private List<MessageHandler> messageHandlers;
-
-    @Resource
     private ListenerApplicationService listenerApplicationService;
 
+    @Resource
+    private PluginHolder pluginHolder;
 
     @PreDestroy
     public void shutdown() {
@@ -66,34 +66,40 @@ public class MessageReceiveListener implements ApplicationListener<MessageReceiv
 
         // 处理微信消息
         for (WechatMessageSpecification.ChatSpecification chatSpecification : event.getMessage().data()) {
-            log.info("处理聊天: {}, 消息数量: {}", chatSpecification.chatName(), chatSpecification.messageSpecifications().size());
+            log.info("处理聊天: {}, 消息数量: {}", chatSpecification.chatName(),
+                    chatSpecification.messageSpecifications().size());
 
-            MessageProcessingData messageProcessingData = listenerApplicationService.getMessageProcessingData(chatSpecification.chatName());
+            MessageProcessingData messageProcessingData = listenerApplicationService
+                    .getMessageProcessingData(chatSpecification.chatName());
             if (messageProcessingData == null) {
                 log.warn("未监听该对象: {}", chatSpecification.chatName());
                 continue;
             }
 
-
-            for (WechatMessageSpecification.ChatSpecification.MessageSpecification msg : chatSpecification.messageSpecifications()) {
+            for (WechatMessageSpecification.ChatSpecification.MessageSpecification msg : chatSpecification
+                    .messageSpecifications()) {
                 messageProcessorPool.submit(() -> {
                     try {
                         log.debug("开始处理消息: 聊天={}, 发送者={}, 消息ID={}",
                                 chatSpecification.chatName(), msg.sender(), msg.id());
 
-                        DefaultMessageHandlerContext context = new DefaultMessageHandlerContext();
-                        context.setMessage(msg);
-                        context.setWxAuto(event.getWxAuto());
-                        context.setCurrentChat(messageProcessingData);
-                        context.setChatBotProperties(chatBotProperties);
-                        context.setMessageTimestamp(event.getMessage().timestamp());
+                        Message message = new Message(msg.id(), msg.type().getValue(), msg.content(), msg.content(),
+                                msg.sender(), msg.senderRemark(), messageProcessingData.chat().getId(),
+                                chatSpecification.chatName(), event.getMessage().timestamp());
+                        MessageHandlerContext context = new DefaultMessageHandlerContext(event.getWxAuto());
+                        context.setMessage(message);
+                        context.setRobotName(chatBotProperties.getRobotName());
+                        context.setIsGroupChat(messageProcessingData.chat().isGroupChat());
+                        context.set("tempFileDir", chatBotProperties.getTempFileDir());
+                        context.set("aiSpecification", messageProcessingData.chat().getAiSpecification());
+                        context.set("listener", messageProcessingData.listener());
+                        context.set("commandAuths", messageProcessingData.commandAuths());
 
-                        boolean handled = new DefaultMessageHandlerChain(messageHandlers).handle(context);
+
+
+                        new DefaultMessageHandlerChain(pluginHolder.getAllExtensions())
+                                .handle(context);
                         context.clear();
-
-                        log.info("消息处理完成: 聊天={}, 发送者={}, 处理结果={}",
-                                chatSpecification.chatName(), msg.sender(), handled ? "已处理" : "未处理");
-
                     } catch (Exception e) {
                         log.error("消息处理异常: 聊天={}, 发送者={}, 错误信息={}",
                                 chatSpecification.chatName(), msg.sender(), e.getMessage(), e);

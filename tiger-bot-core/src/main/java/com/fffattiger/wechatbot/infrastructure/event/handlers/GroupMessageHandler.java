@@ -3,44 +3,43 @@ package com.fffattiger.wechatbot.infrastructure.event.handlers;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.fffattiger.wechatbot.application.dto.MessageProcessingData;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandlerChain;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandlerContext;
+import com.fffattiger.wechatbot.api.Message;
+import com.fffattiger.wechatbot.api.MessageHandlerContext;
+import com.fffattiger.wechatbot.api.MessageHandlerExtension;
+import com.fffattiger.wechatbot.domain.listener.Listener;
 import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageType;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-public class GroupMessageHandler implements MessageHandler {
+public class GroupMessageHandler implements MessageHandlerExtension {
 
     @Override
-    public boolean handle(MessageHandlerContext context, MessageHandlerChain chain) {
-        MessageProcessingData listenerData = context.currentChat();
-        WechatMessageSpecification.ChatSpecification.MessageSpecification messageSpecification = context.message();
-        String content = messageSpecification.content();
-        String botName = context.chatBotProperties().getRobotName();
+    public boolean handle(MessageHandlerContext context) {
+        Message message = context.getMessage();
+        String content = message.cleanContent();
+        String botName = context.getRobotName();
 
-        if (!listenerData.chat().isGroupChat()) {
-            context.setCleanContent(content);
-            return chain.handle(context);
-        }
-
-        if (messageSpecification == null || messageSpecification.type() == null || !messageSpecification.type().equals(MessageType.FRIEND)
-                || !StringUtils.hasLength(content)) {
-            return chain.handle(context);
-        }
-
-        if (!listenerData.listener().shouldProcessMessage(content, botName, listenerData.chat().isGroupChat())) {
+        if (!context.isGroupChat()) {
             return false;
         }
 
-        String cleanContent = listenerData.listener().extractCleanContent(content, botName);
-        context.setCleanContent(cleanContent);
+        if (message.type() == null || !message.type().equals(MessageType.FRIEND.getValue())
+                || !StringUtils.hasLength(content)) {
+            return false;
+        }
 
-        return chain.handle(context);
+        Listener listener = context.get("listener");
+        if (!listener.shouldProcessMessage(content, botName, context.isGroupChat())) {
+            return true;
+        }
+
+        String cleanContent = listener.extractCleanContent(content, botName);
+        context.setMessage(new Message(message.id(), message.type(), message.rawContent(), cleanContent, message.senderId(), message.senderName(), message.chatId(), message.chatName(), message.timestamp()));
+        return false;
     }
+
 
 
 

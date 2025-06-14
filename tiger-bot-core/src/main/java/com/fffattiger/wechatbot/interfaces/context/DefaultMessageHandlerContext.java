@@ -1,23 +1,23 @@
 package com.fffattiger.wechatbot.interfaces.context;
 
+import java.io.File;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
-import com.fffattiger.wechatbot.application.dto.MessageProcessingData;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandlerContext;
+import com.fffattiger.wechatbot.api.Message;
+import com.fffattiger.wechatbot.api.MessageHandlerContext;
 import com.fffattiger.wechatbot.infrastructure.external.wxauto.WxAuto;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler.WechatMessageSpecification.ChatSpecification.MessageSpecification;
-import com.fffattiger.wechatbot.shared.properties.ChatBotProperties;
 
 @SuppressWarnings("unchecked")
 public class DefaultMessageHandlerContext implements MessageHandlerContext {
 
     private final TransmittableThreadLocal<Map<String, Object>> threadLocal = new TransmittableThreadLocal<>();
 
-    public DefaultMessageHandlerContext() {
+
+    public DefaultMessageHandlerContext(WxAuto wxAuto) {
         threadLocal.set(new ConcurrentHashMap<>());
+        set("wxAuto", wxAuto);
     }
 
     public void set(String key, Object value) {
@@ -30,69 +30,56 @@ public class DefaultMessageHandlerContext implements MessageHandlerContext {
     }
 
     @Override
-    public MessageSpecification message() {
+    public Message getMessage() {
         return get("message");
     }
 
     @Override
-    public void setMessage(MessageHandler.WechatMessageSpecification.ChatSpecification.MessageSpecification messageSpecification) {
-        set("message", messageSpecification);
+    public String getRobotName() {
+        return get("robotName");
     }
 
     @Override
-    public void setWxAuto(WxAuto wxAuto) {
-        set("wxAuto", wxAuto);
+    public void replyText(String text) {
+        getWxAuto().sendText(getMessage().chatName(), text);
     }
 
-    @Override
-    public WxAuto wx() {
+    public WxAuto getWxAuto() {
         return get("wxAuto");
     }
 
     @Override
-    public void setCurrentChat(MessageProcessingData currentChat) {
-        set("currentChat", currentChat);
+    public void replyText(String chatName, String text) {
+        getWxAuto().sendText(chatName, text);
     }
 
     @Override
-    public MessageProcessingData currentChat() {
-        return get("currentChat");
+    public void replyFile(File file) {
+        getWxAuto().sendFileByUpload(getMessage().chatName(), file);
     }
 
-    
     public void clear() {
         threadLocal.remove();
     }
 
     @Override
-    public ChatBotProperties chatBotProperties() {
-        return get("chatBotProperties");
+    public void setMessage(Message message) {
+        set("message", message);
     }
 
     @Override
-    public void setChatBotProperties(ChatBotProperties chatBotProperties) {
-        set("chatBotProperties", chatBotProperties);
+    public void setRobotName(String robotName) {
+        set("robotName", robotName);
     }
 
     @Override
-    public String cleanContent() {
-        return get("cleanContent");
+    public void setIsGroupChat(boolean isGroupChat) {
+        set("isGroupChat", isGroupChat);
     }
 
     @Override
-    public void setCleanContent(String cleanContent) {
-        set("cleanContent", cleanContent);
+    public boolean isGroupChat() {
+        return get("isGroupChat");
     }
-
-    @Override
-    public Long messageTimestamp() {
-        return get("messageTimestamp");
-    }
-
-    @Override
-    public void setMessageTimestamp(Long messageTimestamp) {
-        set("messageTimestamp", messageTimestamp);
-    }
-
 
 }

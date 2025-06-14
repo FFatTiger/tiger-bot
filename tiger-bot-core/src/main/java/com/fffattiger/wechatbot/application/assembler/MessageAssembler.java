@@ -4,10 +4,9 @@ package com.fffattiger.wechatbot.application.assembler;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler;
-
 import com.fffattiger.wechatbot.domain.chat.Chat;
 import com.fffattiger.wechatbot.domain.message.Message;
+import com.fffattiger.wechatbot.infrastructure.external.wxauto.WxAuto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
@@ -25,7 +24,7 @@ public interface MessageAssembler {
         @Mapping(target = "info", source = "messageSpecification.info"),
         @Mapping(target = "senderRemark", source = "messageSpecification.senderRemark")
     })
-    Message toMessage(MessageHandler.WechatMessageSpecification.ChatSpecification.MessageSpecification messageSpecification, Chat chat, Long timestamp);
+    Message toMessage(WxAuto.WechatMessageSpecification.ChatSpecification.MessageSpecification messageSpecification, Chat chat, Long timestamp);
 
 
     default LocalDateTime map(Long timestamp) {

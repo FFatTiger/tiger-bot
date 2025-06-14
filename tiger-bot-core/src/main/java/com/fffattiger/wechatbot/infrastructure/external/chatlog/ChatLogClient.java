@@ -1,6 +1,7 @@
 package com.fffattiger.wechatbot.infrastructure.external.chatlog;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import com.fffattiger.wechatbot.shared.properties.ChatBotProperties;
@@ -8,6 +9,7 @@ import com.fffattiger.wechatbot.shared.properties.ChatBotProperties;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Service
 public class ChatLogClient {
 
 

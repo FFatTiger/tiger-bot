@@ -21,6 +21,11 @@ public class ChatBotProperties {
     private String commandPrefix = "/";
 
     /**
+     * 插件目录
+     */
+    private String pluginDir = "plugins";
+
+    /**
      * 机器人名称
      */
     private String robotName;

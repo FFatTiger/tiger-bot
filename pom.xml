@@ -13,6 +13,7 @@
     <modules>
         <module>tiger-bot-core</module>
         <module>tiger-bot-management</module>
+        <module>tiger-bot-api</module>
     </modules>
     
     <parent>

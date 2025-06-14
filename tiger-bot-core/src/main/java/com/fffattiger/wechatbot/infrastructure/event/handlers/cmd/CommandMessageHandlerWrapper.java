@@ -4,10 +4,14 @@ import java.util.List;
 
 import org.springframework.util.StringUtils;
 
-import com.fffattiger.wechatbot.application.dto.MessageProcessingData;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandlerChain;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandlerContext;
+import com.fffattiger.wechatbot.api.CommandMessageHandlerExtension;
+import com.fffattiger.wechatbot.api.Message;
+import com.fffattiger.wechatbot.api.MessageHandlerContext;
+import com.fffattiger.wechatbot.api.MessageHandlerExtension;
+import com.fffattiger.wechatbot.application.dto.MessageProcessingData.ChatCommandAuthWithCommandAndUser;
+import com.fffattiger.wechatbot.application.service.CommandAuthApplicationService;
+import com.fffattiger.wechatbot.domain.listener.ChatCommandAuth;
+import com.fffattiger.wechatbot.application.service.CommandApplicationService;
 import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageType;
 
 import lombok.extern.slf4j.Slf4j;
@@ -16,24 +20,29 @@ import lombok.extern.slf4j.Slf4j;
  * 命令消息处理器
  */
 @Slf4j
-public abstract class AbstractCommandMessageHandler implements MessageHandler {
+public class CommandMessageHandlerWrapper implements MessageHandlerExtension {
+    private final CommandMessageHandlerExtension delegate;
+    private final String commandPrefix;
 
-
+    public CommandMessageHandlerWrapper(CommandMessageHandlerExtension delegate, String commandPrefix) {
+        this.delegate = delegate;
+        this.commandPrefix = commandPrefix;
+    }
 
     @Override
-    public boolean handle(MessageHandlerContext context, MessageHandlerChain chain) {
-        WechatMessageSpecification.ChatSpecification.MessageSpecification messageSpecification = context.message();
-        String sender = messageSpecification.sender();
-        String cleanContent = context.cleanContent();
-        String commandPrefix = context.chatBotProperties().getCommandPrefix();
-        String chatName = context.currentChat().chat().getName();
+    public boolean handle(MessageHandlerContext context) {
+        Message message = context.getMessage();
+        String cleanContent = message.cleanContent();
+        String chatName = message.chatName();
+        String sender = message.senderName();
 
         // 检查是否为命令消息
-        if (messageSpecification.type() == null || !messageSpecification.type().equals(MessageType.FRIEND) || !StringUtils.hasLength(cleanContent)
+        if (message.type() == null || !message.type().equals(MessageType.FRIEND.getValue())
+                || !StringUtils.hasLength(cleanContent)
                 || !cleanContent.startsWith(commandPrefix)) {
             log.debug("非命令消息，跳过处理: 聊天={}, 发送者={}, 内容={}",
                     chatName, sender, cleanContent);
-            return chain.handle(context);
+            return false;
         }
 
         boolean isCommand = false;
@@ -42,7 +51,7 @@ public abstract class AbstractCommandMessageHandler implements MessageHandler {
         String[] args2 = new String[args.length - 1];
         System.arraycopy(args, 1, args2, 0, args.length - 1);
 
-        if (canHandle(cleanContent)) {
+        if (delegate.getCommandName().equals(command.replace(commandPrefix, ""))) {
             log.info("命令处理器匹配: handler={}, 命令={}", this.getClass().getSimpleName(), command);
 
             if (hasPermission(command, sender, context)) {
@@ -50,7 +59,7 @@ public abstract class AbstractCommandMessageHandler implements MessageHandler {
 
                 try {
                     long startTime = System.currentTimeMillis();
-                    doHandle(command, args2, context);
+                    delegate.doHandle(command, args2, context);
                     long duration = System.currentTimeMillis() - startTime;
 
                     log.info("命令执行成功: 聊天={}, 发送者={}, 命令={}, 耗时={}ms",
@@ -60,7 +69,7 @@ public abstract class AbstractCommandMessageHandler implements MessageHandler {
                 } catch (Exception e) {
                     log.error("命令执行异常: 聊天={}, 发送者={}, 命令={}, 错误信息={}",
                             chatName, sender, command, e.getMessage(), e);
-                    context.wx().sendText(chatName, "命令格式错误，请参考帮助");
+                    context.replyText("命令格式错误，请参考帮助");
                 }
             } else {
                 log.warn("命令权限验证失败: 聊天={}, 发送者={}, 命令={}", chatName, sender, command);
@@ -73,22 +82,21 @@ public abstract class AbstractCommandMessageHandler implements MessageHandler {
             return true;
         }
 
-        return chain.handle(context);
+        return false;
     }
 
+
     private boolean hasPermission(String cleanContent, String sender, MessageHandlerContext context) {
-        List<MessageProcessingData.ChatCommandAuthWithCommandAndUser> commandAuthList = context.currentChat().commandAuths();
-        if (commandAuthList.isEmpty()) {
-            
+        List<ChatCommandAuthWithCommandAndUser> commandAuths = (List<ChatCommandAuthWithCommandAndUser>) context.get("commandAuths");
+        if (commandAuths.isEmpty()) {
             return false;
         }
+        
 
-        // 使用富领域模型的业务方法检查命令匹配和权限
         boolean hasPermission = false;
-        for (MessageProcessingData.ChatCommandAuthWithCommandAndUser commandAuth : commandAuthList) {
-            // 使用富领域模型的业务方法检查命令匹配
+        for (ChatCommandAuthWithCommandAndUser commandAuth : commandAuths) {
+
             if (commandAuth.command().matches(cleanContent)) {
-                // 使用富领域模型验证命令有效性
                 if (!commandAuth.command().isValidCommand()) {
                     log.warn("命令无效: {}", commandAuth.command().getPattern());
                     continue;
@@ -109,7 +117,7 @@ public abstract class AbstractCommandMessageHandler implements MessageHandler {
 
         if (!hasPermission) {
             log.warn("用户无权限执行命令: 发送者={}, 命令={}", sender, cleanContent);
-            context.wx().sendText(context.currentChat().chat().getName(), "您无权限调用此命令");
+            context.replyText("您无权限调用此命令");
             return false;
         }
 
@@ -122,27 +130,5 @@ public abstract class AbstractCommandMessageHandler implements MessageHandler {
         return 0;
     }
 
-    /**
-     * 是否可以处理
-     * 
-     * @param command 命令
-     * @return 是否可以处理
-     */
-    public abstract boolean canHandle(String command);
-
-    /**
-     * 处理
-     * 
-     * @param command 命令
-     * @param context 上下文
-     */
-    public abstract void doHandle(String command, String[] args, MessageHandlerContext context);
-
-    /**
-     * 获取命令描述
-     * 
-     * @return 命令描述
-     */
-    public abstract String description();
-
+   
 }

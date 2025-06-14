@@ -9,6 +9,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fffattiger.wechatbot.shared.properties.DatabaseInitProperties;
@@ -23,7 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 @Order(1) // 确保在其他组件之前执行
-public class DatabaseStartupInitializer{
+@Component
+public class DatabaseStartupInitializer implements OrderedInitializer {
 
     private final JdbcTemplate jdbcTemplate;
     private final ResourceLoader resourceLoader;
@@ -37,8 +39,9 @@ public class DatabaseStartupInitializer{
         "commands", "users", "chat_command_auths", "listeners", "messages"
     );
     
-    @Transactional
-    public void initDatabase() {
+
+    @Override
+    public void init() {
         if (!properties.isEnabled()) {
             log.info("数据库初始化已禁用，跳过检查");
             return;
@@ -190,5 +193,10 @@ public class DatabaseStartupInitializer{
             log.error("检查表 {} 是否为空时发生错误", tableName, e);
             return true;
         }
+    }
+
+    @Override
+    public int getOrder() {
+        return -999;
     }
 }

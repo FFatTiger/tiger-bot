@@ -18,6 +18,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.client.MultipartBodyBuilder;
+import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -25,24 +26,15 @@ import org.springframework.web.reactive.function.client.WebClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fffattiger.wechatbot.infrastructure.event.MessageReceiveEvent;
 import com.fffattiger.wechatbot.infrastructure.event.WxAutoConnectedEvent;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler.AddListenChatSpecification;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler.WechatMessageSpecification;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler.ChatWithSpecification;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler.ResultSpecification;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler.RobotNameSpecification;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler.SendFileByPathSpecification;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler.SendFileByUrlSpecification;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler.SendTextSpecification;
-import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageHandler.VoiceCallSpecification;
 import com.fffattiger.wechatbot.shared.properties.ChatBotProperties;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 @Slf4j
-public class WxAutoWebSocketHttpClient implements WxAuto{
+@Component
+public class WxAutoWebSocketHttpClient implements WxAuto {
 
     private WebSocketClient webSocketClient;
     private final WebClient webClient;
@@ -53,22 +45,27 @@ public class WxAutoWebSocketHttpClient implements WxAuto{
     private final AtomicBoolean isConnected = new AtomicBoolean(false);
     private final List<String> listenerChatNames = new ArrayList<>();
 
-    public WxAutoWebSocketHttpClient(ChatBotProperties chatBotProperties, OperationTaskManager taskManager, ApplicationEventPublisher applicationEventPublisher) throws Exception {
+    public WxAutoWebSocketHttpClient(ChatBotProperties chatBotProperties, OperationTaskManager taskManager,
+            ApplicationEventPublisher applicationEventPublisher) throws Exception {
         this.chatBotProperties = chatBotProperties;
         this.taskManager = taskManager;
         this.applicationEventPublisher = applicationEventPublisher;
 
         // 初始化HTTP客户端
         this.webClient = WebClient.builder()
-            .baseUrl(chatBotProperties.getWxAutoGatewayHttpUrl())
-            .build();
-        
+                .baseUrl(chatBotProperties.getWxAutoGatewayHttpUrl())
+                .build();
+
     }
 
-
-    @PostConstruct
-    public void init() throws Exception {
-        initializeWebSocketClient();
+    @Override
+    public void init() {
+        try {
+            initializeWebSocketClient();
+        } catch (Exception e) {
+            log.error("Error initializing WxAutoWebSocketHttpClient", e);
+            throw new RuntimeException("Error initializing WxAutoWebSocketHttpClient", e);
+        }
     }
 
     private void initializeWebSocketClient() throws Exception {
@@ -78,7 +75,8 @@ public class WxAutoWebSocketHttpClient implements WxAuto{
                 log.info("WebSocket连接已建立: 服务器={}, 状态码={}",
                         chatBotProperties.getWxAutoGatewayWsUrl(), handshakedata.getHttpStatus());
                 isConnected.set(true);
-                applicationEventPublisher.publishEvent(new WxAutoConnectedEvent(WxAutoWebSocketHttpClient.this, WxAutoWebSocketHttpClient.this));
+                applicationEventPublisher.publishEvent(
+                        new WxAutoConnectedEvent(WxAutoWebSocketHttpClient.this, WxAutoWebSocketHttpClient.this));
             }
 
             @Override
@@ -124,13 +122,14 @@ public class WxAutoWebSocketHttpClient implements WxAuto{
     private void handleWebSocketMessage(String message) {
         try {
             WechatMessageSpecification batchedMessages = objectMapper.readValue(
-                message, WechatMessageSpecification.class);
+                    message, WechatMessageSpecification.class);
 
             String eventType = batchedMessages.eventType();
             log.debug("处理WebSocket消息: 事件类型={}", eventType);
 
             if ("wechat_messages".equals(eventType)) {
-                applicationEventPublisher.publishEvent(new MessageReceiveEvent(this, batchedMessages, WxAutoWebSocketHttpClient.this));
+                applicationEventPublisher
+                        .publishEvent(new MessageReceiveEvent(this, batchedMessages, WxAutoWebSocketHttpClient.this));
             } else if ("connected".equals(eventType)) {
                 log.info("WebSocket连接确认: {}", batchedMessages.message());
             } else if ("heartbeat".equals(eventType)) {
@@ -154,108 +153,113 @@ public class WxAutoWebSocketHttpClient implements WxAuto{
             pong.put("timestamp", System.currentTimeMillis());
             webSocketClient.send(objectMapper.writeValueAsString(pong));
         } catch (Exception e) {
-            
+
         }
     }
 
-
-    
     @Override
-    public MessageHandler.ResultSpecification<String> addListenChat(String who, boolean savePic, boolean saveVoice, boolean parseLinks) {
+    public ResultSpecification<String> addListenChat(String who, boolean savePic, boolean saveVoice,
+            boolean parseLinks) {
         try {
-            MessageHandler.ResultSpecification<String> resultSpecification = taskManager.submitTask("监听聊天: " + who, () -> {
-                            AddListenChatSpecification request = new AddListenChatSpecification(who, savePic, saveVoice, parseLinks);
-            
-                            return webClient
-                                .post()
-                                .uri("/api/add_listen_chat")
-                                .bodyValue(request)
-                                .retrieve()
-                                .bodyToMono(new ParameterizedTypeReference<MessageHandler.ResultSpecification<String>>() {})
-                                .block(chatBotProperties.getHttpTimeout());
-                        }).get();
+            ResultSpecification<String> resultSpecification = taskManager.submitTask("监听聊天: " + who, () -> {
+                AddListenChatSpecification request = new AddListenChatSpecification(who, savePic, saveVoice,
+                        parseLinks);
+
+                return webClient
+                        .post()
+                        .uri("/api/add_listen_chat")
+                        .bodyValue(request)
+                        .retrieve()
+                        .bodyToMono(new ParameterizedTypeReference<ResultSpecification<String>>() {
+                        })
+                        .block(chatBotProperties.getHttpTimeout());
+            }).get();
             if (resultSpecification.success()) {
                 listenerChatNames.add(who);
             }
             return resultSpecification;
         } catch (Exception e) {
-            
-            return new MessageHandler.ResultSpecification<>(false, e.getMessage(), null, null);
+
+            return new ResultSpecification<>(false, e.getMessage(), null, null);
         }
     }
 
     @Override
-    public MessageHandler.ResultSpecification<String> chatWith(String who) {
+    public ResultSpecification<String> chatWith(String who) {
         try {
             return taskManager.submitTask("与 " + who + " 聊天", () -> {
                 ChatWithSpecification request = new ChatWithSpecification(who);
 
                 return webClient
-                    .post()
-                    .uri("/api/chat_with")
-                    .bodyValue(request)
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<ResultSpecification<String>>() {})
-                    .block(chatBotProperties.getHttpTimeout());
+                        .post()
+                        .uri("/api/chat_with")
+                        .bodyValue(request)
+                        .retrieve()
+                        .bodyToMono(new ParameterizedTypeReference<ResultSpecification<String>>() {
+                        })
+                        .block(chatBotProperties.getHttpTimeout());
             }).get();
         } catch (Exception e) {
-            
-            return new MessageHandler.ResultSpecification<>(false, e.getMessage(), null, null);
+
+            return new ResultSpecification<>(false, e.getMessage(), null, null);
         }
     }
 
     @Override
-    public MessageHandler.ResultSpecification<RobotNameSpecification> getRobotName() {
+    public ResultSpecification<RobotNameSpecification> getRobotName() {
         try {
             return taskManager.submitTask("获取机器人名称", () -> webClient
-                .get()
-                .uri("/api/get_robot_name")
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<MessageHandler.ResultSpecification<RobotNameSpecification>>() {})
-                .block(chatBotProperties.getHttpTimeout())).get();
+                    .get()
+                    .uri("/api/get_robot_name")
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<ResultSpecification<RobotNameSpecification>>() {
+                    })
+                    .block(chatBotProperties.getHttpTimeout())).get();
         } catch (Exception e) {
-            
-            return new MessageHandler.ResultSpecification<>(false, e.getMessage(), null, null);
+
+            return new ResultSpecification<>(false, e.getMessage(), null, null);
         }
     }
 
     @Override
-    public MessageHandler.ResultSpecification<String> sendFile(String toWho, String filePath) {
+    public ResultSpecification<String> sendFile(String toWho, String filePath) {
         try {
             return taskManager.submitTask("发送文件给: " + toWho, () -> {
                 SendFileByPathSpecification request = new SendFileByPathSpecification(toWho, filePath);
 
                 return webClient
-                    .post()
-                    .uri("/api/send_file_by_path")
-                    .bodyValue(request)
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<MessageHandler.ResultSpecification<String>>() {})
-                    .block(chatBotProperties.getHttpTimeout());
+                        .post()
+                        .uri("/api/send_file_by_path")
+                        .bodyValue(request)
+                        .retrieve()
+                        .bodyToMono(new ParameterizedTypeReference<ResultSpecification<String>>() {
+                        })
+                        .block(chatBotProperties.getHttpTimeout());
             }).get();
         } catch (Exception e) {
-            
-            return new MessageHandler.ResultSpecification<>(false, e.getMessage(), null, null);
+
+            return new ResultSpecification<>(false, e.getMessage(), null, null);
         }
     }
 
     @Override
-    public MessageHandler.ResultSpecification<String> sendText(String toWho, String text) {
+    public ResultSpecification<String> sendText(String toWho, String text) {
         log.info("发送文本消息: 接收者={}, 消息长度={}", toWho, text.length());
         log.debug("发送文本消息内容: 接收者={}, 内容={}", toWho, text.length() > 100 ? text.substring(0, 100) + "..." : text);
 
         try {
             long startTime = System.currentTimeMillis();
-            MessageHandler.ResultSpecification<String> resultSpecification = taskManager.submitTask("发送文本消息给: " + toWho, () -> {
+            ResultSpecification<String> resultSpecification = taskManager.submitTask("发送文本消息给: " + toWho, () -> {
                 SendTextSpecification request = new SendTextSpecification(toWho, text);
 
                 return webClient
-                    .post()
-                    .uri("/api/send_text_message")
-                    .bodyValue(request)
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<ResultSpecification<String>>() {})
-                    .block(chatBotProperties.getHttpTimeout());
+                        .post()
+                        .uri("/api/send_text_message")
+                        .bodyValue(request)
+                        .retrieve()
+                        .bodyToMono(new ParameterizedTypeReference<ResultSpecification<String>>() {
+                        })
+                        .block(chatBotProperties.getHttpTimeout());
             }).get();
 
             long duration = System.currentTimeMillis() - startTime;
@@ -273,47 +277,48 @@ public class WxAutoWebSocketHttpClient implements WxAuto{
     }
 
     @Override
-    public MessageHandler.ResultSpecification<String> voiceCall(String userId) {
+    public ResultSpecification<String> voiceCall(String userId) {
         try {
             return taskManager.submitTask("语音通话: " + userId, () -> {
                 VoiceCallSpecification request = new VoiceCallSpecification(userId);
 
                 return webClient
-                    .post()
-                    .uri("/api/voice_call")
-                    .bodyValue(request)
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<MessageHandler.ResultSpecification<String>>() {})
-                    .block(chatBotProperties.getHttpTimeout());
+                        .post()
+                        .uri("/api/voice_call")
+                        .bodyValue(request)
+                        .retrieve()
+                        .bodyToMono(new ParameterizedTypeReference<ResultSpecification<String>>() {
+                        })
+                        .block(chatBotProperties.getHttpTimeout());
             }).get();
         } catch (Exception e) {
-            
-            return new MessageHandler.ResultSpecification<>(false, e.getMessage(), null, null);
+
+            return new ResultSpecification<>(false, e.getMessage(), null, null);
         }
     }
 
-    public MessageHandler.ResultSpecification<String> sendFileByUrl(String toWho, String fileUrl, String filename) {
+    public ResultSpecification<String> sendFileByUrl(String toWho, String fileUrl, String filename) {
         try {
             return taskManager.submitTask("通过URL发送文件给: " + toWho, () -> {
                 SendFileByUrlSpecification request = new SendFileByUrlSpecification(toWho, fileUrl, filename);
 
                 return webClient
-                    .post()
-                    .uri("/api/send_file_by_url")
-                    .bodyValue(request)
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<MessageHandler.ResultSpecification<String>>() {})
-                    .block(chatBotProperties.getHttpTimeout());
+                        .post()
+                        .uri("/api/send_file_by_url")
+                        .bodyValue(request)
+                        .retrieve()
+                        .bodyToMono(new ParameterizedTypeReference<ResultSpecification<String>>() {
+                        })
+                        .block(chatBotProperties.getHttpTimeout());
             }).get();
         } catch (Exception e) {
-            
-            return new MessageHandler.ResultSpecification<>(false, e.getMessage(), null, null);
+
+            return new ResultSpecification<>(false, e.getMessage(), null, null);
         }
     }
 
-
     @Override
-    public MessageHandler.ResultSpecification<String> sendFileByUpload(String toWho, File file) {
+    public ResultSpecification<String> sendFileByUpload(String toWho, File file) {
         try {
             return taskManager.submitTask("上传文件发送给: " + toWho, () -> {
                 MultipartBodyBuilder builder = new MultipartBodyBuilder();
@@ -322,15 +327,16 @@ public class WxAutoWebSocketHttpClient implements WxAuto{
                 MultiValueMap<String, HttpEntity<?>> parts = builder.build();
 
                 return webClient
-                    .post()
-                    .uri("/api/send_file_by_upload")
-                    .body(BodyInserters.fromMultipartData(parts))
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<MessageHandler.ResultSpecification<String>>() {})
-                    .block(chatBotProperties.getHttpTimeout());
+                        .post()
+                        .uri("/api/send_file_by_upload")
+                        .body(BodyInserters.fromMultipartData(parts))
+                        .retrieve()
+                        .bodyToMono(new ParameterizedTypeReference<ResultSpecification<String>>() {
+                        })
+                        .block(chatBotProperties.getHttpTimeout());
             }).get();
         } catch (Exception e) {
-            
+
             return new ResultSpecification<>(false, e.getMessage(), null, null);
         }
     }
@@ -338,22 +344,16 @@ public class WxAutoWebSocketHttpClient implements WxAuto{
     // 健康检查
     public Mono<Object> healthCheck() {
         return webClient
-            .get()
-            .uri("/api/health")
-            .retrieve()
-            .bodyToMono(Object.class)
-            .timeout(Duration.ofSeconds(5));
+                .get()
+                .uri("/api/health")
+                .retrieve()
+                .bodyToMono(Object.class)
+                .timeout(Duration.ofSeconds(5));
     }
 
     // 获取连接状态
     public boolean isConnected() {
         return isConnected.get();
-    }
-
-
-    @Override
-    public void setMessageHandlerChain(MessageHandlerChain messageHandlerChain) {
-        throw new UnsupportedOperationException("Not supported in reactive implementation");
     }
 
     @PreDestroy
