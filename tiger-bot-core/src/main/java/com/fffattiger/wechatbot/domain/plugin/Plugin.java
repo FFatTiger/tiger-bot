@@ -2,22 +2,24 @@ package com.fffattiger.wechatbot.domain.plugin;
 
 import java.time.LocalDateTime;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fffattiger.wechatbot.domain.common.AggregateRoot;
 import com.fffattiger.wechatbot.domain.shared.valueobject.PluginLoadType;
 import com.fffattiger.wechatbot.domain.shared.valueobject.PluginStatus;
 import com.fffattiger.wechatbot.domain.shared.valueobject.PluginType;
 
-import lombok.Data;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
-@Table("plugins")
-@Data
-public class Plugin {
-
-    @Id
-    private Long id;
+@Entity
+@Table(name = "plugins")
+@Getter
+@Setter
+public class Plugin extends AggregateRoot {
 
     private String pluginId;
 
@@ -29,6 +31,7 @@ public class Plugin {
 
     private String description; 
 
+    @Enumerated(EnumType.STRING)
     private PluginStatus status = PluginStatus.DISABLED; 
 
     private String sourceUrl;
@@ -39,8 +42,10 @@ public class Plugin {
 
     private String parameters;
 
+    @Enumerated(EnumType.STRING)
     private PluginLoadType loadType; 
     
+    @Enumerated(EnumType.STRING)
     private PluginType pluginType;
 
     private LocalDateTime installedAt; 

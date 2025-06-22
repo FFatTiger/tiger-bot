@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.fffattiger.wechatbot.application.handler.cmd.CommandMessageHandlerWrapper;
 import org.springframework.stereotype.Component;
 
 import com.fffattiger.wechatbot.api.CommandMessageHandlerExtension;
@@ -38,8 +39,8 @@ public class PluginHolder {
     public List<CommandMessageHandlerExtension> getAllCommandExtensions() {
         return LOADED_PLUGINS.values().stream()
                 .flatMap(List::stream)
-                .filter(extension -> extension instanceof CommandMessageHandlerExtension)
-                .map(extension -> (CommandMessageHandlerExtension) extension)
+                .filter(extension -> extension instanceof CommandMessageHandlerWrapper)
+                .map(extension -> ((CommandMessageHandlerWrapper) extension).getDelegate())
                 .collect(Collectors.toList());
     }
     

@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.springframework.data.relational.core.mapping.Table;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -40,21 +39,34 @@ public interface WxAuto {
 
         /**
          * 添加一个聊天对象（联系人或群聊）到监听列表，之后该对象的新消息会被推送到客户端。
+         * 根据新的wxauto文档，使用nickname参数，系统会自动处理回调。
          * 
-         * @param who        要监听的联系人昵称、备注名或群聊名称。
-         * @param savePic    是否自动保存接收到的图片。
-         * @param saveVoice  是否自动保存接收到的语音。
-         * @param parseLinks 是否解析消息中的链接。
+         * @param nickname 要监听的联系人昵称、备注名或群聊名称。
          * @return 添加结果。
          */
-        ResultSpecification<String> addListenChat(String who, boolean savePic, boolean saveVoice, boolean parseLinks);
+        ResultSpecification<String> addListenChat(String nickname);
 
         /**
-         * 获取当前登录微信机器人的昵称。
+         * 移除一个聊天对象的监听
          * 
-         * @return 当前登录微信机器人的昵称。
+         * @param nickname 要移除监听的联系人昵称、备注名或群聊名称。
+         * @return 移除结果。
          */
-        ResultSpecification<RobotNameSpecification> getRobotName();
+        ResultSpecification<String> removeListenChat(String nickname);
+
+        /**
+         * 停止所有监听
+         * 
+         * @return 停止结果。
+         */
+        ResultSpecification<String> stopAllListening();
+
+        /**
+         * 开始所有监听
+         *
+         * @return 开始结果
+         */
+        ResultSpecification<String> startListening();
 
         /**
          * 打开一个聊天窗口。
@@ -63,14 +75,6 @@ public interface WxAuto {
          * @return 打开结果。
          */
         ResultSpecification<String> chatWith(String who);
-
-        /**
-         * 向指定用户发起语音通话。
-         * 
-         * @param userId 要呼叫的用户的微信ID或准确昵称。
-         * @return 呼叫结果。
-         */
-        ResultSpecification<String> voiceCall(String userId);
 
         /**
          * 获取当前监听的聊天对象
@@ -93,17 +97,17 @@ public interface WxAuto {
                 @JsonIgnoreProperties(ignoreUnknown = true)
                 public record ChatSpecification(
                                 @JsonProperty("chat_name") String chatName,
+                                @JsonProperty("chat_type") String chatType,
                                 @JsonProperty("messages") List<MessageSpecification> messageSpecifications) {
                         @JsonIgnoreProperties(ignoreUnknown = true)
-                        @Table("messages")
                         public record MessageSpecification(
                                         @JsonProperty("type") MessageType type,
+                                        @JsonProperty("attr") MessageAttr attr,
                                         @JsonProperty("content") String content,
                                         @JsonProperty("sender") String sender,
-                                        @JsonProperty("info") List<String> info,
+                                        @JsonProperty("info") Object info,
                                         @JsonProperty("id") String id,
-                                        @JsonProperty("time") String time,
-                                        @JsonProperty("sender_remark") String senderRemark) {
+                                        @JsonProperty("hash") String hash) {
                         }
                 }
         }
@@ -137,10 +141,12 @@ public interface WxAuto {
 
         @JsonIgnoreProperties(ignoreUnknown = true)
         record AddListenChatSpecification(
-                        String who,
-                        @JsonProperty("savepic") boolean savePic,
-                        @JsonProperty("savevoice") boolean saveVoice,
-                        @JsonProperty("parseLinks") boolean parseLinks) {
+                        @JsonProperty("nickname") String nickname) {
+        }
+
+        @JsonIgnoreProperties(ignoreUnknown = true)
+        record RemoveListenChatSpecification(
+                        @JsonProperty("nickname") String nickname) {
         }
 
         @JsonIgnoreProperties(ignoreUnknown = true)

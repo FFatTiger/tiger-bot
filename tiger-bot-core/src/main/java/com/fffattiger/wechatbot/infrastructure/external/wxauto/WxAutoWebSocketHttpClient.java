@@ -24,7 +24,7 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fffattiger.wechatbot.infrastructure.event.MessageReceiveEvent;
+import com.fffattiger.wechatbot.infrastructure.event.WxAutoMessageReceiveEvent;
 import com.fffattiger.wechatbot.infrastructure.event.WxAutoConnectedEvent;
 import com.fffattiger.wechatbot.shared.properties.ChatBotProperties;
 
@@ -89,6 +89,9 @@ public class WxAutoWebSocketHttpClient implements WxAuto {
             public void onClose(int code, String reason, boolean remote) {
                 log.warn("WebSocket连接关闭: 代码={}, 原因={}, 远程关闭={}", code, reason, remote);
                 isConnected.set(false);
+                // WebSocket关闭时清空监听列表，因为服务端会自动停止监听
+                listenerChatNames.clear();
+                log.info("WebSocket连接关闭，已清空本地监听列表");
                 // 自动重连
                 scheduleReconnect();
             }
@@ -129,7 +132,7 @@ public class WxAutoWebSocketHttpClient implements WxAuto {
 
             if ("wechat_messages".equals(eventType)) {
                 applicationEventPublisher
-                        .publishEvent(new MessageReceiveEvent(this, batchedMessages, WxAutoWebSocketHttpClient.this));
+                        .publishEvent(new WxAutoMessageReceiveEvent(this, batchedMessages, WxAutoWebSocketHttpClient.this));
             } else if ("connected".equals(eventType)) {
                 log.info("WebSocket连接确认: {}", batchedMessages.message());
             } else if ("heartbeat".equals(eventType)) {
@@ -153,17 +156,15 @@ public class WxAutoWebSocketHttpClient implements WxAuto {
             pong.put("timestamp", System.currentTimeMillis());
             webSocketClient.send(objectMapper.writeValueAsString(pong));
         } catch (Exception e) {
-
+            log.error("发送心跳响应失败: {}", e.getMessage());
         }
     }
 
     @Override
-    public ResultSpecification<String> addListenChat(String who, boolean savePic, boolean saveVoice,
-            boolean parseLinks) {
+    public ResultSpecification<String> addListenChat(String nickname) {
         try {
-            ResultSpecification<String> resultSpecification = taskManager.submitTask("监听聊天: " + who, () -> {
-                AddListenChatSpecification request = new AddListenChatSpecification(who, savePic, saveVoice,
-                        parseLinks);
+            ResultSpecification<String> resultSpecification = taskManager.submitTask("监听聊天: " + nickname, () -> {
+                AddListenChatSpecification request = new AddListenChatSpecification(nickname);
 
                 return webClient
                         .post()
@@ -175,11 +176,79 @@ public class WxAutoWebSocketHttpClient implements WxAuto {
                         .block(chatBotProperties.getHttpTimeout());
             }).get();
             if (resultSpecification.success()) {
-                listenerChatNames.add(who);
+                listenerChatNames.add(nickname);
+                log.info("成功添加监听: {}, 当前监听列表: {}", nickname, listenerChatNames);
             }
             return resultSpecification;
         } catch (Exception e) {
+            log.error("添加监听失败: nickname={}, error={}", nickname, e.getMessage(), e);
+            return new ResultSpecification<>(false, e.getMessage(), null, null);
+        }
+    }
 
+    @Override
+    public ResultSpecification<String> removeListenChat(String nickname) {
+        try {
+            ResultSpecification<String> resultSpecification = taskManager.submitTask("移除监听: " + nickname, () -> {
+                RemoveListenChatSpecification request = new RemoveListenChatSpecification(nickname);
+
+                return webClient
+                        .post()
+                        .uri("/api/remove_listen_chat")
+                        .bodyValue(request)
+                        .retrieve()
+                        .bodyToMono(new ParameterizedTypeReference<ResultSpecification<String>>() {
+                        })
+                        .block(chatBotProperties.getHttpTimeout());
+            }).get();
+            if (resultSpecification.success()) {
+                listenerChatNames.remove(nickname);
+                log.info("成功移除监听: {}, 当前监听列表: {}", nickname, listenerChatNames);
+            }
+            return resultSpecification;
+        } catch (Exception e) {
+            log.error("移除监听失败: nickname={}, error={}", nickname, e.getMessage(), e);
+            return new ResultSpecification<>(false, e.getMessage(), null, null);
+        }
+    }
+
+    @Override
+    public ResultSpecification<String> stopAllListening() {
+        try {
+            ResultSpecification<String> resultSpecification = taskManager.submitTask("停止所有监听", () -> {
+                return webClient
+                        .post()
+                        .uri("/api/stop_all_listening")
+                        .retrieve()
+                        .bodyToMono(new ParameterizedTypeReference<ResultSpecification<String>>() {
+                        })
+                        .block(chatBotProperties.getHttpTimeout());
+            }).get();
+            if (resultSpecification.success()) {
+                listenerChatNames.clear();
+                log.info("成功停止所有监听，已清空监听列表");
+            }
+            return resultSpecification;
+        } catch (Exception e) {
+            log.error("停止所有监听失败: error={}", e.getMessage(), e);
+            return new ResultSpecification<>(false, e.getMessage(), null, null);
+        }
+    }
+
+    @Override
+    public ResultSpecification<String> startListening() {
+        try {
+            return taskManager.submitTask("开始监听", () -> {
+                return webClient
+                        .post()
+                        .uri("/api/start_listening")
+                        .retrieve()
+                        .bodyToMono(new ParameterizedTypeReference<ResultSpecification<String>>() {
+                        })
+                        .block(chatBotProperties.getHttpTimeout());
+            }).get();
+        } catch (Exception e) {
+            log.error("开始监听失败: error={}", e.getMessage(), e);
             return new ResultSpecification<>(false, e.getMessage(), null, null);
         }
     }
@@ -200,23 +269,7 @@ public class WxAutoWebSocketHttpClient implements WxAuto {
                         .block(chatBotProperties.getHttpTimeout());
             }).get();
         } catch (Exception e) {
-
-            return new ResultSpecification<>(false, e.getMessage(), null, null);
-        }
-    }
-
-    @Override
-    public ResultSpecification<RobotNameSpecification> getRobotName() {
-        try {
-            return taskManager.submitTask("获取机器人名称", () -> webClient
-                    .get()
-                    .uri("/api/get_robot_name")
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<ResultSpecification<RobotNameSpecification>>() {
-                    })
-                    .block(chatBotProperties.getHttpTimeout())).get();
-        } catch (Exception e) {
-
+            log.error("切换聊天窗口失败: who={}, error={}", who, e.getMessage(), e);
             return new ResultSpecification<>(false, e.getMessage(), null, null);
         }
     }
@@ -237,7 +290,7 @@ public class WxAutoWebSocketHttpClient implements WxAuto {
                         .block(chatBotProperties.getHttpTimeout());
             }).get();
         } catch (Exception e) {
-
+            log.error("发送文件失败: toWho={}, filePath={}, error={}", toWho, filePath, e.getMessage(), e);
             return new ResultSpecification<>(false, e.getMessage(), null, null);
         }
     }
@@ -276,27 +329,6 @@ public class WxAutoWebSocketHttpClient implements WxAuto {
         }
     }
 
-    @Override
-    public ResultSpecification<String> voiceCall(String userId) {
-        try {
-            return taskManager.submitTask("语音通话: " + userId, () -> {
-                VoiceCallSpecification request = new VoiceCallSpecification(userId);
-
-                return webClient
-                        .post()
-                        .uri("/api/voice_call")
-                        .bodyValue(request)
-                        .retrieve()
-                        .bodyToMono(new ParameterizedTypeReference<ResultSpecification<String>>() {
-                        })
-                        .block(chatBotProperties.getHttpTimeout());
-            }).get();
-        } catch (Exception e) {
-
-            return new ResultSpecification<>(false, e.getMessage(), null, null);
-        }
-    }
-
     public ResultSpecification<String> sendFileByUrl(String toWho, String fileUrl, String filename) {
         try {
             return taskManager.submitTask("通过URL发送文件给: " + toWho, () -> {
@@ -312,7 +344,7 @@ public class WxAutoWebSocketHttpClient implements WxAuto {
                         .block(chatBotProperties.getHttpTimeout());
             }).get();
         } catch (Exception e) {
-
+            log.error("通过URL发送文件失败: toWho={}, fileUrl={}, error={}", toWho, fileUrl, e.getMessage(), e);
             return new ResultSpecification<>(false, e.getMessage(), null, null);
         }
     }
@@ -336,7 +368,7 @@ public class WxAutoWebSocketHttpClient implements WxAuto {
                         .block(chatBotProperties.getHttpTimeout());
             }).get();
         } catch (Exception e) {
-
+            log.error("上传文件发送失败: toWho={}, file={}, error={}", toWho, file.getName(), e.getMessage(), e);
             return new ResultSpecification<>(false, e.getMessage(), null, null);
         }
     }
@@ -360,6 +392,16 @@ public class WxAutoWebSocketHttpClient implements WxAuto {
     public void shutdown() {
         log.info("开始关闭微信自动化客户端");
 
+        // 在关闭前停止所有监听
+        try {
+            if (isConnected.get()) {
+                log.info("停止所有监听...");
+                stopAllListening();
+            }
+        } catch (Exception e) {
+            log.warn("关闭时停止监听失败: {}", e.getMessage());
+        }
+
         if (webSocketClient != null && !webSocketClient.isClosed()) {
             log.info("关闭WebSocket连接");
             webSocketClient.close();
@@ -371,6 +413,6 @@ public class WxAutoWebSocketHttpClient implements WxAuto {
 
     @Override
     public List<String> getListeners() {
-        return listenerChatNames;
+        return new ArrayList<>(listenerChatNames);
     }
 }

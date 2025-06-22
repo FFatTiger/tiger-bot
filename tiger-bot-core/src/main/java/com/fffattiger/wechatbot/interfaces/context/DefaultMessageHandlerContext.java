@@ -5,8 +5,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
-import com.fffattiger.wechatbot.api.Message;
-import com.fffattiger.wechatbot.api.MessageHandlerContext;
+import com.fffattiger.wechatbot.api.context.MessageHandlerContext;
+import com.fffattiger.wechatbot.api.dto.Message;
 import com.fffattiger.wechatbot.infrastructure.external.wxauto.WxAuto;
 
 @SuppressWarnings("unchecked")
@@ -15,9 +15,10 @@ public class DefaultMessageHandlerContext implements MessageHandlerContext {
     private final TransmittableThreadLocal<Map<String, Object>> threadLocal = new TransmittableThreadLocal<>();
 
 
-    public DefaultMessageHandlerContext(WxAuto wxAuto) {
+    public DefaultMessageHandlerContext(WxAuto wxAuto, Message message) {
         threadLocal.set(new ConcurrentHashMap<>());
         set("wxAuto", wxAuto);
+        set("message", message);
     }
 
     public void set(String key, Object value) {
@@ -41,7 +42,7 @@ public class DefaultMessageHandlerContext implements MessageHandlerContext {
 
     @Override
     public void replyText(String text) {
-        getWxAuto().sendText(getMessage().chatName(), text);
+        getWxAuto().sendText(getMessage().getChatName(), text);
     }
 
     public WxAuto getWxAuto() {
@@ -55,7 +56,7 @@ public class DefaultMessageHandlerContext implements MessageHandlerContext {
 
     @Override
     public void replyFile(File file) {
-        getWxAuto().sendFileByUpload(getMessage().chatName(), file);
+        getWxAuto().sendFileByUpload(getMessage().getChatName(), file);
     }
 
     public void clear() {

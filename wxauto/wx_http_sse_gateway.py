@@ -8,13 +8,14 @@ import time
 import os
 import tempfile
 import requests
-from typing import Set, Optional
+import hashlib
+from typing import Set, Optional, Dict, List
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form, Request
 from pydantic import BaseModel, HttpUrl
 from contextlib import asynccontextmanager
 import uvicorn
 import threading
-from Mwxauto.wxauto import WeChat
+from wxauto import WeChat
 # --- 配置 ---
 WEBSOCKET_HOST = "0.0.0.0"
 WEBSOCKET_PORT = 8765
@@ -30,6 +31,8 @@ DOWNLOAD_TIMEOUT = 30
 # --- 全局变量 ---
 wx_instance = None
 websocket_clients: Set[websockets.WebSocketServerProtocol] = set()
+listening_chats: Dict[str, object] = {}  # 存储正在监听的聊天窗口
+main_event_loop = None # 用于跨线程提交任务到主事件循环
 
 # --- 日志设置 ---
 logging.basicConfig(level=LOG_LEVEL, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -50,21 +53,18 @@ class SendFileByUrlRequest(BaseModel):
     filename: Optional[str] = None  # 可选的文件名，如果不提供则从URL推断
 
 class AddListenChatRequest(BaseModel):
-    who: str
-    savepic: bool = True
-    savevoice: bool = True
-    parse_links: bool = True
+    nickname: str  # 根据文档，AddListenChat需要nickname参数
+
+class RemoveListenChatRequest(BaseModel):
+    nickname: str
 
 class ChatWithRequest(BaseModel):
     who: str
 
-class VoiceCallRequest(BaseModel):
-    user_id: str
-
 class APIResponse(BaseModel):
     success: bool
     message: str
-    data: dict = None
+    data: Optional[dict] = None  # 修复类型注解
 
 
 # --- WebSocket 客户端管理 ---
@@ -83,6 +83,16 @@ async def unregister_websocket_client(websocket):
     if websocket in websocket_clients:
         websocket_clients.remove(websocket)
     logger.info(f"WebSocket client disconnected: {websocket.remote_address}. Total clients: {len(websocket_clients)}")
+    
+    # 如果没有WebSocket客户端了，停止所有监听
+    if not websocket_clients and wx_instance:
+        logger.info("No WebSocket clients remaining. Stopping all listeners.")
+        try:
+            wx_instance.StopListening(remove=True)
+            listening_chats.clear()
+            logger.info("All listeners stopped due to no WebSocket clients.")
+        except Exception as e:
+            logger.error(f"Error stopping listeners: {e}")
 
 async def broadcast_to_websocket_clients(message_payload):
     if not websocket_clients:
@@ -208,8 +218,9 @@ def cleanup_temp_file(filepath: str):
 
 # --- 辅助函数：使消息对象可JSON序列化 ---
 def _sanitize_msg_obj_for_json(msg_obj):
-    """严格只输出 wxauto 官方文档字段，保证 type 字段一定存在，去除多余字段。"""
-    official_fields = ["type", "content", "sender", "info", "id", "time", "sender_remark"]
+    """根据普通版文档，处理消息对象的字段，并添加自定义hash"""
+    # 根据文档，Message对象包含的属性：type, attr, info, id, sender, content, and a custom hash
+    official_fields = ["type", "attr", "info", "id", "sender", "content", "hash"]
     result = {}
 
     for field in official_fields:
@@ -219,95 +230,59 @@ def _sanitize_msg_obj_for_json(msg_obj):
         elif isinstance(msg_obj, dict):
             value = msg_obj.get(field, None)
         
-        if field == "type" and value is None:
-            value = getattr(msg_obj, "__dict__", {}).get("type", None)
         if value is not None:
             result[field] = value
 
     return result
 
-async def _sanitize_raw_messages_dict_for_json(original_dict: dict) -> list:
-    processed_list = []
-    if not isinstance(original_dict, dict):
-        logger.warning(f"Expected a dict from GetListenMessage, got {type(original_dict)}. Returning empty list.")
-        return []
+def message_callback(msg, chat):
+    """消息回调函数，用于处理接收到的消息"""
+    try:
+        logger.info(f"Received message from {chat}: {msg.content}")
         
-    for chat_id_obj, msg_list in original_dict.items():
-        chat_name_to_use = ""
-
-        if isinstance(chat_id_obj, str):
-            chat_name_to_use = chat_id_obj
-        else:
-            if hasattr(chat_id_obj, 'Name'):
-                name_attribute_value = getattr(chat_id_obj, 'Name')
-                if isinstance(name_attribute_value, str) and name_attribute_value:
-                    chat_name_to_use = name_attribute_value
-            
-            if not chat_name_to_use:
-                str_fallback_value = str(chat_id_obj)
-                search_pattern = " for "
-                pattern_index = str_fallback_value.rfind(search_pattern)
-                
-                if pattern_index != -1:
-                    name_part = str_fallback_value[pattern_index + len(search_pattern):]
-                    if name_part.endswith(">"):
-                        name_part = name_part[:-1]
-                    if name_part:
-                        chat_name_to_use = name_part
-                    else:
-                        chat_name_to_use = str_fallback_value 
-                else:
-                    chat_name_to_use = str_fallback_value
-            
-            if not chat_name_to_use:
-                logger.warning(f"Could not determine a non-empty chat_name for chat_id_obj: {chat_id_obj}")
-
-        processed_msg_list = []
-        if isinstance(msg_list, list):
-            for msg_obj in msg_list:
-                processed_msg_list.append(_sanitize_msg_obj_for_json(msg_obj))
-        else:
-            logger.warning(f"Expected a list of messages for chat '{chat_name_to_use}', got {type(msg_list)}")
-            
-        processed_list.append({
-            "chat_name": chat_name_to_use,
-            "messages": processed_msg_list
-        })
+        # 序列化消息
+        sanitized_msg = _sanitize_msg_obj_for_json(msg)
         
-    return processed_list
+        # 生成并添加hash
+        sender = msg.sender if hasattr(msg, 'sender') else ''
+        content = msg.content if hasattr(msg, 'content') else ''
+        timestamp = int(time.time() * 1000)
+        hash_string = f"{timestamp}-{sender}-{content}"
+        sanitized_msg['hash'] = hashlib.sha256(hash_string.encode('utf-8')).hexdigest()
+        
+        # 获取聊天信息
+        try:
+            chat_info = chat.ChatInfo()
+            chat_name = chat_info.get("chat_name", "Unknown")
+            chat_type = chat_info.get("chat_type", "unknown")
+        except Exception as e:
+            logger.warning(f"Failed to get chat info: {e}")
+            chat_name = str(chat)
+            chat_type = "unknown"
+        
+        # 构造要广播的消息
+        message_payload = {
+            "event_type": "wechat_messages",
+            "data": [{
+                "chat_name": chat_name,
+                "chat_type": chat_type,
+                "messages": [sanitized_msg]
+            }],
+            "timestamp": timestamp
+        }
+        
+        # 需要在事件循环中运行广播
+        if main_event_loop:
+            asyncio.run_coroutine_threadsafe(broadcast_to_websocket_clients(message_payload), main_event_loop)
+        else:
+            logger.error("Main event loop is not available. Cannot broadcast message.")
+        
+    except Exception as e:
+        logger.error(f"Error in message callback: {e}", exc_info=True)
 
 # --- 微信消息监听循环 ---
-async def wechat_listener_loop():
-    global wx_instance
-    if not wx_instance:
-        logger.error("WeChat instance not initialized. Listener loop cannot start.")
-        return
-
-    logger.info("Starting WeChat message listener loop...")
-    while True:
-        try:
-            raw_messages_dict_from_wx = wx_instance.GetListenMessage()
-            if raw_messages_dict_from_wx:
-                logger.info(f"Received message structure: {raw_messages_dict_from_wx}")
-                sanitized_dict_to_send = await _sanitize_raw_messages_dict_for_json(raw_messages_dict_from_wx)
-                
-                if sanitized_dict_to_send:
-                    logger.info("Broadcasting messages to WebSocket clients")
-                    await broadcast_to_websocket_clients({
-                        "event_type": "wechat_messages",
-                        "data": sanitized_dict_to_send,
-                        "timestamp": int(time.time() * 1000)
-                    })
-            
-            await asyncio.sleep(WECHAT_POLL_INTERVAL)
-
-        except Exception as e:
-            logger.error(f"Critical error in WeChat listener loop: {e}", exc_info=True)
-            if not wx_instance:
-                logger.critical("WeChat instance lost. Stopping listener loop.")
-                break
-            logger.info("Restarting WeChat listener loop after 5 seconds...")
-            await asyncio.sleep(5)
+# GetNextNewMessage 已被移除，不再需要此轮询
+# async def wechat_listener_loop(): ...
 
 # --- WebSocket 处理器 ---
 async def websocket_handler(websocket, path = None):
@@ -358,45 +333,27 @@ async def websocket_handler(websocket, path = None):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # 启动时执行
-    global wx_instance
+    global wx_instance, main_event_loop
+    
+    # 获取并保存主线程的事件循环,
+    main_event_loop = asyncio.get_running_loop()
+    
     try:
         logger.info("Attempting to initialize WeChat instance...")
         wx_instance = WeChat()
         logger.info("WeChat instance created successfully.")
-
-        # 添加初始监听者
-        initial_listeners = []
-        try:
-            my_name = wx_instance.A_MyIcon.Name
-            if my_name:
-                initial_listeners.append(my_name)
-                logger.info(f"Retrieved own WeChat name: '{my_name}'. Will listen to self for testing.")
-        except Exception as e:
-            logger.warning(f"Error retrieving own WeChat name: {e}")
-        
-        if "文件传输助手" not in initial_listeners:
-             initial_listeners.append("文件传输助手")
-
-        for listener_name in initial_listeners:
-            try:
-                logger.info(f"Adding initial listener for: '{listener_name}'")
-                wx_instance.AddListenChat(who=listener_name, savepic=True, savevoice=True, parse_links=True)
-            except Exception as e:
-                logger.error(f"Failed to add initial listener for '{listener_name}': {e}")
-        
-        # 启动消息监听任务
-        listener_task = asyncio.create_task(wechat_listener_loop())
-        logger.info("WeChat listener task started.")
         
         yield
         
         # 关闭时执行
-        if listener_task and not listener_task.done():
-            listener_task.cancel()
+        # 停止所有监听
+        if wx_instance:
             try:
-                await listener_task
-            except asyncio.CancelledError:
-                logger.info("WeChat listener task cancelled.")
+                wx_instance.StopListening(remove=True)
+                listening_chats.clear()
+                logger.info("All listeners stopped on shutdown.")
+            except Exception as e:
+                logger.error(f"Error stopping listeners on shutdown: {e}")
         
     except Exception as e:
         logger.critical(f"Fatal error during startup: {e}", exc_info=True)
@@ -414,6 +371,7 @@ async def send_text_message(request: SendTextMessageRequest):
     
     try:
         logger.info(f"Sending text message to '{request.to_who}': '{request.text_content[:50]}...'")
+        # 使用基本的SendMsg方法
         wx_instance.SendMsg(request.text_content, request.to_who)
         return APIResponse(success=True, message="Text message sent successfully")
     except Exception as e:
@@ -458,10 +416,7 @@ async def send_file_by_upload(
         # 发送文件
         wx_instance.SendFiles(temp_filepath, to_who)
         
-        return APIResponse(
-            success=True, 
-            message="Uploaded file sent successfully"
-        )
+        return APIResponse(success=True, message="Uploaded file sent successfully")
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -511,41 +466,87 @@ async def send_file_by_url(request: SendFileByUrlRequest):
 @app.post("/api/add_listen_chat", response_model=APIResponse)
 async def add_listen_chat(request: AddListenChatRequest):
     """添加消息监听"""
-    global wx_instance
+    global wx_instance, listening_chats
     if not wx_instance:
         raise HTTPException(status_code=503, detail="WeChat instance not ready")
     
     try:
-        logger.info(f"Adding listener for: '{request.who}'")
-        wx_instance.AddListenChat(
-            who=request.who, 
-            savepic=request.savepic, 
-            savevoice=request.savevoice, 
-            parse_links=request.parse_links
-        )
-        return APIResponse(success=True, message=f"Added listener for '{request.who}'")
+        logger.info(f"Adding listener for: '{request.nickname}'")
+        
+        # 使用普通版API添加监听
+        result = wx_instance.AddListenChat(request.nickname, message_callback)
+        
+        # 记录监听状态
+        listening_chats[request.nickname] = result if result else True
+        logger.info(f"Successfully added listener for '{request.nickname}'")
+        
+        return APIResponse(success=True, message=f"Added listener for '{request.nickname}'")
+        
     except Exception as e:
         logger.error(f"Error adding listener: {e}")
         raise HTTPException(status_code=500, detail=f"Error adding listener: {str(e)}")
 
-@app.get("/api/get_robot_name", response_model=APIResponse)
-async def get_robot_name():
-    """获取机器人名称"""
+@app.post("/api/remove_listen_chat", response_model=APIResponse)
+async def remove_listen_chat(request: RemoveListenChatRequest):
+    """移除消息监听"""
+    global wx_instance, listening_chats
+    if not wx_instance:
+        raise HTTPException(status_code=503, detail="WeChat instance not ready")
+    
+    try:
+        logger.info(f"Removing listener for: '{request.nickname}'")
+        
+        # 使用普通版API移除监听
+        wx_instance.RemoveListenChat(nickname=request.nickname)
+        
+        # 从本地记录中移除
+        if request.nickname in listening_chats:
+            del listening_chats[request.nickname]
+        
+        return APIResponse(success=True, message=f"Removed listener for '{request.nickname}'")
+        
+    except Exception as e:
+        logger.error(f"Error removing listener: {e}")
+        raise HTTPException(status_code=500, detail=f"Error removing listener: {str(e)}")
+
+@app.post("/api/start_listening", response_model=APIResponse)
+async def start_listening():
+    """开始消息监听"""
     global wx_instance
     if not wx_instance:
         raise HTTPException(status_code=503, detail="WeChat instance not ready")
     
     try:
-        robot_name = wx_instance.A_MyIcon.Name
-        logger.info(f"Retrieved robot name: '{robot_name}'")
-        return APIResponse(
-            success=True, 
-            message="Robot name retrieved", 
-            data={"robot_name": robot_name}
-        )
+        logger.info("Starting listener")
+        
+        # 使用普通版API开始监听
+        wx_instance.StartListening()
+        
+        return APIResponse(success=True, message="Listener started")
+        
     except Exception as e:
-        logger.error(f"Error getting robot name: {e}")
-        raise HTTPException(status_code=500, detail=f"Error getting robot name: {str(e)}")
+        logger.error(f"Error starting listener: {e}")
+        raise HTTPException(status_code=500, detail=f"Error starting listener: {str(e)}")
+
+@app.post("/api/stop_all_listening", response_model=APIResponse)
+async def stop_all_listening():
+    """停止所有监听"""
+    global wx_instance, listening_chats
+    if not wx_instance:
+        raise HTTPException(status_code=503, detail="WeChat instance not ready")
+    
+    try:
+        logger.info("Stopping all listeners")
+        
+        # 使用普通版API停止所有监听
+        wx_instance.StopListening(remove=True)
+        listening_chats.clear()
+        
+        return APIResponse(success=True, message="All listeners stopped")
+        
+    except Exception as e:
+        logger.error(f"Error stopping all listeners: {e}")
+        raise HTTPException(status_code=500, detail=f"Error stopping all listeners: {str(e)}")
 
 @app.post("/api/chat_with", response_model=APIResponse)
 async def chat_with(request: ChatWithRequest):
@@ -562,29 +563,15 @@ async def chat_with(request: ChatWithRequest):
         logger.error(f"Error switching chat: {e}")
         raise HTTPException(status_code=500, detail=f"Error switching chat: {str(e)}")
 
-@app.post("/api/voice_call", response_model=APIResponse)
-async def voice_call(request: VoiceCallRequest):
-    """发起语音通话"""
-    global wx_instance
-    if not wx_instance:
-        raise HTTPException(status_code=503, detail="WeChat instance not ready")
-    
-    try:
-        logger.info(f"Initiating voice call with: '{request.user_id}'")
-        wx_instance.VoiceCall(request.user_id)
-        return APIResponse(success=True, message=f"Initiated voice call with '{request.user_id}'")
-    except Exception as e:
-        logger.error(f"Error initiating voice call: {e}")
-        raise HTTPException(status_code=500, detail=f"Error initiating voice call: {str(e)}")
-
 @app.get("/api/health")
 async def health_check():
     """健康检查"""
-    global wx_instance
+    global wx_instance, listening_chats
     return {
         "status": "healthy" if wx_instance else "unhealthy",
         "wechat_ready": wx_instance is not None,
-        "sse_clients": len(sse_clients),
+        "websocket_clients": len(websocket_clients),
+        "listening_chats": list(listening_chats.keys()),
         "temp_dir": TEMP_DIR,
         "max_file_size": f"{MAX_FILE_SIZE / 1024 / 1024:.1f}MB"
     }
@@ -594,9 +581,6 @@ async def start_websocket_server():
     """启动WebSocket服务器"""
     logger.info(f"Starting WebSocket server on ws://{WEBSOCKET_HOST}:{WEBSOCKET_PORT}")
     
-    # 启动消息监听循环
-    listener_task = asyncio.create_task(wechat_listener_loop())
-    
     # 启动WebSocket服务器
     async with websockets.serve(websocket_handler, WEBSOCKET_HOST, WEBSOCKET_PORT):
         logger.info("WebSocket server is running...")
@@ -604,12 +588,6 @@ async def start_websocket_server():
             await asyncio.Future()  # 保持运行
         except asyncio.CancelledError:
             pass
-        finally:
-            listener_task.cancel()
-            try:
-                await listener_task
-            except asyncio.CancelledError:
-                logger.info("WeChat listener task cancelled")
 
 def run_websocket_server():
     """在单独线程中运行WebSocket服务器"""

@@ -20,6 +20,10 @@ spring:
             initialize-schema: always
       client:
         enabled: false
+  jpa:
+    hibernate:
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
   datasource:
     url: jdbc:postgresql://192.168.31.66:5437/postgres
     username: admin
@@ -37,3 +41,4 @@ chatbot:
     init:
       enabled: true  # 是否启用数据库初始化检查
       force-recreate: false  # 是否强制重新创建表（慎用）
+  robot-name: hcuu

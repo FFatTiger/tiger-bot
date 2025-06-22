@@ -1,6 +1,0 @@
-fastapi
-uvicorn[standard]
-websockets
-requests
-pydantic
-Mwxauto

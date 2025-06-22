@@ -11,7 +11,7 @@ import org.pf4j.PluginWrapper;
 import org.springframework.stereotype.Service;
 
 import com.fffattiger.wechatbot.domain.plugin.Plugin;
-import com.fffattiger.wechatbot.domain.plugin.PluginLoaderService;
+import com.fffattiger.wechatbot.infrastructure.plugin.PluginLoaderService;
 import com.fffattiger.wechatbot.domain.plugin.repository.PluginRepository;
 import com.fffattiger.wechatbot.domain.shared.valueobject.PluginStatus;
 

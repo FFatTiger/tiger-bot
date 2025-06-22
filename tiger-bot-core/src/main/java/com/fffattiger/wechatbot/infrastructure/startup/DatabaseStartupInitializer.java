@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Order(1) // 确保在其他组件之前执行
 @Component
-public class DatabaseStartupInitializer implements OrderedInitializer {
+public class DatabaseStartupInitializer implements Initializer.OrderedInitializer {
 
     private final JdbcTemplate jdbcTemplate;
     private final ResourceLoader resourceLoader;

@@ -66,7 +66,11 @@ CREATE TABLE IF NOT EXISTS chats (
                                      group_flag BOOLEAN DEFAULT FALSE,
                                      ai_provider_id BIGINT NOT NULL,
                                      ai_model_id BIGINT NOT NULL,
-                                     ai_role_id BIGINT NOT NULL
+                                     ai_role_id BIGINT NOT NULL,
+                                     enable BOOLEAN DEFAULT TRUE,
+                                     at_reply_enable BOOLEAN DEFAULT FALSE,
+                                     keyword_reply_enable BOOLEAN DEFAULT FALSE,
+                                     keyword_reply TEXT
 );
 
 COMMENT ON TABLE chats IS '聊天对象表';
@@ -76,6 +80,13 @@ COMMENT ON COLUMN chats.group_flag IS '是否为群聊';
 COMMENT ON COLUMN chats.ai_provider_id IS 'AI供应商ID';
 COMMENT ON COLUMN chats.ai_model_id IS 'AI模型ID';
 COMMENT ON COLUMN chats.ai_role_id IS 'AI角色ID';
+COMMENT ON COLUMN chats.enable IS '是否开启监听';
+COMMENT ON COLUMN chats.at_reply_enable IS '是否开启@回复';
+COMMENT ON COLUMN chats.keyword_reply_enable IS '是否开启关键词回复';
+COMMENT ON COLUMN chats.keyword_reply IS '关键词回复，逗号分隔';
+
+-- 聊天-关键词表
+DROP TABLE IF EXISTS chatgroup_keywords;
 
 -- 命令表
 CREATE TABLE IF NOT EXISTS commands (
@@ -108,63 +119,56 @@ COMMENT ON COLUMN users.username IS '用户名';
 COMMENT ON COLUMN users.remark IS '用户备注';
 
 -- 聊天-命令-用户权限表
-CREATE TABLE IF NOT EXISTS chat_command_auths (
-                                                  id BIGSERIAL PRIMARY KEY,
-                                                  chat_id BIGINT NOT NULL,
-                                                  command_id BIGINT NOT NULL,
-                                                  user_id BIGINT NOT NULL
+DROP TABLE IF EXISTS chat_command_auths;
+
+-- 权限表
+CREATE TABLE IF NOT EXISTS permissions (
+    id BIGSERIAL PRIMARY KEY,
+    type VARCHAR(255) NOT NULL,
+    resource_id VARCHAR(255),
+    subject_id VARCHAR(255),
+    context_id VARCHAR(255) NOT NULL,
+    granted BOOLEAN NOT NULL DEFAULT TRUE,
+    expires_at TIMESTAMP
 );
 
-COMMENT ON TABLE chat_command_auths IS '聊天-命令-用户权限表';
-COMMENT ON COLUMN chat_command_auths.id IS '主键';
-COMMENT ON COLUMN chat_command_auths.chat_id IS '聊天对象ID';
-COMMENT ON COLUMN chat_command_auths.command_id IS '命令ID';
-COMMENT ON COLUMN chat_command_auths.user_id IS '用户ID，允许为null表示所有人可用';
-
--- 监听列表表
-CREATE TABLE IF NOT EXISTS listeners (
-                                         id BIGSERIAL PRIMARY KEY,
-                                         chat_id BIGINT NOT NULL,
-                                         at_reply_enable BOOLEAN DEFAULT FALSE,
-                                         keyword_reply_enable BOOLEAN DEFAULT FALSE,
-                                         save_pic BOOLEAN DEFAULT FALSE,
-                                         save_voice BOOLEAN DEFAULT FALSE,
-                                         parse_links BOOLEAN DEFAULT FALSE,
-                                         keyword_reply VARCHAR(255)
-);
-
-COMMENT ON TABLE listeners IS '监听列表表';
-COMMENT ON COLUMN listeners.id IS '主键，监听ID';
-COMMENT ON COLUMN listeners.chat_id IS '监听的对象id';
-COMMENT ON COLUMN listeners.at_reply_enable IS '是否开启@回复';
-COMMENT ON COLUMN listeners.keyword_reply_enable IS '是否开启关键词回复';
-COMMENT ON COLUMN listeners.save_pic IS '是否保存图片';
-COMMENT ON COLUMN listeners.save_voice IS '是否保存语音';
-COMMENT ON COLUMN listeners.parse_links IS '是否解析链接';
-COMMENT ON COLUMN listeners.keyword_reply IS '关键词回复，逗号分隔';
-
+COMMENT ON TABLE permissions IS '权限表';
+COMMENT ON COLUMN permissions.id IS '主键';
+COMMENT ON COLUMN permissions.type IS '权限类型';
+COMMENT ON COLUMN permissions.resource_id IS '资源ID';
+COMMENT ON COLUMN permissions.subject_id IS '主体ID';
+COMMENT ON COLUMN permissions.context_id IS '上下文ID';
+COMMENT ON COLUMN permissions.granted IS '是否授权';
+COMMENT ON COLUMN permissions.expires_at IS '过期时间';
 
 -- 消息表
 CREATE TABLE IF NOT EXISTS messages (
                                         id BIGSERIAL PRIMARY KEY,
                                         chat_id BIGINT NOT NULL,
                                         type VARCHAR(128) NOT NULL,
+                                        attr VARCHAR(128) NOT NULL,
                                         content TEXT NOT NULL,
                                         sender VARCHAR(128) NOT NULL,
                                         time TIMESTAMP NOT NULL,
-                                        info TEXT NOT NULL,
-                                        sender_remark VARCHAR(255)
+                                        hash VARCHAR(128) NOT NULL,
+                                        status VARCHAR(50) NOT NULL,
+                                        bot_message BOOLEAN NOT NULL DEFAULT FALSE,
+                                        info TEXT
 );
 
-COMMENT ON TABLE messages IS '消息表'; 
+COMMENT ON TABLE messages IS '消息表';
 COMMENT ON COLUMN messages.id IS '主键，消息ID';
 COMMENT ON COLUMN messages.chat_id IS '聊天对象ID';
-COMMENT ON COLUMN messages.type IS '消息类型';
+COMMENT ON COLUMN messages.type IS '消息类型（text、image、video等）';
+COMMENT ON COLUMN messages.attr IS '消息来源属性（friend、self、system等）';
 COMMENT ON COLUMN messages.content IS '消息内容';
 COMMENT ON COLUMN messages.sender IS '发送者';
 COMMENT ON COLUMN messages.time IS '消息时间';
+COMMENT ON COLUMN messages.hash IS '消息hash值';
+COMMENT ON COLUMN messages.status IS '消息状态';
+COMMENT ON COLUMN messages.bot_message IS '是否为机器人消息';
 COMMENT ON COLUMN messages.info IS '消息信息';
-COMMENT ON COLUMN messages.sender_remark IS '发送者备注';
+
 
 -- 插件表
 CREATE TABLE IF NOT EXISTS plugins (

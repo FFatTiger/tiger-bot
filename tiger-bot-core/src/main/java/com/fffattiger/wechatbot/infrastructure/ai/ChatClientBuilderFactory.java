@@ -13,6 +13,7 @@ import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
 import com.fffattiger.wechatbot.domain.ai.AiModel;
@@ -24,28 +25,28 @@ public class ChatClientBuilderFactory {
     public static ChatClient.Builder builder(AiProvider aiProvider, AiModel aiModel, AiRole aiRole,
             Map<String, Object> params, ObjectProvider<RestClient.Builder> restClientBuilderProvider) {
         ChatModel chatModel = null;
-        if (aiProvider.providerType()
+        if (aiProvider.getProviderType()
                 .equals(org.springframework.ai.observation.conventions.AiProvider.DEEPSEEK.value())) {
             chatModel = buildDeepSeekModel(aiProvider, aiModel, restClientBuilderProvider);
-        } else if (aiProvider.providerType()
+        } else if (aiProvider.getProviderType()
                 .equals(org.springframework.ai.observation.conventions.AiProvider.OPENAI.value())) {
             chatModel = builderOpenAiModel(aiProvider, aiModel, restClientBuilderProvider);
         } else {
-            throw new IllegalArgumentException("Invalid provider type: " + aiProvider.providerType());
+            throw new IllegalArgumentException("Invalid provider type: " + aiProvider.getProviderType());
         }
 
         ChatClient.Builder builder = ChatClient.builder(chatModel);
 
-        if (aiRole != null) {
-            switch (MessageType.fromValue(aiRole.promptType())) {
+        if (aiRole != null && StringUtils.hasLength(aiRole.getPromptType()) && StringUtils.hasLength(aiRole.getPromptContent())) {
+            switch (MessageType.fromValue(aiRole.getPromptType())) {
                 case SYSTEM:
-                    builder.defaultSystem(t -> t.text(aiRole.promptContent()).params(params));
+                    builder.defaultSystem(t -> t.text(aiRole.getPromptContent()).params(params));
                     break;
                 case USER:
-                    builder.defaultUser(t -> t.text(aiRole.promptContent()).params(params));
+                    builder.defaultUser(t -> t.text(aiRole.getPromptContent()).params(params));
                     break;
                 default:
-                    throw new IllegalArgumentException("Invalid prompt type: " + aiRole.promptType());
+                    throw new IllegalArgumentException("Invalid prompt type: " + aiRole.getPromptType());
             }
         }
 
@@ -56,12 +57,12 @@ public class ChatClientBuilderFactory {
             ObjectProvider<RestClient.Builder> restClientBuilderProvider) {
         ChatModel chatModel;
         // 处理baseUrl和completionPath
-        String baseUrl = aiProvider.baseUrl();
+        String baseUrl = aiProvider.getBaseUrl();
         String completionPath = extractCompletionPath(baseUrl);
         OpenAiApi.Builder openAiApiBuilder = OpenAiApi.builder()
                 .restClientBuilder(restClientBuilderProvider.getIfAvailable(RestClient::builder))
-                .baseUrl(aiProvider.baseUrl())
-                .apiKey(aiProvider.apiKey());
+                .baseUrl(aiProvider.getBaseUrl())
+                .apiKey(aiProvider.getApiKey());
         if (completionPath != null) {
             openAiApiBuilder.baseUrl(baseUrl.replace(completionPath, ""));
             openAiApiBuilder.completionsPath(completionPath);
@@ -69,10 +70,10 @@ public class ChatClientBuilderFactory {
         OpenAiApi openAiApi = openAiApiBuilder.build();
 
         OpenAiChatOptions.Builder optionsBuilder = OpenAiChatOptions.builder()
-                .model(aiModel.modelName());
+                .model(aiModel.getModelName());
 
         // 应用动态参数配置
-        optionsBuilder = ReflectionParameterConfigurer.configureParameters(optionsBuilder, aiModel.params());
+        optionsBuilder = ReflectionParameterConfigurer.configureParameters(optionsBuilder, aiModel.getParams());
 
         chatModel = OpenAiChatModel.builder().openAiApi(openAiApi)
                 .defaultOptions(optionsBuilder.build())
@@ -85,14 +86,14 @@ public class ChatClientBuilderFactory {
         ChatModel chatModel;
         DeepSeekApi deepSeekApi = DeepSeekApi.builder()
                 .restClientBuilder(restClientBuilderProvider.getIfAvailable(RestClient::builder))
-                .apiKey(aiProvider.apiKey()).build();
+                .apiKey(aiProvider.getApiKey()).build();
 
         // 使用通用反射工具动态配置参数
         DeepSeekChatOptions.Builder optionsBuilder = DeepSeekChatOptions.builder()
-                .model(aiModel.modelName());
+                .model(aiModel.getModelName());
 
         // 应用动态参数配置
-        optionsBuilder = ReflectionParameterConfigurer.configureParameters(optionsBuilder, aiModel.params());
+        optionsBuilder = ReflectionParameterConfigurer.configureParameters(optionsBuilder, aiModel.getParams());
 
         chatModel = DeepSeekChatModel.builder().deepSeekApi(deepSeekApi)
                 .defaultOptions(optionsBuilder.build())

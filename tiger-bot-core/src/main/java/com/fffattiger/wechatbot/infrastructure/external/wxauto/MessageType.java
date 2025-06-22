@@ -4,12 +4,54 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum MessageType {
-    SYS("sys"),
-    TIME("time"),
-    RECALL("recall"),
-    FRIEND("friend"),
-    SELF("self"),
-    UNKNOWN("unknown"); // 兼容未来扩展
+    /**
+     * 文本消息
+     */
+    TEXT("text"),
+    /**
+     * 引用消息
+     */ 
+    QUOTE("quote"),
+    /**
+     * 语音消息
+     */
+    VOICE("voice"),
+    /**
+     * 图片消息
+     */
+    IMAGE("image"),
+    /**
+     * 视频消息
+     */
+    VIDEO("video"),
+    /**
+     * 文件消息
+     */
+    FILE("file"),
+    /**
+     * 链接消息
+     */
+    LINK("link"),
+    /**
+     * 表情消息
+     */
+    EMOTION("emotion"),
+    /**
+     * 合并转发消息
+     */
+    MERGE("merge"),
+    /**
+     * 个人名片消息
+     */
+    PERSONAL_CARD("personal_card"),
+    /**
+     * 笔记消息
+     */
+    NOTE("note"),
+    /**
+     * 其他消息
+     */
+    OTHER("other");
 
     private final String value;
 
@@ -29,6 +71,6 @@ public enum MessageType {
                 return t;
             }
         }
-        return UNKNOWN;
+        return OTHER;
     }
 } 

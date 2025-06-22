@@ -1,21 +1,34 @@
 package com.fffattiger.wechatbot.domain.chat;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Embedded;
-import org.springframework.data.relational.core.mapping.Table;
+import java.util.List;
 
+import com.fffattiger.wechatbot.domain.chat.event.MessageReceivedEvent;
+import com.fffattiger.wechatbot.domain.common.AggregateRoot;
 import com.fffattiger.wechatbot.domain.shared.valueobject.AiSpecification;
 
-import lombok.Data;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import lombok.ToString;
 
-@Table("chats")
-@Data
-public class Chat {
-    @Id
-    private Long id;
-
+/**
+ * 聊天群组聚合根
+ */
+@Entity
+@Table(name = "chats")
+@Getter
+@ToString(callSuper = true)
+@Slf4j
+public class Chat extends AggregateRoot {
+    
     /**
-     * 聊天的名称，群名或者私聊名
+     * 聊天群组的名称，群名或者私聊名
      */
     private String name;
 
@@ -27,49 +40,46 @@ public class Chat {
     /**
      * AI配置
      */
-    @Embedded.Empty
+    @Embedded
     private AiSpecification aiSpecification;
+    
+    /**
+     * 监听器配置
+     */
+    @Embedded
+    private ListenerConfiguration listener;
+    
 
     // 构造函数
-    public Chat() {}
+    protected Chat() {}
 
-    public Chat(Long id, String name, boolean groupFlag, AiSpecification aiSpecification) {
-        this.id = id;
+    public Chat(String name, boolean groupFlag, AiSpecification aiSpecification, ListenerConfiguration listenerConfig) {
         this.name = name;
         this.groupFlag = groupFlag;
         this.aiSpecification = aiSpecification;
+        this.listener = listenerConfig != null ? listenerConfig : ListenerConfiguration.defaultConfig();
     }
-
-    // 业务方法
-    public boolean canReceiveMessage() {
-        return name != null && !name.trim().isEmpty();
+    /**
+     * 是否监听
+     * @return
+     */
+    public boolean isListened() {
+        return this.listener != null && this.listener.enable();
     }
-
-    public boolean isGroupChat() {
-        return groupFlag;
-    }
-
-    public boolean hasAiConfiguration() {
-        return aiSpecification != null &&
-               aiSpecification.aiProviderId() != null &&
-               aiSpecification.aiModelId() != null &&
-               aiSpecification.aiRoleId() != null;
-    }
-
-    public void updateAiConfiguration(AiSpecification newSpecification) {
-        if (newSpecification == null) {
-            throw new IllegalArgumentException("AI配置不能为空");
+    
+    /**
+     * 接受消息
+     * @param message
+     * @return
+     */
+    public boolean receiveMessage(Message message, String botName) {
+        if (!this.isListened()) {
+            return false;
         }
-        if (newSpecification.aiProviderId() == null ||
-            newSpecification.aiModelId() == null ||
-            newSpecification.aiRoleId() == null) {
-            throw new IllegalArgumentException("AI配置信息不完整");
-        }
-        this.aiSpecification = newSpecification;
+
+        return this.listener.shouldProcessMessage(message.getContent(), botName, this.groupFlag);
     }
 
-    public boolean containsMember(String memberName) {
-        // 简单的成员检查逻辑，实际可能需要更复杂的实现
-        return memberName != null && !memberName.trim().isEmpty();
-    }
+    
 }
+ 

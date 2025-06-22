@@ -1,12 +1,17 @@
 package com.fffattiger.wechatbot.domain.user;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
+import com.fffattiger.wechatbot.domain.common.AggregateRoot;
 
-@Table("users")
-public class User {
-    @Id
-    private Long id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+
+@Entity
+@Table(name = "users")
+@Getter
+@Setter
+public class User extends AggregateRoot {
 
     /**
      * 用户名
@@ -19,10 +24,9 @@ public class User {
     private String remark;
 
     // 构造函数
-    public User() {}
+    protected User() {}
 
-    public User(Long id, String username, String remark) {
-        this.id = id;
+    public User(String username, String remark) {
         this.username = username;
         this.remark = remark;
     }
@@ -42,31 +46,5 @@ public class User {
             return remark;
         }
         return username;
-    }
-
-    // Getters
-    public Long getId() {
-        return id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getRemark() {
-        return remark;
-    }
-
-    // Setters (仅用于框架)
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setRemark(String remark) {
-        this.remark = remark;
     }
 }

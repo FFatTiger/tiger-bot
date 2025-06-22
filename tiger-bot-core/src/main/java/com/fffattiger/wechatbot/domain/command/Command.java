@@ -1,16 +1,20 @@
 package com.fffattiger.wechatbot.domain.command;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Embedded;
-import org.springframework.data.relational.core.mapping.Table;
 import org.springframework.util.AntPathMatcher;
 
+import com.fffattiger.wechatbot.domain.common.AggregateRoot;
 import com.fffattiger.wechatbot.domain.shared.valueobject.AiSpecification;
 
-@Table("commands")
-public class Command {
-    @Id
-    private Long id;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import lombok.Getter;
+
+@Entity
+@Table(name = "commands")
+@Getter
+public class Command extends AggregateRoot {
 
     /**
      * 命令的正则或名称
@@ -25,70 +29,36 @@ public class Command {
     /**
      * AI配置
      */
-    @Embedded.Empty
+    @Embedded
     private AiSpecification aiSpecification;
 
+    /**
+     * 命令参数
+     */
+    @Transient
+    private CommandArgs commandArgs;
+
     // 构造函数
-    public Command() {}
+    protected Command() {}
 
-    public Command(Long id, String pattern, String description, AiSpecification aiSpecification) {
-        this.id = id;
+    public Command(String pattern, String description, AiSpecification aiSpecification) {
         this.pattern = pattern;
         this.description = description;
         this.aiSpecification = aiSpecification;
+        
     }
 
-    // 业务方法
-    public boolean matches(String input) {
-        if (pattern == null || input == null) {
-            return false;
+
+    public CommandArgs extractCommandArgs(String commandWithArgs, String commandPrefix) {
+        if (!commandWithArgs.startsWith(commandPrefix)) {
+            return null;
         }
-        return new AntPathMatcher().match(pattern, input);
-    }
 
-    public boolean requiresAiConfiguration() {
-        return aiSpecification != null &&
-               aiSpecification.aiProviderId() != null &&
-               aiSpecification.aiModelId() != null &&
-               aiSpecification.aiRoleId() != null;
-    }
+        String[] command = commandWithArgs.split(" ");
+        String cleanCommand = command[0].replace(commandPrefix, "");
 
-    public boolean isValidCommand() {
-        return pattern != null && !pattern.trim().isEmpty() &&
-               description != null && !description.trim().isEmpty();
-    }
-
-    // Getters
-    public Long getId() {
-        return id;
-    }
-
-    public String getPattern() {
-        return pattern;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public AiSpecification getAiSpecification() {
-        return aiSpecification;
-    }
-
-    // Setters (仅用于框架)
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public void setPattern(String pattern) {
-        this.pattern = pattern;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public void setAiSpecification(AiSpecification aiSpecification) {
-        this.aiSpecification = aiSpecification;
+        String[] args = new String[command.length - 1];
+        System.arraycopy(command, 1, args, 0, command.length - 1);
+        return new CommandArgs(cleanCommand, args);        
     }
 }

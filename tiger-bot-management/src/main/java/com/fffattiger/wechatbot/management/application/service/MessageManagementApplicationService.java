@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import com.fffattiger.wechatbot.application.service.ChatApplicationService;
 import com.fffattiger.wechatbot.application.service.MessageApplicationService;
 import com.fffattiger.wechatbot.domain.chat.Chat;
-import com.fffattiger.wechatbot.domain.message.Message;
+import com.fffattiger.wechatbot.domain.chat.Message;
 import com.fffattiger.wechatbot.management.application.dto.MessageRecordDto;
 
 import lombok.extern.slf4j.Slf4j;
