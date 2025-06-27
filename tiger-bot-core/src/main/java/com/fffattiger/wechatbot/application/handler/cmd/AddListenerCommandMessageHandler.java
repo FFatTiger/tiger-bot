@@ -1,57 +1,44 @@
 package com.fffattiger.wechatbot.application.handler.cmd;
-// package com.fffattiger.wechatbot.core.handler.cmd;
+import org.springframework.stereotype.Service;
 
-// import org.springframework.stereotype.Service;
+import com.fffattiger.wechatbot.api.CommandMessageHandlerExtension;
+import com.fffattiger.wechatbot.api.context.MessageHandlerContext;
+import com.fffattiger.wechatbot.application.service.ChatApplicationService;
+import com.fffattiger.wechatbot.domain.chat.Chat;
 
-// import com.fffattiger.wechatbot.properties.WxChatConfig;
-// import com.fffattiger.wechatbot.repository.ListenerRepository;
-// import com.fffattiger.wechatbot.core.WxChat;
-// import com.fffattiger.wechatbot.core.holder.WxChatHolder;
-// import com.fffattiger.wechatbot.entity.ChatEntity;
-// import com.fffattiger.wechatbot.wxauto.MessageHandlerContext;
+import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 
-// import jakarta.annotation.Resource;
 
-// @Service
-// public class AddListenerCommandMessageHandler extends AbstractCommandMessageHandler {
+@Service
+@Slf4j
+public class AddListenerCommandMessageHandler implements CommandMessageHandlerExtension {
 
-//     @Resource
-//     private ListenerRepository listenerRepository;
+    @Resource
+    private ChatApplicationService chatApplicationService;
 
-//     @Override
-//     public boolean canHandle(String command) {
-//         return command.startsWith("/增加监听") || command.startsWith("/addlistener") ;
-//     }
+    @Override
+    public String getCommandName() {
+        return "增加监听";
+    }
 
-//     @Override
-//     public void doHandle(String command, String[] args, MessageHandlerContext context) {
-//         if (args.length < 1) {
-//             context.wx().sendText(context.currentChat().chat().name(), "命令格式错误，请参考帮助");
-//             return;
-//         }
-//         String chatName = args[0];
-//         boolean savePic = false;
-//         boolean saveVoice = false;
-//         boolean parseLinks = false;
-//         if (args.length > 1) {
-//             savePic = Boolean.parseBoolean(args[1]);
-//         }
-//         if (args.length > 2) {
-//             saveVoice = Boolean.parseBoolean(args[2]);
-//         }
-//         if (args.length > 3) {
-//             parseLinks = Boolean.parseBoolean(args[3]);
-//         }
+    @Override
+    public void doHandle(String command, String[] args, MessageHandlerContext context) {
+        Long chatId = context.getMessage().getChatId();
 
-//         ChatEntity chatEntity = new ChatEntity(null, chatName, true);
-//         ListenerEntity listenerEntity = new ListenerEntity(null, chatEntity, null, true, true, savePic, saveVoice, parseLinks, null);
-//         context.wx().addListenChat(chatName, savePic, saveVoice, parseLinks);
-//         context.wx().sendText(context.currentChat().getChatName(), "增加监听成功");
-//     }
+        try {
+            chatApplicationService.startListening(chatId);
+            Chat chat = chatApplicationService.findById(chatId);
+            log.info("Chat [{}] is now being listened to.", chat.getName());
+            context.replyText("✅ 已开始监听当前会话。");
+        } catch (Exception e) {
+            log.error("Failed to start listening to chat [{}]: {}", chatId, e.getMessage(), e);
+            context.replyText("❌ 开始监听失败：" + e.getMessage());
+        }
+    }
 
-//     @Override
-//     public String description() {
-//         return "/增加监听 chatName 增加监听";
-//     }
-    
-// }
+    @Override
+    public String getDescription() {
+        return "/增加监听 <监听对象> - 增加监听对象";
+    }
+}

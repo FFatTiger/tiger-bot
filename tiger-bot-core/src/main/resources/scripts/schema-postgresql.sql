@@ -93,6 +93,10 @@ CREATE TABLE IF NOT EXISTS commands (
                                         id BIGSERIAL PRIMARY KEY,
                                         pattern VARCHAR(128) NOT NULL,
                                         description VARCHAR(255),
+                                        enabled BOOLEAN DEFAULT TRUE,
+                                        source_type VARCHAR(128) NOT NULL,
+                                        source_id VARCHAR(128) NULL,
+                                        source_name VARCHAR(128) NULL,
                                         ai_provider_id BIGINT NULL,
                                         ai_model_id BIGINT NULL,
                                         ai_role_id BIGINT NULL
@@ -102,6 +106,10 @@ COMMENT ON TABLE commands IS '命令表';
 COMMENT ON COLUMN commands.id IS '主键，命令ID';
 COMMENT ON COLUMN commands.pattern IS '命令的正则或名称';
 COMMENT ON COLUMN commands.description IS '命令描述';
+COMMENT ON COLUMN commands.enabled IS '是否启用';
+COMMENT ON COLUMN commands.source_type IS '命令来源类型 (SYSTEM, PLUGIN)';
+COMMENT ON COLUMN commands.source_id IS '命令来源ID';
+COMMENT ON COLUMN commands.source_name IS '命令来源名称';
 COMMENT ON COLUMN commands.ai_provider_id IS 'AI供应商ID';
 COMMENT ON COLUMN commands.ai_model_id IS 'AI模型ID';
 COMMENT ON COLUMN commands.ai_role_id IS 'AI角色ID';

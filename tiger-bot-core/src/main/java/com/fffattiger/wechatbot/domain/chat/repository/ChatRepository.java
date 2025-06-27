@@ -16,7 +16,7 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
      * 获取所有监听的聊天
      * @return
      */
-    List<Chat> findAllByListenerIsNotNull();
+    List<Chat> findByListenerEnableIsTrue();
 
     /**
      * 根据名称获取聊天

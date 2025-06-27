@@ -98,4 +98,58 @@ public class ChatBotProperties {
      * 聊天记忆文件最大数量
      */
     private int chatMemoryFileMaxCount = 100;
+
+
+     /**
+     * HTTP代理配置
+     */
+    private Proxy proxy = new Proxy();
+    
+    /**
+     * HTTP代理配置内部类
+     */
+    @Data
+    public static class Proxy {
+        /**
+         * 是否启用代理
+         */
+        private boolean enabled = false;
+        
+        /**
+         * 代理主机地址
+         */
+        private String host;
+        
+        /**
+         * 代理端口
+         */
+        private int port = 8080;
+        
+        /**
+         * 代理用户名（可选）
+         */
+        private String username;
+        
+        /**
+         * 代理密码（可选）
+         */
+        private String password;
+        
+        /**
+         * 代理类型（HTTP/SOCKS）
+         */
+        private ProxyType type = ProxyType.HTTP;
+
+        /**
+         * 不使用代理的主机列表，逗号分隔.
+         */
+        private String noProxy;
+    }
+    
+    /**
+     * 代理类型枚举
+     */
+    public enum ProxyType {
+        HTTP, SOCKS
+    }
 }

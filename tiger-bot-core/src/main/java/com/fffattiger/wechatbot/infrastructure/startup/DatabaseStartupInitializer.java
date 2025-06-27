@@ -36,7 +36,7 @@ public class DatabaseStartupInitializer implements Initializer.OrderedInitialize
      */
     private static final List<String> REQUIRED_TABLES = Arrays.asList(
         "ai_providers", "ai_models", "ai_roles", "chats", 
-        "commands", "users", "chat_command_auths", "listeners", "messages", "plugins"
+        "commands", "users", "messages", "plugins"
     );
     
 

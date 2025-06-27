@@ -23,7 +23,6 @@ public class WxAutoConnectedListener implements ApplicationListener<WxAutoConnec
 
         chatApplicationService.findAllListened().forEach(chat -> {
             try {
-                // 使用新的API，只需要nickname参数，其他参数由服务端自动处理
                 var result = event.getWxAuto().addListenChat(chat.getName());
                 if (result.success()) {
                     log.info("成功添加监听: {}", chat.getName());

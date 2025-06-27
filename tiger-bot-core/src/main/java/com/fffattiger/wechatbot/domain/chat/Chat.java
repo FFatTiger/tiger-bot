@@ -72,7 +72,7 @@ public class Chat extends AggregateRoot {
      * @param message
      * @return
      */
-    public boolean receiveMessage(Message message, String botName) {
+    public boolean receiveMessage(ChatMessage message, String botName) {
         if (!this.isListened()) {
             return false;
         }
@@ -80,6 +80,29 @@ public class Chat extends AggregateRoot {
         return this.listener.shouldProcessMessage(message.getContent(), botName, this.groupFlag);
     }
 
-    
+    public void changeAiRole(Long newRoleId) {
+        if (newRoleId == null) {
+            throw new IllegalArgumentException("New Role ID cannot be null.");
+        }
+        // 创建新的 AiSpecification, 保留旧的 provider 和 model
+        this.aiSpecification = new AiSpecification(
+            this.aiSpecification.aiProviderId(),
+            this.aiSpecification.aiModelId(),
+            newRoleId
+        );
+    }
+
+    public void startListening() {
+        if (this.listener == null) {
+            this.listener = ListenerConfiguration.defaultConfig();
+        } else {
+            this.listener = new ListenerConfiguration(
+                true,
+                this.listener.atReplyEnable(),
+                this.listener.keywordReplyEnable(),
+                this.listener.keywordReply()
+            );
+        }
+    }
 }
  

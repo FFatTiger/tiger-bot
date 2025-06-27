@@ -1,13 +1,15 @@
 package com.fffattiger.wechatbot.application.service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import com.fffattiger.wechatbot.shared.properties.ChatBotProperties;
-import org.springframework.stereotype.Service;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
 
 import com.fffattiger.wechatbot.domain.chat.Chat;
-import com.fffattiger.wechatbot.domain.chat.Message;
+import com.fffattiger.wechatbot.domain.chat.ChatMessage;
 import com.fffattiger.wechatbot.domain.chat.event.MessageReceivedEvent;
 import com.fffattiger.wechatbot.domain.chat.repository.ChatRepository;
 import com.fffattiger.wechatbot.domain.chat.repository.MessageRepository;
@@ -27,7 +29,6 @@ public class ChatApplicationService {
     private final MessageRepository messageRepository;
     private final MessageMapper messageMapper;
     private final ApplicationEventPublisher eventPublisher;
-    private final ChatBotProperties chatBotProperties;
 
     /**
      * 获取所有聊天
@@ -42,7 +43,7 @@ public class ChatApplicationService {
      * @return
      */
     public List<Chat> findAllListened() {
-        return chatRepository.findAllByListenerIsNotNull();
+        return chatRepository.findByListenerEnableIsTrue();
     }
 
 
@@ -55,23 +56,12 @@ public class ChatApplicationService {
     public void receiveMessage(String chatName, WxAuto.WechatMessageSpecification.ChatSpecification.MessageSpecification spec, Long time) {
         Chat chat = chatRepository.findByName(chatName).orElseThrow(() -> new RuntimeException("Chat not found"));
 
-        Message message = messageMapper.toMessage(spec, chat.getId(), time);
+        ChatMessage message = messageMapper.toMessage(spec, chat.getId(), time);
         messageRepository.save(message);
 
-        if (chat.receiveMessage(message, chatBotProperties.getRobotName())) {
+        if (chat.isListened()) {
             eventPublisher.publishEvent(new MessageReceivedEvent(chat, message));
         }
-    }
-
-    /**
-     * 根据聊天ID获取所有消息
-     *
-     * @param chatId
-     * @return
-     */
-    @Transactional(Transactional.TxType.SUPPORTS)
-    public List<Message> findAllMessagesByChatId(Long chatId) {
-        return messageRepository.findByChatIdOrderByTimeAsc(chatId);
     }
 
     /**
@@ -81,5 +71,48 @@ public class ChatApplicationService {
      */
     public Chat findById(Long chatId) {
         return chatRepository.findById(chatId).orElseThrow(() -> new RuntimeException("Chat not found"));
+    }
+
+    /**
+     * 切换AI角色
+     * @param chatId
+     * @param newRoleId
+     */
+    @Transactional
+    public void changeAiRole(Long chatId, Long newRoleId) {
+        Chat chat = findById(chatId);
+        chat.changeAiRole(newRoleId);
+        chatRepository.save(chat);
+    }
+
+    /**
+     * 开始监听
+     * @param chatId
+     */
+    @Transactional
+    public void startListening(Long chatId) {
+        Chat chat = findById(chatId);
+        chat.startListening();
+        chatRepository.save(chat);
+        log.info("Chat [{}] started listening.", chat.getName());
+    }
+
+    /**
+     * Get messages for summary
+     * @param chatId
+     * @param date
+     * @return
+     */
+    public List<ChatMessage> findMessagesByChatIdAndDate(Long chatId, LocalDate date) {
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
+
+        List<ChatMessage> messages = messageRepository.findByChatIdAndTimeBetweenOrderByTimeAsc(chatId, startOfDay, endOfDay);
+
+        if (messages.isEmpty()) {
+            return List.of();
+        }
+
+        return messages;
     }
 }

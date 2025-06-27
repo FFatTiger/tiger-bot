@@ -8,7 +8,8 @@ import org.mapstruct.Mapping;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fffattiger.wechatbot.domain.chat.Message;
+import com.fffattiger.wechatbot.application.dto.DefaultMessage;
+import com.fffattiger.wechatbot.domain.chat.ChatMessage;
 import com.fffattiger.wechatbot.infrastructure.external.wxauto.MessageAttr;
 import com.fffattiger.wechatbot.infrastructure.external.wxauto.WxAuto.WechatMessageSpecification.ChatSpecification.MessageSpecification;
 
@@ -30,7 +31,14 @@ public interface MessageMapper {
     @Mapping(target = "botMessage", ignore = true)
     @Mapping(target = "chatId", source = "chatId") 
     @Mapping(target = "info", source = "spec")
-    Message toMessage(MessageSpecification spec, Long chatId, Long time);
+    ChatMessage toMessage(MessageSpecification spec, Long chatId, Long time);
+
+    // @Mapping(target = "id", ignore = true) 
+    // @Mapping(target = "status", ignore = true) 
+    // @Mapping(target = "botMessage", ignore = true)
+    // @Mapping(target = "chatId", source = "chatId") 
+    // @Mapping(target = "info", source = "spec")
+    // DefaultMessage toMessage(ChatMessage message);
 
     
     default String mapInfo(MessageSpecification spec) {

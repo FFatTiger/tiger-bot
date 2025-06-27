@@ -25,7 +25,7 @@ spring:
       naming:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
   datasource:
-    url: jdbc:postgresql://192.168.31.66:5437/postgres
+    url: jdbc:postgresql://192.168.31.66:5437/tigerbot
     username: admin
     password: 123
     driver-class-name: org.postgresql.Driver
@@ -42,3 +42,15 @@ chatbot:
       enabled: true  # 是否启用数据库初始化检查
       force-recreate: false  # 是否强制重新创建表（慎用）
   robot-name: hcuu
+  proxy:
+    enabled: true  # 是否启用代理
+    host: 192.168.31.88  # 代理主机地址
+    port: 7890  # 代理端口
+    type: HTTP  # 代理类型：HTTP 或 SOCKS
+
+cloudpaste:
+  base-backend-url: https://paster.qoq.icu/
+  base-frontend-url: https://p.qoq.icu/
+  api-token: Am2VbyKN14gD
+  connect-timeout: 5000
+  read-timeout: 100000

@@ -15,6 +15,10 @@
     <name>TigerBot Management</name>
     <description>TigerBot后台管理系统</description>
 
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
     <dependencies>
         <!-- 依赖core模块 -->
         <dependency>

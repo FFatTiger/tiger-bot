@@ -16,10 +16,12 @@ import lombok.Getter;
 @Getter
 public class Command extends AggregateRoot {
 
+ 
     /**
      * 命令的正则或名称
      */
     private String pattern;
+
 
     /**
      * 命令描述
@@ -27,25 +29,33 @@ public class Command extends AggregateRoot {
     private String description;
 
     /**
-     * AI配置
+     * 是否启用
      */
+    private boolean enabled;
+
+    /**
+     * 命令来源
+     */
+    private CommandSource source;
+
+
     @Embedded
     private AiSpecification aiSpecification;
 
-    /**
-     * 命令参数
-     */
+
     @Transient
     private CommandArgs commandArgs;
 
     // 构造函数
     protected Command() {}
 
-    public Command(String pattern, String description, AiSpecification aiSpecification) {
+
+    public Command(String pattern, String description, AiSpecification aiSpecification, CommandSource source) {
         this.pattern = pattern;
         this.description = description;
         this.aiSpecification = aiSpecification;
-        
+        this.enabled = true;
+        this.source = source;
     }
 
 

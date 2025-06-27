@@ -46,13 +46,13 @@ public class WxAutoWebSocketHttpClient implements WxAuto {
     private final List<String> listenerChatNames = new ArrayList<>();
 
     public WxAutoWebSocketHttpClient(ChatBotProperties chatBotProperties, OperationTaskManager taskManager,
-            ApplicationEventPublisher applicationEventPublisher) throws Exception {
+            ApplicationEventPublisher applicationEventPublisher, WebClient.Builder webClientBuilder) throws Exception {
         this.chatBotProperties = chatBotProperties;
         this.taskManager = taskManager;
         this.applicationEventPublisher = applicationEventPublisher;
 
         // 初始化HTTP客户端
-        this.webClient = WebClient.builder()
+        this.webClient = webClientBuilder
                 .baseUrl(chatBotProperties.getWxAutoGatewayHttpUrl())
                 .build();
 
@@ -298,7 +298,6 @@ public class WxAutoWebSocketHttpClient implements WxAuto {
     @Override
     public ResultSpecification<String> sendText(String toWho, String text) {
         log.info("发送文本消息: 接收者={}, 消息长度={}", toWho, text.length());
-        log.debug("发送文本消息内容: 接收者={}, 内容={}", toWho, text.length() > 100 ? text.substring(0, 100) + "..." : text);
 
         try {
             long startTime = System.currentTimeMillis();

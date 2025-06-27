@@ -10,5 +10,4 @@ public interface AiRoleRepository extends CrudRepository<AiRole, Long> {
     
     Optional<AiRole> findByName(String name);
 
-    boolean existsByName(String name);
 }

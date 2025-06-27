@@ -1,15 +1,15 @@
 package com.fffattiger.wechatbot.application.handler.cmd;
 
-import com.fffattiger.wechatbot.api.Ordered;
 import org.springframework.util.StringUtils;
 
 import com.fffattiger.wechatbot.api.CommandMessageHandlerExtension;
 import com.fffattiger.wechatbot.api.MessageHandlerExtension;
 import com.fffattiger.wechatbot.api.context.MessageHandlerContext;
 import com.fffattiger.wechatbot.api.dto.Message;
-import com.fffattiger.wechatbot.application.service.CommandApplicationService;
 import com.fffattiger.wechatbot.domain.command.Command;
 import com.fffattiger.wechatbot.domain.command.CommandArgs;
+import com.fffattiger.wechatbot.domain.command.repository.CommandRepository;
+import com.fffattiger.wechatbot.domain.permission.service.PermissionDomainService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,12 +20,17 @@ import lombok.extern.slf4j.Slf4j;
 public class CommandMessageHandlerWrapper implements MessageHandlerExtension{
     private final CommandMessageHandlerExtension delegate;
     private final String commandPrefix;
-    private final CommandApplicationService commandApplicationService;
+    private final CommandRepository commandRepository;
+    private final PermissionDomainService permissionDomainService;
 
-    public CommandMessageHandlerWrapper(CommandMessageHandlerExtension delegate, String commandPrefix, CommandApplicationService commandApplicationService) {
+    public CommandMessageHandlerWrapper(CommandMessageHandlerExtension delegate,
+                                        CommandRepository commandRepository,
+                                        PermissionDomainService permissionDomainService,
+                                        String commandPrefix) {
         this.delegate = delegate;
+        this.commandRepository = commandRepository;
+        this.permissionDomainService = permissionDomainService;
         this.commandPrefix = commandPrefix;
-        this.commandApplicationService = commandApplicationService;
     }
 
     @Override
@@ -35,57 +40,66 @@ public class CommandMessageHandlerWrapper implements MessageHandlerExtension{
         String chatName = message.getChatName();
         String sender = message.getSenderName();
 
-        // 根据新的wxauto文档，检查是否为命令消息
-        // 使用attr字段判断消息来源，"friend"表示好友/群友消息
-        if (message.getAttr() == null || !"friend".equals(message.getAttr())
-                || !StringUtils.hasLength(cleanContent)
-                || !cleanContent.startsWith(commandPrefix)) {
-            log.debug("非命令消息，跳过处理: 聊天={}, 发送者={}, 内容={}",
-                    chatName, sender, cleanContent);
+        // 1. 检查是否为可能需要本处理器处理的命令
+        if (!isPotentialCommand(message, cleanContent)) {
             return false;
         }
 
-        boolean isCommand = false;
-        String[] args = cleanContent.split(" ");
-        String commandStr = args[0];
-        String commandStrWithoutPrefix = commandStr.replace(commandPrefix, "");
+        String commandName = extractCommandName(cleanContent);
+        if (!delegate.getCommandName().equals(commandName)) {
+            log.debug("命令处理器不匹配: handler={}, 命令={}", delegate.getClass().getSimpleName(), commandName);
+            return false; // 不是我的命令，交给下一个处理器
+        }
 
-        if (delegate.getCommandName().equals(commandStrWithoutPrefix)) {
-            log.info("命令处理器匹配: handler={}, 命令={}", this.getClass().getSimpleName(), commandStr);
-            Command command = commandApplicationService.findByCommand(commandStrWithoutPrefix);
+        log.info("命令处理器匹配: handler={}, 命令={}", delegate.getClass().getSimpleName(), commandName);
+        
+        // 2. 获取领域对象
+        Command command = commandRepository.findByPattern(commandName).orElse(null);
+        if (command == null) {
+            log.warn("命令 '{}' 已被配置处理器，但在数据库中未找到定义。", commandName);
+            context.replyText("这是一个未知的内部命令。");
+            return true; // 确认处理，终止责任链
+        }
+
+        // // 3. 权限检查
+        // if (!permissionDomainService.canExecuteCommand(Long.parseLong(message.getSenderId()), command.getId(), message.getChatId())) {
+        //     log.warn("命令权限验证失败: 聊天={}, 发送者={}, 命令={}", chatName, sender, commandName);
+        //     context.replyText("抱歉，您没有权限执行此命令。");
+        //     return true; // 确认处理，终止责任链
+        // }
+        // log.info("命令权限验证通过: 聊天={}, 发送者={}, 命令={}", chatName, sender, commandName);
+
+        // 4. 解析参数并执行
+        try {
             CommandArgs commandArgs = command.extractCommandArgs(cleanContent, commandPrefix);
+            
+            long startTime = System.currentTimeMillis();
+            delegate.doHandle(commandArgs.command(), commandArgs.args(), context);
+            long duration = System.currentTimeMillis() - startTime;
 
-            if (commandApplicationService.hasPermission(command, sender, message.getChatId())) {
-                log.info("命令权限验证通过: 聊天={}, 发送者={}, 命令={}", chatName, sender, command);
+            log.info("命令执行成功: 聊天={}, 发送者={}, 命令={}, 耗时={}ms",
+                    chatName, sender, commandName, duration);
 
-                try {
-                    long startTime = System.currentTimeMillis();
-                    delegate.doHandle(commandArgs.command(), commandArgs.args(), context);
-                    long duration = System.currentTimeMillis() - startTime;
-
-                    log.info("命令执行成功: 聊天={}, 发送者={}, 命令={}, 耗时={}ms",
-                            chatName, sender, commandStr, duration);
-                    isCommand = true;
-
-                } catch (Exception e) {
-                    log.error("命令执行异常: 聊天={}, 发送者={}, 命令={}, 错误信息={}",
-                            chatName, sender, commandStr, e.getMessage(), e);
-                    context.replyText("命令格式错误，请参考帮助");
-                }
-            } else {
-                log.warn("命令权限验证失败: 聊天={}, 发送者={}, 命令={}", chatName, sender, commandStr);
-            }
-        } else {
-            log.debug("命令处理器不匹配: handler={}, 命令={}", this.getClass().getSimpleName(), commandStr);
+        } catch (Exception e) {
+            log.error("命令执行异常: 聊天={}, 发送者={}, 命令={}, 错误信息={}",
+                    chatName, sender, commandName, e.getMessage(), e);
+            context.replyText("命令执行时发生未知错误。");
         }
-
-        if (isCommand) {
-            return true;
-        }
-
-        return false;
+        
+        return true; // 无论成功失败，只要是我的命令，就终止责任链
     }
     
+    private boolean isPotentialCommand(Message message, String content) {
+        return "friend".equals(message.getAttr())
+                && StringUtils.hasLength(content)
+                && content.startsWith(commandPrefix);
+    }
+
+    private String extractCommandName(String content) {
+        String commandStr = content.split(" ")[0];
+        return commandStr.replace(commandPrefix, "");
+    }
+
     @Override
     public int getOrder() {
         return 0;
@@ -94,6 +108,4 @@ public class CommandMessageHandlerWrapper implements MessageHandlerExtension{
     public CommandMessageHandlerExtension getDelegate() {
         return delegate;
     }
-
-   
 }

@@ -20,7 +20,7 @@ import lombok.Getter;
 @Entity
 @Table(name = "messages")
 @Getter
-public class Message extends com.fffattiger.wechatbot.domain.common.Entity {
+public class ChatMessage extends com.fffattiger.wechatbot.domain.common.Entity {
 
     /**
      * 聊天群组ID
@@ -78,9 +78,9 @@ public class Message extends com.fffattiger.wechatbot.domain.common.Entity {
     private LocalDateTime time;
 
     // 构造函数
-    protected Message() {}
+    protected ChatMessage() {}
 
-    public Message(Long chatId, String type, String attr, String content, String sender,
+    public ChatMessage(Long chatId, String type, String attr, String content, String sender,
                   String info, String hash, LocalDateTime time) {
         this.chatId = chatId;
         this.type = MessageType.fromValue(type);

@@ -1,8 +1,11 @@
 package com.fffattiger.wechatbot.api.context;
 
 import java.io.File;
+import java.time.LocalDate;
+import java.util.List;
 
 import com.fffattiger.wechatbot.api.dto.Message;
+import org.springframework.web.client.RestClient;
 
 /**
  * 消息处理器上下文接口。
@@ -102,5 +105,36 @@ public interface MessageHandlerContext {
      */
     void clear();
 
+    /**
+     * 将当前消息保存到剪贴板。
+     * 
+     * @param content 要保存的文本。
+     * @return 访问链接。
+     */
+    String saveToPaste(String content);
 
+    /**
+     * 将当前消息保存到剪贴板。
+     * 
+     * @param content 要保存的文本。
+     * @param remark 备注。
+     * @param slug 短链接。
+     * @param password 访问密码。
+     * @param expiresAt 过期时间。
+     * @param maxViews 最大查看次数。
+     * @return 访问链接。
+     */
+    String saveToPaste(String content, String remark, String slug, String password, String expiresAt, Integer maxViews);
+
+    /**
+     * 获取历史消息
+     */
+    List<Message> getHistoryMessages(LocalDate date);
+
+    /**
+     * 获取RestClient.Builder
+     * 
+     * @return RestClient.Builder
+     */
+    RestClient.Builder getRestClientBuilder();
 }

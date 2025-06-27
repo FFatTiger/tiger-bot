@@ -16,6 +16,10 @@ import com.fffattiger.wechatbot.api.CommandMessageHandlerExtension;
 import com.fffattiger.wechatbot.api.MessageHandlerExtension;
 import com.fffattiger.wechatbot.application.handler.cmd.CommandMessageHandlerWrapper;
 import com.fffattiger.wechatbot.application.service.CommandApplicationService;
+import com.fffattiger.wechatbot.domain.command.Command;
+import com.fffattiger.wechatbot.domain.command.CommandSource;
+import com.fffattiger.wechatbot.domain.command.repository.CommandRepository;
+import com.fffattiger.wechatbot.domain.permission.service.PermissionDomainService;
 import com.fffattiger.wechatbot.domain.plugin.Plugin;
 import com.fffattiger.wechatbot.shared.properties.ChatBotProperties;
 
@@ -34,6 +38,8 @@ public class PluginLoaderService {
     private final PluginManager pluginManager;
     private final PluginHolder pluginHolder;
     private final ChatBotProperties chatBotProperties;
+    private final CommandRepository commandRepository;
+    private final PermissionDomainService permissionDomainService;
     private final CommandApplicationService commandApplicationService;
 
     public PluginWrapper loadPlugin(Path pluginPath) {
@@ -67,7 +73,7 @@ public class PluginLoaderService {
             }
             
             // 3. 提取插件扩展并注册
-            List<MessageHandlerExtension> extensions = extractExtensions(pluginId);
+            List<MessageHandlerExtension> extensions = extractAndRegisterExtensions(pluginId);
             Map<String, List<MessageHandlerExtension>> extensionsMap = new HashMap<>();
             extensionsMap.put(pluginId, extensions);
             pluginHolder.addExtensions(extensionsMap);
@@ -78,6 +84,45 @@ public class PluginLoaderService {
             log.error("插件加载失败: {}", plugin.getName(), e);
             throw new RuntimeException("插件加载失败: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * 提取、注册并返回插件的扩展
+     * @param pluginId 插件ID
+     * @return 扩展列表
+     */
+    public List<MessageHandlerExtension> extractAndRegisterExtensions(String pluginId) {
+        List<MessageHandlerExtension> extensions = new ArrayList<>();
+        try {
+            // 提取消息处理扩展
+            List<MessageHandlerExtension> messageExtensions =
+                    pluginManager.getExtensions(MessageHandlerExtension.class, pluginId);
+            extensions.addAll(messageExtensions);
+
+            // 提取并包装命令扩展
+            List<CommandMessageHandlerExtension> commandExtensions =
+                    pluginManager.getExtensions(CommandMessageHandlerExtension.class, pluginId);
+
+            for (CommandMessageHandlerExtension cmdExt : commandExtensions) {
+                CommandMessageHandlerWrapper wrapper = new CommandMessageHandlerWrapper(
+                        cmdExt, commandRepository, permissionDomainService, chatBotProperties.getCommandPrefix());
+                extensions.add(wrapper);
+                // 注册命令
+                commandApplicationService.registerCommand(new Command(
+                        cmdExt.getCommandName(),
+                        cmdExt.getDescription(),
+                        null,
+                        CommandSource.ofPlugin(cmdExt.getCommandName(), pluginId)
+                ));
+            }
+
+            log.debug("插件 {} 提取扩展: 消息处理={}, 命令处理={}",
+                    pluginId, messageExtensions.size(), commandExtensions.size());
+
+        } catch (Exception e) {
+            log.error("提取插件扩展失败: {}", pluginId, e);
+        }
+        return extensions;
     }
 
     /**
@@ -126,36 +171,4 @@ public class PluginLoaderService {
         }
     }
 
-    /**
-     * 提取插件扩展
-     */
-    private List<MessageHandlerExtension> extractExtensions(String pluginId) {
-        List<MessageHandlerExtension> extensions = new ArrayList<>();
-        
-        try {
-            // 提取消息处理扩展
-            List<MessageHandlerExtension> messageExtensions = 
-                    pluginManager.getExtensions(MessageHandlerExtension.class, pluginId);
-            extensions.addAll(messageExtensions);
-            
-            // 提取命令扩展
-            List<CommandMessageHandlerExtension> commandExtensions = 
-                    pluginManager.getExtensions(CommandMessageHandlerExtension.class, pluginId);
-            
-            // 包装命令扩展
-            for (CommandMessageHandlerExtension cmdExt : commandExtensions) {
-                CommandMessageHandlerWrapper wrapper = new CommandMessageHandlerWrapper(
-                        cmdExt, chatBotProperties.getCommandPrefix(), commandApplicationService);
-                extensions.add(wrapper);
-            }
-            
-            log.debug("插件 {} 提取扩展: 消息处理={}, 命令处理={}", 
-                    pluginId, messageExtensions.size(), commandExtensions.size());
-            
-        } catch (Exception e) {
-            log.error("提取插件扩展失败: {}", pluginId, e);
-        }
-        
-        return extensions;
-    }
 } 

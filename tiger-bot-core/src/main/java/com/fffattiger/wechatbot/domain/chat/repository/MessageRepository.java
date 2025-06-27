@@ -1,9 +1,16 @@
 package com.fffattiger.wechatbot.domain.chat.repository;
 
-import com.fffattiger.wechatbot.domain.chat.Message;
-import org.springframework.data.jpa.repository.JpaRepository;
+import java.time.LocalDateTime;
 import java.util.List;
 
-public interface MessageRepository extends JpaRepository<Message, Long> {
-    List<Message> findByChatIdOrderByTimeAsc(Long chatId);
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
+
+import com.fffattiger.wechatbot.domain.chat.ChatMessage;
+
+@Repository
+public interface MessageRepository extends CrudRepository<ChatMessage, Long> {
+    List<ChatMessage> findByChatIdOrderByTimeAsc(Long chatId);
+
+    List<ChatMessage> findByChatIdAndTimeBetweenOrderByTimeAsc(Long chatId, LocalDateTime startTime, LocalDateTime endTime);
 } 

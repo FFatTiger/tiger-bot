@@ -52,18 +52,12 @@ public class WxAutoMessageReceiveListener implements ApplicationListener<WxAutoM
 
         // 处理微信消息
         for (WechatMessageSpecification.ChatSpecification chatSpecification : event.getMessage().data()) {
-            log.info("处理聊天: {}, 消息数量: {}", chatSpecification.chatName(),
-                    chatSpecification.messageSpecifications().size());
 
             for (WechatMessageSpecification.ChatSpecification.MessageSpecification msg : chatSpecification
                     .messageSpecifications()) {
                 messageProcessorPool.submit(() -> {
-                    try {
-                        log.debug("开始处理消息: 聊天={}, 发送者={}, 消息ID={}",
-                                chatSpecification.chatName(), msg.sender(), msg.id());
-
+                    try {;
                         chatApplicationService.receiveMessage(chatSpecification.chatName(), msg, event.getTimestamp());
-
                     } catch (Exception e) {
                         log.error("消息处理异常: 聊天={}, 发送者={}, 错误信息={}",
                                 chatSpecification.chatName(), msg.sender(), e.getMessage(), e);
@@ -71,7 +65,5 @@ public class WxAutoMessageReceiveListener implements ApplicationListener<WxAutoM
                 });
             }
         }
-
-        log.debug("消息事件处理完成，已提交所有处理任务到线程池");
     }
 }

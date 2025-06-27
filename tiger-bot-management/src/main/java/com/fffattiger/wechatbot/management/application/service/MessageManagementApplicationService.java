@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import com.fffattiger.wechatbot.application.service.ChatApplicationService;
 import com.fffattiger.wechatbot.application.service.MessageApplicationService;
 import com.fffattiger.wechatbot.domain.chat.Chat;
-import com.fffattiger.wechatbot.domain.chat.Message;
+import com.fffattiger.wechatbot.domain.chat.ChatMessage;
 import com.fffattiger.wechatbot.management.application.dto.MessageRecordDto;
 
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +36,7 @@ public class MessageManagementApplicationService {
      * 获取所有消息记录（分页）
      */
     public Page<MessageRecordDto> getAllMessageRecords(Pageable pageable) {
-        Page<Message> messages = coreMessageApplicationService.getAllMessages(pageable);
+        Page<ChatMessage> messages = coreMessageApplicationService.getAllMessages(pageable);
         List<MessageRecordDto> dtos = messages.getContent().stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
@@ -47,7 +47,7 @@ public class MessageManagementApplicationService {
      * 根据聊天ID获取消息记录（分页）
      */
     public Page<MessageRecordDto> getMessageRecordsByChatId(Long chatId, Pageable pageable) {
-        Page<Message> messages = coreMessageApplicationService.getMessagesByChatId(chatId, pageable);
+        Page<ChatMessage> messages = coreMessageApplicationService.getMessagesByChatId(chatId, pageable);
         List<MessageRecordDto> dtos = messages.getContent().stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
@@ -59,7 +59,7 @@ public class MessageManagementApplicationService {
      */
     public List<MessageRecordDto> searchMessageRecords(Long chatId, String keyword, 
                                                       LocalDateTime startTime, LocalDateTime endTime) {
-        List<Message> messages;
+        List<ChatMessage> messages;
 
         if (chatId != null && keyword != null && !keyword.trim().isEmpty()) {
             // 按聊天ID和关键词搜索
@@ -92,7 +92,7 @@ public class MessageManagementApplicationService {
      * 根据发送者获取消息记录
      */
     public List<MessageRecordDto> getMessageRecordsBySender(String sender) {
-        List<Message> messages = coreMessageApplicationService.getMessagesBySender(sender);
+        List<ChatMessage> messages = coreMessageApplicationService.getMessagesBySender(sender);
         return messages.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
@@ -147,7 +147,7 @@ public class MessageManagementApplicationService {
     /**
      * 转换为DTO
      */
-    private MessageRecordDto convertToDto(Message message) {
+    private MessageRecordDto convertToDto(ChatMessage message) {
         String chatName = "未知聊天";
         try {
             Chat chat = coreChatApplicationService.getChatById(message.getChatId());
@@ -176,7 +176,7 @@ public class MessageManagementApplicationService {
     /**
      * 按时间范围过滤消息
      */
-    private boolean filterByTimeRange(Message message, LocalDateTime startTime, LocalDateTime endTime) {
+    private boolean filterByTimeRange(ChatMessage message, LocalDateTime startTime, LocalDateTime endTime) {
         if (message.getTime() == null) {
             return false;
         }
